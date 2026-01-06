@@ -1,0 +1,219 @@
+/**
+ * Support Dashboard Screen
+ *
+ * Displays list of user's support tickets and option to create new one.
+ */
+
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { format } from "date-fns";
+import { Stack, useRouter } from "expo-router";
+import React, { useEffect } from "react";
+import { FlatList, StyleSheet, View } from "react-native";
+import {
+  ActivityIndicator,
+  Card,
+  Chip,
+  FAB,
+  Text,
+  useTheme,
+} from "react-native-paper";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useSupport } from "../../src/hooks/useSupport";
+import type { SupportTicket } from "../../src/types";
+
+// Status Colors
+const STATUS_COLORS = {
+  open: "#2196F3",
+  in_progress: "#FF9800",
+  resolved: "#4CAF50",
+  closed: "#9E9E9E",
+};
+
+export default function SupportScreen() {
+  const theme = useTheme();
+  const router = useRouter();
+  const { tickets, isLoading, fetchTickets } = useSupport();
+
+  useEffect(() => {
+    fetchTickets();
+  }, [fetchTickets]);
+
+  const renderTicket = ({ item }: { item: SupportTicket }) => {
+    const statusColor = STATUS_COLORS[item.status] || theme.colors.primary;
+
+    return (
+      <Card style={styles.card} mode="elevated">
+        <Card.Content>
+          <View style={styles.cardHeader}>
+            <View style={styles.headerLeft}>
+              <Text
+                variant="titleMedium"
+                style={styles.subject}
+                numberOfLines={1}
+              >
+                {item.subject}
+              </Text>
+              <Text variant="bodySmall" style={{ color: theme.colors.outline }}>
+                {format(new Date(item.createdAt), "MMM dd, yyyy")} •{" "}
+                {item.category}
+              </Text>
+            </View>
+            <Chip
+              style={{ backgroundColor: statusColor + "20" }}
+              textStyle={{
+                color: statusColor,
+                fontSize: 11,
+                fontWeight: "bold",
+              }}
+            >
+              {item.status.toUpperCase().replace("_", " ")}
+            </Chip>
+          </View>
+
+          <Text variant="bodyMedium" numberOfLines={2} style={styles.message}>
+            {item.message}
+          </Text>
+
+          <View style={styles.cardFooter}>
+            <View style={styles.priorityBadge}>
+              <MaterialCommunityIcons
+                name="flag"
+                size={14}
+                color={theme.colors.outline}
+              />
+              <Text
+                variant="labelSmall"
+                style={{ color: theme.colors.outline, marginLeft: 4 }}
+              >
+                {item.priority.charAt(0).toUpperCase() + item.priority.slice(1)}{" "}
+                Priority
+              </Text>
+            </View>
+          </View>
+        </Card.Content>
+      </Card>
+    );
+  };
+
+  const renderEmpty = () => (
+    <View style={styles.emptyContainer}>
+      <MaterialCommunityIcons
+        name="ticket-confirmation-outline"
+        size={64}
+        color={theme.colors.outlineVariant}
+      />
+      <Text
+        variant="titleMedium"
+        style={{ marginTop: 16, color: theme.colors.onSurfaceVariant }}
+      >
+        No support tickets
+      </Text>
+      <Text
+        variant="bodyMedium"
+        style={{
+          color: theme.colors.outline,
+          marginTop: 4,
+          textAlign: "center",
+        }}
+      >
+        Need help? Create a new ticket below.
+      </Text>
+    </View>
+  );
+
+  return (
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
+    >
+      <Stack.Screen options={{ title: "Support Tickets" }} />
+
+      {isLoading && tickets.length === 0 ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={theme.colors.primary} />
+        </View>
+      ) : (
+        <FlatList
+          data={tickets}
+          renderItem={renderTicket}
+          keyExtractor={(item) => item.$id}
+          contentContainerStyle={
+            tickets.length === 0 ? { flex: 1 } : styles.listContent
+          }
+          ListEmptyComponent={renderEmpty}
+        />
+      )}
+
+      <FAB
+        icon="plus"
+        label="New Ticket"
+        style={[styles.fab, { backgroundColor: theme.colors.primary }]}
+        color="#fff"
+        onPress={() => router.push("/support/create")}
+      />
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  listContent: {
+    padding: 16,
+    paddingBottom: 80,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 32,
+  },
+  card: {
+    marginBottom: 12,
+    backgroundColor: "#fff",
+    borderRadius: 12,
+  },
+  cardHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    marginBottom: 8,
+  },
+  headerLeft: {
+    flex: 1,
+    marginRight: 12,
+  },
+  subject: {
+    fontWeight: "bold",
+    marginBottom: 2,
+  },
+  message: {
+    color: "#666",
+    marginBottom: 12,
+  },
+  cardFooter: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  priorityBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#f5f5f5",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+  },
+  fab: {
+    position: "absolute",
+    margin: 16,
+    right: 0,
+    bottom: 0,
+    borderRadius: 28,
+  },
+});
