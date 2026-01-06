@@ -84,6 +84,9 @@ interface AppState {
   updateTraveler: (travelerId: string, updates: Partial<Traveler>) => void;
 
   // Actions - Booked Trips
+  bookTrip: (trip: Omit<BookedTrip, "id" | "status" | "statusHistory" | "bookingDate">) => void;
+
+  // Actions - Booked Trips
   addBookedTrip: (trip: BookedTrip) => void;
   updateTripStatus: (tripId: string, status: BookedTrip["status"], note?: string) => void;
 }
@@ -159,6 +162,17 @@ export const useStore = create<AppState>((set, get) => ({
     })),
 
   // Booked Trips Actions
+  bookTrip: (tripData) => 
+    set((state) => ({
+      bookedTrips: [...state.bookedTrips, {
+        ...tripData,
+        id: "booking_" + Date.now(),
+        status: "processing",
+        statusHistory: [{ status: "processing", date: new Date(), note: "Booking initiated" }],
+        bookingDate: new Date(),
+      }]
+    })),
+
   addBookedTrip: (trip) =>
     set((state) => ({
       bookedTrips: [...state.bookedTrips, trip],

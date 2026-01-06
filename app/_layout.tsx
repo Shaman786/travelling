@@ -7,6 +7,7 @@ import {
 import { useEffect } from "react";
 import { PaperProvider } from "react-native-paper";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import ToastManager from "toastify-react-native";
 import { useStore } from "../src/store/useStore";
 import { theme } from "../src/theme";
 
@@ -19,19 +20,19 @@ function AuthHandler() {
   useEffect(() => {
     if (!navigationState?.key) return;
 
-    const inAuthGroup = segments[0] === "(auth)";
-
     // Slight delay to ensure navigation is ready
     const timer = setTimeout(() => {
+      const inAuthGroup = segments[0] === "(auth)";
+
       if (!isLoggedIn && !inAuthGroup) {
-        router.replace("/(auth)/login");
+        router.replace("/(auth)/login" as any);
       } else if (isLoggedIn && inAuthGroup) {
-        router.replace("/(tabs)");
+        router.replace("/(tabs)" as any);
       }
     }, 100);
 
     return () => clearTimeout(timer);
-  }, [isLoggedIn, segments, navigationState?.key]);
+  }, [isLoggedIn, segments, navigationState?.key, router]);
 
   return null;
 }
@@ -47,6 +48,7 @@ export default function RootLayout() {
           <Stack.Screen name="index" options={{ headerShown: false }} />
           <Stack.Screen name="details/[id]" options={{ headerShown: false }} />
         </Stack>
+        <ToastManager />
       </PaperProvider>
     </SafeAreaProvider>
   );

@@ -1,9 +1,13 @@
+import * as DocumentPicker from "expo-document-picker";
 import { useRouter } from "expo-router";
-import React from "react";
-import { StyleSheet, View } from "react-native";
+import React, { useState } from "react";
+import { Linking, ScrollView, StyleSheet, View } from "react-native";
 import {
   Avatar,
   Button,
+  Card,
+  Divider,
+  IconButton,
   List,
   Surface,
   Text,
@@ -12,89 +16,169 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useStore } from "../../src/store/useStore";
 
+interface UploadedFile {
+  name: string;
+  uri: string;
+  size?: number;
+}
+
 export default function ProfileScreen() {
   const theme = useTheme();
   const router = useRouter();
   const { user, logout } = useStore();
+  const [documents, setDocuments] = useState<UploadedFile[]>([]);
 
   const handleLogout = async () => {
     logout();
-    router.replace("/");
+    router.replace("/(auth)/login");
+  };
+
+  const handleUpload = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: ["application/pdf", "image/*"],
+        copyToCacheDirectory: true,
+      });
+
+      if (result.assets && result.assets.length > 0) {
+        const file = result.assets[0];
+        setDocuments((prev) => [
+          ...prev,
+          { name: file.name, uri: file.uri, size: file.size },
+        ]);
+      }
+    } catch (err) {
+      console.log("Document Picker Error", err);
+    }
+  };
+
+  const openWhatsApp = () => {
+    const phoneNumber = "919876543210"; // Replace with your number
+    const message = "Hello! I need help with my travel booking.";
+    const url = `whatsapp://send?phone=${phoneNumber}&text=${encodeURIComponent(
+      message
+    )}`;
+    Linking.openURL(url).catch(() => {
+      // Fallback or alert
+      console.log("Cannot open WhatsApp");
+    });
   };
 
   return (
     <SafeAreaView
       style={[styles.container, { backgroundColor: theme.colors.background }]}
     >
-      <View style={styles.header}>
-        <Avatar.Image
-          size={100}
-          source={{ uri: user?.avatar || "https://i.pravatar.cc/300" }}
-        />
-        <Text variant="headlineMedium" style={styles.name}>
-          {user?.name || "Guest User"}
-        </Text>
-        <Text variant="bodyMedium" style={styles.email}>
-          {user?.email || "Sign in to sync your trips"}
-        </Text>
+      <ScrollView showsVerticalScrollIndicator={false}>
+        <View style={styles.header}>
+          <Avatar.Image
+            size={100}
+            source={{ uri: user?.avatar || "https://i.pravatar.cc/300" }}
+          />
+          <Text variant="headlineMedium" style={styles.name}>
+            {user?.name || "Guest"}
+          </Text>
+          <Text variant="bodyMedium" style={styles.email}>
+            {user?.email || "guest@travelling.app"}
+          </Text>
+        </View>
 
-        {!user && (
-          <Button
-            mode="contained"
-            onPress={() => router.push("/")}
-            style={styles.loginBtn}
-          >
-            Sign In / Register
-          </Button>
-        )}
-      </View>
+        <View style={styles.sectionContainer}>
+          {/* Travel Vault */}
+          <Card style={styles.card} mode="elevated">
+            <Card.Title
+              title="Travel Vault"
+              subtitle="Securely store your passports & visas"
+              left={(props) => (
+                <Avatar.Icon
+                  {...props}
+                  icon="safe"
+                  style={{ backgroundColor: theme.colors.primary }}
+                />
+              )}
+            />
+            <Card.Content>
+              {documents.length === 0 ? (
+                <Text variant="bodySmall" style={styles.emptyText}>
+                  No documents uploaded yet.
+                </Text>
+              ) : (
+                documents.map((doc, idx) => (
+                  <View key={idx} style={styles.docItem}>
+                    <List.Icon
+                      icon="file-document-outline"
+                      color={theme.colors.secondary}
+                    />
+                    <Text
+                      variant="bodyMedium"
+                      style={styles.docName}
+                      numberOfLines={1}
+                    >
+                      {doc.name}
+                    </Text>
+                  </View>
+                ))
+              )}
+              <Button
+                mode="outlined"
+                onPress={handleUpload}
+                icon="cloud-upload"
+                style={styles.actionBtn}
+              >
+                Upload Document
+              </Button>
+            </Card.Content>
+          </Card>
 
-      <Surface style={styles.menuContainer} elevation={1}>
-        <List.Section>
-          <List.Subheader>Account</List.Subheader>
-          <List.Item
-            title="Personal Information"
-            left={(props) => <List.Icon {...props} icon="account-details" />}
-            right={(props) => <List.Icon {...props} icon="chevron-right" />}
-          />
-          <List.Item
-            title="Payment Methods"
-            left={(props) => (
-              <List.Icon {...props} icon="credit-card-outline" />
-            )}
-            right={(props) => <List.Icon {...props} icon="chevron-right" />}
-          />
-          <List.Item
-            title="Travel Documents"
-            left={(props) => <List.Icon {...props} icon="passport" />}
-            right={(props) => <List.Icon {...props} icon="chevron-right" />}
-          />
-        </List.Section>
+          {/* Expert Support */}
+          <Card style={[styles.card, { marginTop: 16 }]} mode="elevated">
+            <Card.Content style={styles.supportContent}>
+              <View style={{ flex: 1 }}>
+                <Text variant="titleMedium" style={{ fontWeight: "bold" }}>
+                  Need Help?
+                </Text>
+                <Text variant="bodySmall">
+                  Chat with our travel experts instantly via WhatsApp.
+                </Text>
+              </View>
+              <IconButton
+                icon="whatsapp"
+                mode="contained"
+                containerColor="#25D366"
+                iconColor="#fff"
+                size={30}
+                onPress={openWhatsApp}
+              />
+            </Card.Content>
+          </Card>
 
-        <List.Section>
-          <List.Subheader>Settings</List.Subheader>
-          <List.Item
-            title="Notifications"
-            left={(props) => <List.Icon {...props} icon="bell-outline" />}
-            onPress={() => {}}
-          />
-          <List.Item
-            title="Help & Support"
-            left={(props) => (
-              <List.Icon {...props} icon="help-circle-outline" />
-            )}
-            onPress={() => {}}
-          />
-          <List.Item
-            title="Logout"
-            left={(props) => (
-              <List.Icon {...props} icon="logout" color={theme.colors.error} />
-            )}
-            onPress={handleLogout}
-            titleStyle={{ color: theme.colors.error }}
-          />
-        </List.Section>
-      </Surface>
+          {/* Account Actions */}
+          <Surface style={styles.menuContainer} elevation={0}>
+            <List.Section>
+              <List.Subheader>Account Settings</List.Subheader>
+              <List.Item
+                title="Edit Profile"
+                left={(props) => (
+                  <List.Icon {...props} icon="account-edit-outline" />
+                )}
+                right={(props) => <List.Icon {...props} icon="chevron-right" />}
+              />
+              <Divider />
+              <List.Item
+                title="Logout"
+                left={(props) => (
+                  <List.Icon
+                    {...props}
+                    icon="logout"
+                    color={theme.colors.error}
+                  />
+                )}
+                onPress={handleLogout}
+                titleStyle={{ color: theme.colors.error }}
+              />
+            </List.Section>
+          </Surface>
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -106,23 +190,56 @@ const styles = StyleSheet.create({
   header: {
     alignItems: "center",
     paddingVertical: 32,
+    backgroundColor: "#fff",
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
+    elevation: 2,
+    marginBottom: 20,
   },
   name: {
     fontWeight: "bold",
     marginTop: 16,
+    color: "#1A1A2E",
   },
   email: {
     color: "#666",
-    marginBottom: 16,
   },
-  loginBtn: {
-    marginTop: 8,
+  sectionContainer: {
+    paddingHorizontal: 20,
+    paddingBottom: 40,
+  },
+  card: {
+    backgroundColor: "#fff",
+    borderRadius: 12,
+  },
+  emptyText: {
+    color: "#999",
+    fontStyle: "italic",
+    marginBottom: 10,
+  },
+  docItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 8,
+    backgroundColor: "#F5F7FA",
+    padding: 8,
+    borderRadius: 8,
+  },
+  docName: {
+    marginLeft: 8,
+    flex: 1,
+  },
+  actionBtn: {
+    marginTop: 10,
+    borderColor: "#0056D2",
+  },
+  supportContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
   },
   menuContainer: {
-    flex: 1,
-    backgroundColor: "#fff",
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    paddingVertical: 16,
+    marginTop: 20,
+    backgroundColor: "transparent",
   },
 });
