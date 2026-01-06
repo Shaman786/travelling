@@ -1,132 +1,164 @@
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { format } from "date-fns";
 import { useRouter } from "expo-router";
 import React from "react";
-import { ScrollView, StyleSheet, View } from "react-native";
-import { Appbar, List, Surface, Text, useTheme } from "react-native-paper";
+import { FlatList, StyleSheet, View } from "react-native";
+import {
+  Button,
+  Card,
+  Chip,
+  Divider,
+  Text,
+  useTheme,
+} from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Toast } from "toastify-react-native";
 import StepTracker from "../../src/components/StepTracker";
-import { useStore } from "../../src/store/useStore";
-
-// Creating some mock booked trips for visualization if none exist
-const mockBookedTrips = [
-  {
-    id: "booking_123",
-    packageId: "pkg_kerala_bliss",
-    packageTitle: "Kerala Backwater Bliss",
-    destination: "India",
-    status: "visa_approved",
-    departureDate: new Date("2024-04-15"),
-    totalPrice: 899,
-  },
-  {
-    id: "booking_456",
-    packageId: "pkg_dubai_luxury",
-    packageTitle: "Dubai Luxury Escape",
-    destination: "Gulf",
-    status: "processing",
-    departureDate: new Date("2024-06-20"),
-    totalPrice: 1698,
-  },
-];
+import { BookedTrip, useStore } from "../../src/store/useStore";
 
 export default function MyTripsScreen() {
   const theme = useTheme();
   const router = useRouter();
-  const user = useStore((state) => state.user);
+  const bookedTrips = useStore((state) => state.bookedTrips);
 
-  // In a real app we'd use useStore(state => state.bookedTrips)
-  // defaulting to mock data for the demo
-  const bookedTrips = mockBookedTrips;
-
-  const getStatusSteps = (status: string) => {
-    const steps = [
-      { title: "Booking Confirmed", status: "completed" },
-      { title: "Documents Verified", status: "upcoming" },
-      { title: "Visa Submitted", status: "upcoming" },
-      { title: "Visa Approved", status: "upcoming" },
-      { title: "Ready to Fly", status: "upcoming" },
-    ];
-
-    let currentIndex = 0;
-    switch (status) {
-      case "processing":
-        currentIndex = 0;
-        break;
-      case "documents_verified":
-        currentIndex = 1;
-        break;
-      case "visa_submitted":
-        currentIndex = 2;
-        break;
-      case "visa_approved":
-        currentIndex = 3;
-        break;
-      case "ready_to_fly":
-        currentIndex = 4;
-        break;
-      case "completed":
-        currentIndex = 5;
-        break;
-    }
-
-    return steps.map((step, index) => {
-      if (index < currentIndex)
-        return { ...step, status: "completed" as const };
-      if (index === currentIndex)
-        return { ...step, status: "current" as const };
-      return step;
-    });
+  const handleCancelTrip = (tripId: string) => {
+    Toast.info("Cancellation coming soon!");
   };
 
-  const [expandedId, setExpandedId] = React.useState<string | null>(null);
+  const renderEmptyState = () => (
+    <View style={styles.center}>
+      <MaterialCommunityIcons
+        name="bag-suitcase-off"
+        size={64}
+        color={theme.colors.outlineVariant}
+      />
+      <Text
+        variant="headlineSmall"
+        style={{ marginTop: 16, color: theme.colors.onSurfaceVariant }}
+      >
+        No upcoming trips
+      </Text>
+      <Text
+        variant="bodyMedium"
+        style={{
+          marginTop: 8,
+          textAlign: "center",
+          color: theme.colors.outline,
+        }}
+      >
+        Your next adventure is waiting.
+      </Text>
+      <Button
+        mode="contained"
+        onPress={() => router.push("/(tabs)")}
+        style={{ marginTop: 24, borderRadius: 8 }}
+        contentStyle={{ height: 48 }}
+      >
+        Book Now
+      </Button>
+    </View>
+  );
 
-  const toggleExpand = (id: string) => {
-    setExpandedId(expandedId === id ? null : id);
+  const renderTripItem = ({ item: trip }: { item: BookedTrip }) => {
+    // Determine visual status color
+    let statusColor = theme.colors.primary;
+    if (trip.status === "visa_approved") statusColor = "#2196F3"; // Blue
+    if (trip.status === "ready_to_fly" || trip.status === "completed")
+      statusColor = "#4CAF50"; // Green
+
+    // Format Status Text
+    const statusText = trip.status
+      .split("_")
+      .map((w: string) => w.charAt(0).toUpperCase() + w.slice(1))
+      .join(" ");
+
+    return (
+      <Card style={styles.card} mode="elevated">
+        {/* Header with Image if available - keeping simple text header for now based on mock data */}
+        <View
+          style={[
+            styles.cardHeader,
+            {
+              borderBottomColor: theme.colors.outlineVariant,
+              borderBottomWidth: 0.5,
+            },
+          ]}
+        >
+          <View style={{ flex: 1 }}>
+            <Text variant="titleMedium" style={{ fontWeight: "bold" }}>
+              {trip.packageTitle}
+            </Text>
+            <Text variant="bodySmall" style={{ color: theme.colors.outline }}>
+              {format(
+                new Date(trip.departureDate || Date.now()),
+                "MMM dd, yyyy"
+              )}{" "}
+              • {trip.destination}
+            </Text>
+          </View>
+          <Chip
+            icon="information"
+            style={{ backgroundColor: statusColor + "20" }}
+            textStyle={{ color: statusColor, fontSize: 12 }}
+          >
+            {statusText}
+          </Chip>
+        </View>
+
+        <Card.Content style={{ paddingTop: 16 }}>
+          {/* Use StepTracker for visual progress */}
+          <StepTracker currentStatus={trip.status} />
+
+          <Divider style={{ marginVertical: 12 }} />
+
+          <View style={styles.actions}>
+            <View>
+              <Text variant="bodySmall" style={{ color: theme.colors.outline }}>
+                Total Paid
+              </Text>
+              <Text
+                variant="titleMedium"
+                style={{ fontWeight: "bold", color: theme.colors.primary }}
+              >
+                ${trip.totalPrice}
+              </Text>
+            </View>
+
+            <Button
+              mode="outlined"
+              compact
+              textColor={theme.colors.error}
+              style={{ borderColor: theme.colors.errorContainer }}
+              onPress={() => handleCancelTrip(trip.id)}
+            >
+              Cancel
+            </Button>
+          </View>
+        </Card.Content>
+      </Card>
+    );
   };
 
   return (
     <SafeAreaView
       style={[styles.container, { backgroundColor: theme.colors.background }]}
     >
-      <Appbar.Header style={{ backgroundColor: theme.colors.background }}>
-        <Appbar.Content title="My Trips" />
-      </Appbar.Header>
+      <View style={styles.header}>
+        <Text variant="headlineMedium" style={styles.title}>
+          My Trips
+        </Text>
+      </View>
 
-      <ScrollView contentContainerStyle={styles.content}>
-        {bookedTrips.map((trip) => (
-          <Surface key={trip.id} style={styles.card} elevation={2}>
-            <List.Accordion
-              title={trip.packageTitle}
-              description={`${
-                trip.destination
-              } • ${trip.departureDate.toLocaleDateString()}`}
-              expanded={expandedId === trip.id}
-              onPress={() => toggleExpand(trip.id)}
-              left={(props) => (
-                <List.Icon
-                  {...props}
-                  icon="airplane"
-                  color={theme.colors.primary}
-                />
-              )}
-              style={styles.accordionHeader}
-              titleStyle={styles.cardTitle}
-            >
-              <View style={styles.trackerContainer}>
-                <Text variant="titleMedium" style={styles.trackerTitle}>
-                  Status Tracking
-                </Text>
-                <StepTracker steps={getStatusSteps(trip.status)} />
-              </View>
-            </List.Accordion>
-          </Surface>
-        ))}
-
-        {bookedTrips.length === 0 && (
-          <View style={styles.emptyState}>
-            <Text>No trips booked yet.</Text>
-          </View>
-        )}
-      </ScrollView>
+      <FlatList
+        data={[...bookedTrips].reverse()}
+        keyExtractor={(item) => item.id}
+        renderItem={renderTripItem}
+        contentContainerStyle={
+          bookedTrips.length === 0 ? { flex: 1 } : styles.listContent
+        }
+        ListEmptyComponent={renderEmptyState}
+        showsVerticalScrollIndicator={false}
+      />
     </SafeAreaView>
   );
 }
@@ -135,32 +167,44 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  content: {
+  center: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 32,
+  },
+  header: {
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    backgroundColor: "#fff",
+    elevation: 2,
+    borderBottomWidth: 1,
+    borderBottomColor: "#f0f0f0",
+  },
+  title: {
+    fontWeight: "bold",
+    color: "#0056D2",
+  },
+  listContent: {
     padding: 16,
+    paddingBottom: 40,
   },
   card: {
-    borderRadius: 12,
     marginBottom: 16,
+    backgroundColor: "#fff",
+    borderRadius: 12,
     overflow: "hidden",
-    backgroundColor: "#fff",
   },
-  accordionHeader: {
-    backgroundColor: "#fff",
-  },
-  cardTitle: {
-    fontWeight: "bold",
-    fontSize: 16,
-  },
-  trackerContainer: {
+  cardHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
     padding: 16,
-    backgroundColor: "#FAFAFA",
+    backgroundColor: "#fafafa",
   },
-  trackerTitle: {
-    marginBottom: 8,
-    fontWeight: "bold",
-  },
-  emptyState: {
+  actions: {
+    flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
-    marginTop: 40,
   },
 });

@@ -7,7 +7,9 @@
  * - Current trip tracking
  */
 
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { create } from "zustand";
+import { createJSONStorage, persist } from "zustand/middleware";
 
 // Types
 export interface User {
@@ -108,92 +110,112 @@ const initialTripDraft: TripDraft = {
 };
 
 // Create the store
-export const useStore = create<AppState>((set, get) => ({
-  // Initial State
-  user: null,
-  isLoggedIn: false,
-  tripDraft: initialTripDraft,
-  bookedTrips: [],
+export const useStore = create<AppState>()(
+  persist(
+    (set, get) => ({
+      // Initial State
+      user: null,
+      isLoggedIn: false,
+      tripDraft: initialTripDraft,
+      bookedTrips: [],
 
-  // Auth Actions
-  setUser: (user) => set({ user, isLoggedIn: !!user }),
+      // Auth Actions
+      setUser: (user) => set({ user, isLoggedIn: !!user }),
+      login: (user) => set({ user, isLoggedIn: true }),
+      logout: () => set({ user: null, isLoggedIn: false }),
 
-  login: (user) => set({ user, isLoggedIn: true }),
+      // Trip Draft Actions
+      updateTripDraft: (updates) =>
+        set((state) => ({
+          tripDraft: { ...state.tripDraft, ...updates },
+        })),
 
-  logout: () => set({ user: null, isLoggedIn: false }),
+      resetTripDraft: () => set({ tripDraft: initialTripDraft }),
 
-  // Trip Draft Actions
-  updateTripDraft: (updates) =>
-    set((state) => ({
-      tripDraft: { ...state.tripDraft, ...updates },
-    })),
+      setDraftStep: (step) =>
+        set((state) => ({
+          tripDraft: { ...state.tripDraft, currentStep: step },
+        })),
 
-  resetTripDraft: () => set({ tripDraft: initialTripDraft }),
+      addTraveler: (traveler) =>
+        set((state) => ({
+          tripDraft: {
+            ...state.tripDraft,
+            travelers: [...state.tripDraft.travelers, traveler],
+          },
+        })),
 
-  setDraftStep: (step) =>
-    set((state) => ({
-      tripDraft: { ...state.tripDraft, currentStep: step },
-    })),
+      removeTraveler: (travelerId) =>
+        set((state) => ({
+          tripDraft: {
+            ...state.tripDraft,
+            travelers: state.tripDraft.travelers.filter((t) => t.id !== travelerId),
+          },
+        })),
 
-  addTraveler: (traveler) =>
-    set((state) => ({
-      tripDraft: {
-        ...state.tripDraft,
-        travelers: [...state.tripDraft.travelers, traveler],
-      },
-    })),
+      updateTraveler: (travelerId, updates) =>
+        set((state) => ({
+          tripDraft: {
+            ...state.tripDraft,
+            travelers: state.tripDraft.travelers.map((t) =>
+              t.id === travelerId ? { ...t, ...updates } : t
+            ),
+          },
+        })),
 
-  removeTraveler: (travelerId) =>
-    set((state) => ({
-      tripDraft: {
-        ...state.tripDraft,
-        travelers: state.tripDraft.travelers.filter((t) => t.id !== travelerId),
-      },
-    })),
-
-  updateTraveler: (travelerId, updates) =>
-    set((state) => ({
-      tripDraft: {
-        ...state.tripDraft,
-        travelers: state.tripDraft.travelers.map((t) =>
-          t.id === travelerId ? { ...t, ...updates } : t
-        ),
-      },
-    })),
-
-  // Booked Trips Actions
-  bookTrip: (tripData) => 
-    set((state) => ({
-      bookedTrips: [...state.bookedTrips, {
-        ...tripData,
-        id: "booking_" + Date.now(),
-        status: "processing",
-        statusHistory: [{ status: "processing", date: new Date(), note: "Booking initiated" }],
-        bookingDate: new Date(),
-      }]
-    })),
-
-  addBookedTrip: (trip) =>
-    set((state) => ({
-      bookedTrips: [...state.bookedTrips, trip],
-    })),
-
-  updateTripStatus: (tripId, status, note) =>
-    set((state) => ({
-      bookedTrips: state.bookedTrips.map((trip) =>
-        trip.id === tripId
-          ? {
-              ...trip,
-              status,
+      // Booked Trips Actions
+      bookTrip: (tripData) =>
+        set((state) => ({
+          bookedTrips: [
+            ...state.bookedTrips,
+            {
+              ...tripData,
+              id: "booking_" + Date.now(),
+              status: "processing",
               statusHistory: [
-                ...trip.statusHistory,
-                { status, date: new Date(), note },
+                {
+                  status: "processing",
+                  date: new Date(),
+                  note: "Booking initiated",
+                },
               ],
-            }
-          : trip
-      ),
-    })),
-}));
+              bookingDate: new Date(),
+            },
+          ],
+        })),
+
+      addBookedTrip: (trip) =>
+        set((state) => ({
+          bookedTrips: [...state.bookedTrips, trip],
+        })),
+
+      updateTripStatus: (tripId, status, note) =>
+        set((state) => ({
+          bookedTrips: state.bookedTrips.map((trip) =>
+            trip.id === tripId
+              ? {
+                  ...trip,
+                  status,
+                  statusHistory: [
+                    ...trip.statusHistory,
+                    { status, date: new Date(), note },
+                  ],
+                }
+              : trip
+          ),
+        })),
+    }),
+    {
+      name: "travelling-storage",
+      storage: createJSONStorage(() => AsyncStorage),
+      partialize: (state) => ({
+        user: state.user,
+        isLoggedIn: state.isLoggedIn,
+        bookedTrips: state.bookedTrips,
+      }),
+    }
+  )
+);
 
 // Selectors (for convenience)
 export const selectUser = (state: AppState) => state.user;

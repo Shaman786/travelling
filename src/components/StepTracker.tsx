@@ -11,15 +11,68 @@ interface Step {
 }
 
 interface StepTrackerProps {
-  steps: Step[];
+  currentStatus: string;
 }
 
-const StepTracker = ({ steps }: StepTrackerProps) => {
+const StepTracker = ({ currentStatus }: StepTrackerProps) => {
   const theme = useTheme();
+
+  // Determine current step index based on status string
+  const getStepIndex = (status: string) => {
+    switch (status) {
+      case "processing":
+        return 0;
+      case "visa_approved":
+        return 1; // Assuming mapping
+      case "ready_to_fly":
+        return 2;
+      case "completed":
+        return 3;
+      default:
+        return 0;
+    }
+  };
+
+  const steps = [
+    {
+      title: "Booking Confirmed",
+      status: "completed" as const,
+      description: "Your trip is locked in.",
+    },
+    {
+      title: "Visa Processing",
+      status: "current" as const,
+      description: "Documents under review.",
+    },
+    {
+      title: "Ready to Fly",
+      status: "upcoming" as const,
+      description: "Pack your bags!",
+    },
+    {
+      title: "Trip Completed",
+      status: "upcoming" as const,
+      description: "Hope you had fun!",
+    },
+  ];
+
+  const activeIndex = getStepIndex(currentStatus);
+
+  // Update statuses dynamically
+  // Update statuses dynamically
+  const dynamicSteps = steps.map((step, index) => ({
+    ...step,
+    status: (index < activeIndex
+      ? "completed"
+      : index === activeIndex
+      ? "current"
+      : "upcoming") as "completed" | "current" | "upcoming",
+    date: undefined,
+  }));
 
   return (
     <View style={styles.container}>
-      {steps.map((step, index) => {
+      {dynamicSteps.map((step, index) => {
         const isLast = index === steps.length - 1;
 
         let iconName: any = "circle-outline";
