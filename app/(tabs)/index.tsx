@@ -1,0 +1,254 @@
+import { Image } from "expo-image";
+import { useRouter } from "expo-router";
+import React, { useState } from "react";
+import {
+  Dimensions,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { Avatar, Chip, Searchbar, Text, useTheme } from "react-native-paper";
+import { SafeAreaView } from "react-native-safe-area-context";
+import PackageCard from "../../src/components/PackageCard";
+import { categories, packages } from "../../src/data/mockData";
+import { useStore } from "../../src/store/useStore";
+
+const { width } = Dimensions.get("window");
+
+export default function CatalogScreen() {
+  const theme = useTheme();
+  const router = useRouter();
+  const user = useStore((state) => state.user);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("all");
+
+  // Filter logic
+  const filteredPackages = packages.filter((pkg) => {
+    const matchesCategory =
+      selectedCategory === "all" ||
+      pkg.region.toLowerCase() === selectedCategory.toLowerCase();
+    const matchesSearch = pkg.title
+      .toLowerCase()
+      .includes(searchQuery.toLowerCase());
+    return matchesCategory && matchesSearch;
+  });
+
+  return (
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
+    >
+      <ScrollView showsVerticalScrollIndicator={false}>
+        {/* Header */}
+        <View style={styles.header}>
+          <View>
+            <Text
+              variant="titleSmall"
+              style={{ color: theme.colors.secondary }}
+            >
+              Welcome back,
+            </Text>
+            <Text variant="headlineMedium" style={styles.userName}>
+              {user?.name || "Traveller"} 👋
+            </Text>
+          </View>
+          <TouchableOpacity onPress={() => router.push("/profile")}>
+            <Avatar.Image
+              size={44}
+              source={{
+                uri: user?.avatar || "https://i.pravatar.cc/300",
+              }}
+            />
+          </TouchableOpacity>
+        </View>
+
+        {/* Search Bar */}
+        <View style={styles.searchContainer}>
+          <Searchbar
+            placeholder="Where to next?"
+            onChangeText={setSearchQuery}
+            value={searchQuery}
+            style={styles.searchbar}
+            elevation={1}
+            iconColor={theme.colors.primary}
+          />
+        </View>
+
+        {/* Categories */}
+        <View style={styles.sectionHeader}>
+          <Text variant="titleLarge" style={styles.sectionTitle}>
+            Destinations
+          </Text>
+        </View>
+
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.categoryScroll}
+        >
+          <Chip
+            selected={selectedCategory === "all"}
+            onPress={() => setSelectedCategory("all")}
+            style={[
+              styles.categoryChip,
+              selectedCategory === "all" && {
+                backgroundColor: theme.colors.primary,
+              },
+            ]}
+            textStyle={selectedCategory === "all" ? { color: "#fff" } : {}}
+            showSelectedOverlay
+          >
+            All
+          </Chip>
+          {categories.map((cat) => (
+            <TouchableOpacity
+              key={cat.id}
+              onPress={() => setSelectedCategory(cat.id)}
+              style={styles.categoryItem}
+            >
+              <View
+                style={[
+                  styles.categoryImageContainer,
+                  selectedCategory === cat.id && styles.categorySelected,
+                  { borderColor: theme.colors.primary },
+                ]}
+              >
+                <Image
+                  source={{ uri: cat.image }}
+                  style={styles.categoryImage}
+                  contentFit="cover"
+                />
+                {selectedCategory === cat.id && (
+                  <View
+                    style={[
+                      styles.activeOverlay,
+                      { backgroundColor: theme.colors.primary },
+                    ]}
+                  />
+                )}
+              </View>
+              <Text
+                variant="labelMedium"
+                style={[
+                  styles.categoryName,
+                  selectedCategory === cat.id && {
+                    color: theme.colors.primary,
+                    fontWeight: "bold",
+                  },
+                ]}
+              >
+                {cat.name}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+
+        {/* Featured Packages */}
+        <View style={styles.sectionHeader}>
+          <Text variant="titleLarge" style={styles.sectionTitle}>
+            Recommended for You
+          </Text>
+          <TouchableOpacity>
+            <Text
+              variant="labelLarge"
+              style={{ color: theme.colors.primary, fontWeight: "bold" }}
+            >
+              See All
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.packagesGrid}>
+          {filteredPackages.map((item) => (
+            <PackageCard key={item.id} item={item} style={styles.packageCard} />
+          ))}
+        </View>
+
+        <View style={styles.footerSpacer} />
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    marginTop: 10,
+    marginBottom: 20,
+  },
+  userName: {
+    fontWeight: "bold",
+    color: "#1A1A2E",
+  },
+  searchContainer: {
+    paddingHorizontal: 20,
+    marginBottom: 24,
+  },
+  searchbar: {
+    backgroundColor: "#fff",
+    borderRadius: 12,
+  },
+  sectionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    marginBottom: 16,
+  },
+  sectionTitle: {
+    fontWeight: "bold",
+    color: "#1A1A2E",
+  },
+  categoryScroll: {
+    paddingHorizontal: 20,
+    gap: 16,
+    paddingBottom: 24,
+    alignItems: "center",
+  },
+  categoryChip: {
+    marginRight: 8,
+    height: 40,
+  },
+  categoryItem: {
+    alignItems: "center",
+    marginRight: 8,
+  },
+  categoryImageContainer: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    overflow: "hidden",
+    marginBottom: 8,
+    borderWidth: 2,
+    borderColor: "transparent",
+  },
+  categorySelected: {
+    // Border color applied via inline style
+  },
+  categoryImage: {
+    width: "100%",
+    height: "100%",
+  },
+  activeOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    opacity: 0.3,
+  },
+  categoryName: {
+    color: "#6B7280",
+  },
+  packagesGrid: {
+    paddingHorizontal: 20,
+  },
+  packageCard: {
+    marginBottom: 20,
+  },
+  footerSpacer: {
+    height: 100,
+  },
+});
