@@ -1,67 +1,82 @@
-name: Build Android APK
+name: Android APK Build
 
 on:
   push:
-    branches: [main, master]
+    branches:
+      - main
+      - feat/implement-react-native-video
   workflow_dispatch:
+    inputs:
+      profile:
+        description: "Build Profile"
+        required: true
+        default: "preview" 
+        type: choice
+        options:
+          - preview
 
 jobs:
   build:
-    runs-on: ubuntu-latest
-    
+    runs-on: self-hosted
+    env:
+      ANDROID_HOME: /home/builder/build-station/toolchains/android-sdk
+      ANDROID_SDK_ROOT: /home/builder/build-station/toolchains/android-sdk
+      # CRITICAL: These are needed for the app to work!
+      EXPO_PUBLIC_APPWRITE_ENDPOINT: ${{ secrets.EXPO_PUBLIC_APPWRITE_ENDPOINT }}
+      EXPO_PUBLIC_APPWRITE_PROJECT_ID: ${{ secrets.EXPO_PUBLIC_APPWRITE_PROJECT_ID }}
+      EXPO_PUBLIC_APPWRITE_PLATFORM: ${{ secrets.EXPO_PUBLIC_APPWRITE_PLATFORM }}
+
     steps:
-      - name: 🏗 Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: 🏗 Setup Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
-          cache: 'npm'
+          node-version: 22
+          cache: npm
 
-      - name: 🏗 Setup Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '17'
+      - name: Install dependencies
+        run: npm install
 
-      - name: 🏗 Setup Expo CLI
-        run: npm install -g expo-cli eas-cli
-
-      - name: 📦 Install dependencies
-        run: npm ci
-
-      - name: 🔧 Setup EAS
-        run: npx expo install expo-dev-client
+      - name: Expo prebuild (Android)
         env:
-          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          APP_VARIANT: preview
+        run: npx expo prebuild --platform android --clean
 
-      - name: 🏗 Build APK (Local)
+      - name: Configure Android SDK
         run: |
-          npx expo prebuild --platform android --clean
-          cd android && ./gradlew assembleRelease
+          echo "Using ANDROID_HOME=$ANDROID_HOME"
+          echo "sdk.dir=$ANDROID_HOME" > android/local.properties
+          chmod +x android/gradlew
+
+      - name: Build APK (Debug)
         env:
-          EXPO_PUBLIC_APPWRITE_ENDPOINT: ${{ secrets.APPWRITE_ENDPOINT }}
-          EXPO_PUBLIC_APPWRITE_PROJECT_ID: ${{ secrets.APPWRITE_PROJECT_ID }}
-          EXPO_PUBLIC_APPWRITE_DATABASE_ID: ${{ secrets.APPWRITE_DATABASE_ID }}
-
-      - name: 📱 Upload APK artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: travelling-release-${{ github.run_number }}
-          path: android/app/build/outputs/apk/release/*.apk
-
-      - name: ☁️ Upload to Cloudflare R2
-        uses: ryand56/r2-upload-action@latest
-        with:
-          r2-account-id: ${{ secrets.R2_ACCOUNT_ID }}
-          r2-access-key-id: ${{ secrets.R2_ACCESS_KEY_ID }}
-          r2-secret-access-key: ${{ secrets.R2_SECRET_ACCESS_KEY }}
-          r2-bucket: ${{ secrets.R2_BUCKET }}
-          source-dir: android/app/build/outputs/apk/release
-          destination-dir: travelling/builds
-
-      - name: 🎉 Build Complete
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
         run: |
-          echo "✅ APK built and uploaded!"
-          echo "📱 Download from your R2 bucket: travelling/builds/"
+          cd android
+          # We use assembleDebug to avoid keystore/signing errors
+          ./gradlew assembleDebug --no-daemon
+
+      - name: Send APK to Telegram
+        run: |
+          # 1. Identify the APK file
+          STAMP=$(date +%Y%m%d-%H%M)
+          APK_NAME=travelling-debug-$STAMP.apk
+
+          # 2. Rename the standard debug output
+          # Note: Debug output location is slightly different than release
+          mv android/app/build/outputs/apk/debug/app-debug.apk $APK_NAME
+
+          # 3. Send to Telegram
+          echo "Sending $APK_NAME to Telegram..."
+          curl -v -F "chat_id=${{ secrets.TELEGRAM_CHAT_ID }}" \
+               -F document=@$APK_NAME \
+               -F caption="🚀 Build Complete: $APK_NAME" \
+               https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendDocument
+
+      - name: Cleanup
+        if: always()
+        run: |
+          rm -rf android/
+          rm -rf node_modules/
