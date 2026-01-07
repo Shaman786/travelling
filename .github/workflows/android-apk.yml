@@ -77,7 +77,7 @@ jobs:
           
           # 3. Construct Download Link
           # Link format: DOMAIN / FOLDER / FILENAME
-          DOWNLOAD_URL="${{ env.DOWNLOAD_DOMAIN }}/travelling/$APK_NAME"
+          DOWNLOAD_URL="https://pub-1d4d217c0080414481b5a0f03becdb89.r2.dev"
           
           echo "Link: $DOWNLOAD_URL"
           
