@@ -25,10 +25,9 @@ jobs:
       EXPO_PUBLIC_APPWRITE_ENDPOINT: ${{ secrets.EXPO_PUBLIC_APPWRITE_ENDPOINT }}
       EXPO_PUBLIC_APPWRITE_PROJECT_ID: ${{ secrets.EXPO_PUBLIC_APPWRITE_PROJECT_ID }}
       EXPO_PUBLIC_APPWRITE_PLATFORM: ${{ secrets.EXPO_PUBLIC_APPWRITE_PLATFORM }}
-      # Worker/Public Domain for Downloads (Replace this!)
-      DOWNLOAD_DOMAIN: "https://tv-palace-builds.r2.cloudflarestorage.com" 
-      # ^ If you have a custom worker domain like dl.tvpalace.com, put it here.
-      # Otherwise, use your R2 public bucket link if enabled.
+      
+      # ✅ FIX 1: Put the Public Domain Here
+      DOWNLOAD_DOMAIN: "https://pub-1d4d217c0080414481b5a0f03becdb89.r2.dev"
 
     steps:
       - name: Checkout code
@@ -69,15 +68,14 @@ jobs:
           
           echo "🚀 Uploading $APK_NAME to R2..."
           
-          # 2. Call your Server Script
-          # We pass "travelling" as the 2nd argument so it goes into the 'travelling' folder in R2
+          # 2. Call your Server Script (puts it in 'travelling' folder)
           ~/build-station/scripts/upload_artifact.sh \
               ~/build-station/artifacts/$APK_NAME \
               "travelling"
           
           # 3. Construct Download Link
-          # Link format: DOMAIN / FOLDER / FILENAME
-          DOWNLOAD_URL="https://pub-1d4d217c0080414481b5a0f03becdb89.r2.dev"
+          # ✅ FIX 2: Combine Domain + Folder + Filename
+          DOWNLOAD_URL="${{ env.DOWNLOAD_DOMAIN }}/travelling/$APK_NAME"
           
           echo "Link: $DOWNLOAD_URL"
           
