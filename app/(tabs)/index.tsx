@@ -35,11 +35,16 @@ const DESTINATION_CATEGORIES = [
 export default function CatalogScreen() {
   const theme = useTheme();
   const router = useRouter();
-  const { user, comparisonList, clearComparison } = useStore((state) => ({
-    user: state.user,
-    comparisonList: state.comparisonList,
-    clearComparison: state.clearComparison,
-  }));
+  /*
+   * FIX: Split useStore selectors to avoid object identity loop.
+   * Do NOT return an object literal from useStore without useShallow.
+   */
+  const user = useStore((state) => state.user);
+  const comparisonList = useStore((state) => state.comparisonList);
+  const clearComparison = useStore((state) => state.clearComparison);
+
+  // const [searchQuery, setSearchQuery] = useState(""); <-- Leaving this next line alone
+
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [packages, setPackages] = useState<TravelPackage[]>([]);
