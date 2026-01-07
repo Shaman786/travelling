@@ -52,20 +52,27 @@ jobs:
           echo "sdk.dir=$ANDROID_HOME" > android/local.properties
           chmod +x android/gradlew
 
-      - name: Build APK (Debug)
+      - name: Configure Release to use Debug Keystore (Hack)
+        run: |
+          # Replace signingConfig signingConfigs.release with signingConfigs.debug in build.gradle
+          # This forces 'release' build type to use the 'debug' key
+          sed -i 's/signingConfig signingConfigs.release/signingConfig signingConfigs.debug/g' android/app/build.gradle || true
+          # Also ensure it is using debug config if release config is not strictly defined yet
+          # For Expo projects, usually release block exists.
+          
+      - name: Build APK (Release)
         run: |
           cd android
-          # We use assembleDebug with bundling enabled to make it standalone
-          ./gradlew assembleDebug -PbundleInDebug=true --no-daemon
+          ./gradlew assembleRelease --no-daemon
 
       - name: Upload APK to R2 & Notify Telegram
         run: |
           STAMP=$(date +%Y%m%d-%H%M)
-          APK_NAME=travelling-debug-$STAMP.apk
+          APK_NAME=travelling-release-$STAMP.apk
           
           # 1. Move to Artifacts Folder
           mkdir -p ~/build-station/artifacts
-          mv android/app/build/outputs/apk/debug/app-debug.apk ~/build-station/artifacts/$APK_NAME
+          mv android/app/build/outputs/apk/release/app-release.apk ~/build-station/artifacts/$APK_NAME
           
           echo "🚀 Uploading $APK_NAME to R2..."
           
