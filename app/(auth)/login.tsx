@@ -1,7 +1,9 @@
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
-import { StyleSheet, View } from "react-native";
+import * as SecureStore from "expo-secure-store";
+import React, { useCallback, useEffect, useState } from "react";
+import { StyleSheet, TouchableOpacity, View } from "react-native";
 import {
   Button,
   HelperText,
@@ -11,24 +13,62 @@ import {
 } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "../../src/hooks/useAuth";
+import { useBiometrics } from "../../src/hooks/useBiometrics";
 
 export default function LoginScreen() {
   const theme = useTheme();
   const router = useRouter();
   const { login: authLogin, error: authError, isLoading } = useAuth();
+  const { isCompatible, isEnrolled, authenticate, biometricType } =
+    useBiometrics();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  // Local loading state is handled by useAuth but we can sync if needed
-  // or just use isLoading from hook. Let's use hook's isLoading.
+  const [canBiometric, setCanBiometric] = useState(false);
+
+  const checkStoredCredentials = useCallback(async () => {
+    try {
+      if (isCompatible && isEnrolled) {
+        const storedEmail = await SecureStore.getItemAsync("user_email");
+        const storedPassword = await SecureStore.getItemAsync("user_password");
+        if (storedEmail && storedPassword) {
+          setCanBiometric(true);
+        }
+      }
+    } catch {}
+  }, [isCompatible, isEnrolled]);
+
+  useEffect(() => {
+    checkStoredCredentials();
+  }, [checkStoredCredentials]);
 
   const handleLogin = async () => {
     if (!email || !password) return;
 
-    // Call the real login method
     const success = await authLogin(email, password);
     if (success) {
+      // Save credentials for biometric next time
+      await SecureStore.setItemAsync("user_email", email);
+      await SecureStore.setItemAsync("user_password", password);
       router.replace("/(tabs)");
+    }
+  };
+
+  const handleBiometricLogin = async () => {
+    const authorized = await authenticate();
+    if (authorized) {
+      const storedEmail = await SecureStore.getItemAsync("user_email");
+      const storedPassword = await SecureStore.getItemAsync("user_password");
+      if (storedEmail && storedPassword) {
+        // Pre-fill fields for visual feedback
+        setEmail(storedEmail);
+        setPassword(storedPassword);
+        // Login
+        const success = await authLogin(storedEmail, storedPassword);
+        if (success) {
+          router.replace("/(tabs)");
+        }
+      }
     }
   };
 
@@ -38,7 +78,7 @@ export default function LoginScreen() {
     >
       <View style={styles.header}>
         <Image
-          source={require("../../assets/images/icon.png")} // Fallback if image doesn't exist, ensure icon is there or use text
+          source={require("../../assets/images/icon.png")}
           style={{ width: 80, height: 80, borderRadius: 16 }}
         />
         <Text
@@ -60,6 +100,7 @@ export default function LoginScreen() {
           mode="outlined"
           style={styles.input}
           autoCapitalize="none"
+          keyboardType="email-address"
         />
         <TextInput
           label="Password"
@@ -86,6 +127,23 @@ export default function LoginScreen() {
         >
           Sign In
         </Button>
+
+        {canBiometric && (
+          <TouchableOpacity
+            style={styles.biometricBtn}
+            onPress={handleBiometricLogin}
+            disabled={isLoading}
+          >
+            <MaterialCommunityIcons
+              name={biometricType === 2 ? "face-recognition" : "fingerprint"}
+              size={32}
+              color={theme.colors.primary}
+            />
+            <Text style={{ color: theme.colors.primary, marginTop: 4 }}>
+              Login with {biometricType === 2 ? "Face ID" : "Biometrics"}
+            </Text>
+          </TouchableOpacity>
+        )}
 
         <Button
           mode="text"
@@ -129,5 +187,10 @@ const styles = StyleSheet.create({
   },
   textButton: {
     marginTop: 8,
+  },
+  biometricBtn: {
+    alignItems: "center",
+    marginTop: 16,
+    padding: 8,
   },
 });

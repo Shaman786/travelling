@@ -1,0 +1,20 @@
+{
+  "welcome": "नमस्ते",
+  "search_placeholder": "अगली यात्रा कहाँ?",
+  "destinations": "गंतव्य",
+  "recommended": "आपके लिए अनुशंसित",
+  "see_all": "सभी देखें",
+  "home": "होम",
+  "my_trips": "मेरी यात्राएं",
+  "profile": "प्रोफ़ाइल",
+  "login": "लॉग इन",
+  "signup": "साइन अप",
+  "email": "ईमेल",
+  "password": "पासवर्ड",
+  "logout": "लॉग आउट",
+  "travel_vault": "ट्रैवल वाल्ट",
+  "support": "सहायता",
+  "change_password": "पासवर्ड बदलें",
+  "language": "भाषा",
+  "biometrics": "ब बायोमेट्रिक्स"
+}

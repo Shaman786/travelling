@@ -13,10 +13,11 @@ import type {
     BookingStatus,
     PackageFilters,
     PaginatedResponse,
+    Review,
     SavedTraveler,
     SupportTicket,
     TravelDocument,
-    TravelPackage
+    TravelPackage,
 } from "../types";
 import { APPWRITE_ENDPOINT, APPWRITE_PROJECT_ID, BUCKETS, DATABASE_ID, databases, ID, Query, storage, TABLES } from "./appwrite";
 
@@ -614,10 +615,65 @@ export const travelerService = {
   },
 };
 
+// ============ Review Service ============
+
+export const reviewService = {
+  /**
+   * Create a review
+   */
+  async createReview(reviewData: Omit<Review, "$id" | "createdAt" | "$createdAt" | "$updatedAt" | "$collectionId" | "$databaseId" | "$permissions" | "$sequence">): Promise<Review> {
+    try {
+      const now = new Date().toISOString();
+      const row = await databases.createDocument<Review>(
+        DATABASE_ID,
+        TABLES.REVIEWS,
+        ID.unique(),
+        {
+          ...reviewData,
+          createdAt: now,
+        }
+      );
+      
+      return {
+        ...row,
+        createdAt: row.$createdAt,
+      } as Review;
+    } catch (error: any) {
+      console.error("Create review error:", error);
+      throw new Error(error.message || "Failed to submit review");
+    }
+  },
+
+  /**
+   * Get reviews for a package
+   */
+  async getPackageReviews(packageId: string, limit = 20): Promise<Review[]> {
+    try {
+      const response = await databases.listDocuments<Review>(
+        DATABASE_ID,
+        TABLES.REVIEWS,
+        [
+          Query.equal("packageId", packageId),
+          Query.orderDesc("$createdAt"),
+          Query.limit(limit),
+        ]
+      );
+      return response.documents.map(review => ({
+        ...review,
+        createdAt: review.$createdAt,
+      })) as Review[];
+    } catch (error: any) {
+      console.error("Get reviews error:", error);
+      return [];
+    }
+  },
+};
+
 export default {
   packages: packageService,
   bookings: bookingService,
   documents: documentService,
   support: supportService,
   travelers: travelerService,
+  reviews: reviewService,
 };

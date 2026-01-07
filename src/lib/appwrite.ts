@@ -4,7 +4,7 @@ import "react-native-url-polyfill/auto";
 // Appwrite Configuration from environment variables
 const endpoint = process.env.EXPO_PUBLIC_APPWRITE_ENDPOINT || "";
 const projectId = process.env.EXPO_PUBLIC_APPWRITE_PROJECT_ID || "";
-const platform = process.env.EXPO_PUBLIC_APPWRITE_PLATFORM || "";
+const platform = process.env.EXPO_PUBLIC_APPWRITE_PLATFORM || "com.travels.travelling";
 
 // Export constants for use in other services
 export const APPWRITE_ENDPOINT = endpoint;
@@ -20,6 +20,7 @@ export const TABLES = {
   DOCUMENTS: "documents",
   TICKETS: "tickets",
   SAVED_TRAVELERS: "saved_travelers",
+  REVIEWS: "reviews",
 };
 
 export const BUCKETS = {

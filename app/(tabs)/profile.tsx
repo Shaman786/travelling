@@ -1,6 +1,7 @@
 import * as DocumentPicker from "expo-document-picker";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Linking, ScrollView, StyleSheet, View } from "react-native";
 import {
   Avatar,
@@ -26,16 +27,25 @@ interface UploadedFile {
 export default function ProfileScreen() {
   const theme = useTheme();
   const router = useRouter();
-  const { user } = useStore(); // Keep user from store
-  const { logout } = useAuth(); // Use useAuth for proper server logout
+  const { t, i18n } = useTranslation();
+  const { user } = useStore();
+  const { logout } = useAuth();
   const [documents, setDocuments] = useState<UploadedFile[]>([]);
 
+  const toggleLanguage = () => {
+    const current = i18n.language;
+    const next = current === "en" ? "hi" : current === "hi" ? "ar" : "en";
+    i18n.changeLanguage(next);
+  };
+
+  // ... (keep handleLogout, handleUpload, openWhatsApp)
   const handleLogout = async () => {
-    await logout(); // This now calls authService.logout() to delete server session
+    await logout();
     router.replace("/(auth)/login");
   };
 
   const handleUpload = async () => {
+    // ... implementation unchanged
     try {
       const result = await DocumentPicker.getDocumentAsync({
         type: ["application/pdf", "image/*"],
@@ -54,10 +64,9 @@ export default function ProfileScreen() {
     }
   };
 
-  // WhatsApp support - configure number in Admin Dashboard
   const openWhatsApp = () => {
-    // TODO: Get support number from backend/config
-    const supportNumber = ""; // Configure via Admin Dashboard
+    // ... implementation unchanged
+    const supportNumber = "";
     if (!supportNumber) {
       alert(
         "WhatsApp support not configured. Please use the Support Tickets feature."
@@ -99,7 +108,7 @@ export default function ProfileScreen() {
           {/* Travel Vault */}
           <Card style={styles.card} mode="elevated">
             <Card.Title
-              title="Travel Vault"
+              title={t("travel_vault")}
               subtitle="Store passports, visas & IDs"
               left={(props) => (
                 <Avatar.Icon
@@ -147,7 +156,7 @@ export default function ProfileScreen() {
             <Card.Content style={styles.supportContent}>
               <View style={{ flex: 1 }}>
                 <Text variant="titleMedium" style={{ fontWeight: "bold" }}>
-                  Need Help?
+                  {t("support")}
                 </Text>
                 <Text variant="bodySmall">
                   Chat with our travel experts instantly via WhatsApp.
@@ -168,6 +177,14 @@ export default function ProfileScreen() {
           <Surface style={styles.menuContainer} elevation={0}>
             <List.Section>
               <List.Subheader>Account Settings</List.Subheader>
+
+              <List.Item
+                title={`${t("language")}: ${i18n.language.toUpperCase()}`}
+                left={(props) => <List.Icon {...props} icon="translate" />}
+                right={(props) => <List.Icon {...props} icon="chevron-right" />}
+                onPress={toggleLanguage}
+              />
+
               <List.Item
                 title="Edit Profile"
                 left={(props) => (
@@ -183,7 +200,7 @@ export default function ProfileScreen() {
                 onPress={() => router.push("/favorites" as any)}
               />
               <List.Item
-                title="Change Password"
+                title={t("change_password")}
                 left={(props) => <List.Icon {...props} icon="lock-reset" />}
                 right={(props) => <List.Icon {...props} icon="chevron-right" />}
                 onPress={() => router.push("/profile/change-password" as any)}
@@ -196,7 +213,7 @@ export default function ProfileScreen() {
               />
               <Divider />
               <List.Item
-                title="Logout"
+                title={t("logout")}
                 left={(props) => (
                   <List.Icon
                     {...props}

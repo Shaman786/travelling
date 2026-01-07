@@ -1,0 +1,20 @@
+{
+  "welcome": "أهلاً بك",
+  "search_placeholder": "إلى أين بعد ذلك؟",
+  "destinations": "الوجهات",
+  "recommended": "موصى به لك",
+  "see_all": "عرض الكل",
+  "home": "الرئيسية",
+  "my_trips": "رحلاتي",
+  "profile": "الملف الشخصي",
+  "login": "تسجيل الدخول",
+  "signup": "إنشاء حساب",
+  "email": "البريد الإلكتروني",
+  "password": "كلمة المرور",
+  "logout": "تسجيل الخروج",
+  "travel_vault": "خزنة السفر",
+  "support": "الدعم",
+  "change_password": "تغيير كلمة المرور",
+  "language": "لغة",
+  "biometrics": "قياسات حيوية"
+}

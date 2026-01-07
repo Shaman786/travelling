@@ -98,6 +98,9 @@ interface AppState {
   // Favorites
   favoritePackages: string[];
 
+  // Comparison
+  comparisonList: string[]; // List of package IDs (max 2)
+
   // Actions - Auth
   setUser: (user: User | null) => void;
   login: (user: User) => void;
@@ -128,6 +131,11 @@ interface AppState {
   addFavorite: (packageId: string) => void;
   removeFavorite: (packageId: string) => void;
   toggleFavorite: (packageId: string) => void;
+
+  // Actions - Comparison
+  addToComparison: (packageId: string) => void;
+  removeFromComparison: (packageId: string) => void;
+  clearComparison: () => void;
 }
 
 // Initial trip draft state
@@ -157,6 +165,7 @@ export const useStore = create<AppState>()(
       bookingDraft: initialBookingDraft,
       bookedTrips: [],
       favoritePackages: [],
+      comparisonList: [],
 
       // Auth Actions
       setUser: (user) => set({ user, isLoggedIn: !!user }),
@@ -336,6 +345,25 @@ export const useStore = create<AppState>()(
             ? state.favoritePackages.filter((id) => id !== packageId)
             : [...state.favoritePackages, packageId],
         })),
+
+      // Comparison Actions
+      addToComparison: (packageId) =>
+        set((state) => {
+          if (state.comparisonList.includes(packageId)) return state;
+          if (state.comparisonList.length >= 2) {
+             // If full (2 items), replace the first one (FIFO)
+             const [, second] = state.comparisonList;
+             return { comparisonList: [second, packageId] };
+          }
+          return { comparisonList: [...state.comparisonList, packageId] };
+        }),
+
+      removeFromComparison: (packageId) =>
+        set((state) => ({
+          comparisonList: state.comparisonList.filter((id) => id !== packageId),
+        })),
+
+      clearComparison: () => set({ comparisonList: [] }),
     }),
     {
       name: "travelling-storage",

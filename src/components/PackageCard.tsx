@@ -16,8 +16,21 @@ interface PackageCardProps {
 const PackageCard = ({ item, style }: PackageCardProps) => {
   const theme = useTheme();
   const router = useRouter();
+  const activeComparison = useStore((state) =>
+    state.comparisonList.includes(item.$id)
+  );
   const favoritePackages = useStore((state) => state.favoritePackages);
   const toggleFavorite = useStore((state) => state.toggleFavorite);
+  const addToComparison = useStore((state) => state.addToComparison);
+  const removeFromComparison = useStore((state) => state.removeFromComparison);
+
+  const toggleCompare = () => {
+    if (activeComparison) {
+      removeFromComparison(item.$id);
+    } else {
+      addToComparison(item.$id);
+    }
+  };
 
   const isFavorite = favoritePackages.includes(item.$id);
 
@@ -46,18 +59,31 @@ const PackageCard = ({ item, style }: PackageCardProps) => {
           style={styles.gradient}
         />
 
-        {/* Favorite Heart Button */}
-        <TouchableOpacity
-          style={styles.favoriteButton}
-          onPress={handleToggleFavorite}
-          activeOpacity={0.7}
-        >
-          <MaterialCommunityIcons
-            name={isFavorite ? "heart" : "heart-outline"}
-            size={24}
-            color={isFavorite ? "#FF4757" : "#fff"}
-          />
-        </TouchableOpacity>
+        {/* Action Buttons */}
+        <View style={styles.actionsContainer}>
+          <TouchableOpacity
+            style={styles.iconButton}
+            onPress={toggleCompare}
+            activeOpacity={0.7}
+          >
+            <MaterialCommunityIcons
+              name={activeComparison ? "scale-balance" : "scale-balance"}
+              size={20}
+              color={activeComparison ? theme.colors.primary : "#fff"}
+            />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.iconButton}
+            onPress={handleToggleFavorite}
+            activeOpacity={0.7}
+          >
+            <MaterialCommunityIcons
+              name={isFavorite ? "heart" : "heart-outline"}
+              size={20}
+              color={isFavorite ? "#FF4757" : "#fff"}
+            />
+          </TouchableOpacity>
+        </View>
 
         <View style={styles.priceTag}>
           <Text style={styles.priceText}>${item.price.toLocaleString()}</Text>
@@ -131,16 +157,25 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 12,
     borderBottomRightRadius: 12,
   },
-  favoriteButton: {
+
+  actionsContainer: {
     position: "absolute",
     top: 12,
     right: 12,
+    flexDirection: "row",
+    gap: 8,
+  },
+  iconButton: {
     width: 36,
     height: 36,
     borderRadius: 18,
     backgroundColor: "rgba(0,0,0,0.4)",
     justifyContent: "center",
     alignItems: "center",
+  },
+  // Removed old favoriteButton style
+  activeButton: {
+    backgroundColor: "#fff",
   },
   priceTag: {
     position: "absolute",

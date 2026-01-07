@@ -4,7 +4,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import * as Print from "expo-print";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import * as Sharing from "expo-sharing";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { ActivityIndicator, ScrollView, StyleSheet, View } from "react-native";
 import {
   Button,
@@ -16,7 +16,9 @@ import {
 } from "react-native-paper";
 import { Toast } from "toastify-react-native";
 import { usePackage } from "../../src/hooks/usePackages";
+import { reviewService } from "../../src/lib/databaseService";
 import { useStore } from "../../src/store/useStore";
+import { Review } from "../../src/types";
 
 export default function PackageDetailsScreen() {
   const { id } = useLocalSearchParams();
@@ -24,6 +26,20 @@ export default function PackageDetailsScreen() {
   const router = useRouter();
   const bookTrip = useStore((state) => state.bookTrip);
   const user = useStore((state) => state.user);
+
+  const [reviews, setReviews] = useState<Review[]>([]);
+
+  // Fetch reviews when package loads
+  useEffect(() => {
+    if (id && typeof id === "string") {
+      fetchReviews(id);
+    }
+  }, [id]);
+
+  const fetchReviews = async (packageId: string) => {
+    const result = await reviewService.getPackageReviews(packageId);
+    setReviews(result);
+  };
 
   // Use the usePackage hook to fetch from Appwrite
   const {
@@ -270,6 +286,67 @@ export default function PackageDetailsScreen() {
             ))}
           </View>
 
+          {/* Reviews Section */}
+          <Divider style={styles.divider} />
+          <Text variant="titleLarge" style={styles.sectionTitle}>
+            Reviews
+          </Text>
+          {reviews.length === 0 ? (
+            <Text
+              variant="bodyMedium"
+              style={{ color: theme.colors.outline, fontStyle: "italic" }}
+            >
+              No reviews yet. Be the first to review!
+            </Text>
+          ) : (
+            reviews.map((review) => (
+              <Surface key={review.$id} style={styles.reviewCard} elevation={1}>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    marginBottom: 8,
+                  }}
+                >
+                  {review.userAvatar ? (
+                    <Image
+                      source={{ uri: review.userAvatar }}
+                      style={{ width: 32, height: 32, borderRadius: 16 }}
+                    />
+                  ) : (
+                    <MaterialCommunityIcons
+                      name="account-circle"
+                      size={32}
+                      color={theme.colors.secondary}
+                    />
+                  )}
+                  <View style={{ marginLeft: 12, flex: 1 }}>
+                    <Text variant="titleSmall" style={{ fontWeight: "bold" }}>
+                      {review.userName}
+                    </Text>
+                    <View style={{ flexDirection: "row" }}>
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <MaterialCommunityIcons
+                          key={star}
+                          name={star <= review.rating ? "star" : "star-outline"}
+                          size={14}
+                          color="#FFC107"
+                        />
+                      ))}
+                    </View>
+                  </View>
+                  <Text
+                    variant="labelSmall"
+                    style={{ color: theme.colors.outline }}
+                  >
+                    {new Date(review.createdAt).toLocaleDateString()}
+                  </Text>
+                </View>
+                <Text variant="bodyMedium">{review.comment}</Text>
+              </Surface>
+            ))
+          )}
+
           <View style={styles.bottomSpacer} />
         </View>
       </ScrollView>
@@ -445,5 +522,11 @@ const styles = StyleSheet.create({
   bookButton: {
     borderRadius: 12,
     paddingHorizontal: 8,
+  },
+  reviewCard: {
+    marginBottom: 12,
+    padding: 16,
+    borderRadius: 12,
+    backgroundColor: "#fff",
   },
 });

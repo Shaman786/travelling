@@ -10,7 +10,9 @@ import { useEffect, useRef } from "react";
 import { PaperProvider } from "react-native-paper";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import ToastManager from "toastify-react-native";
+import OfflineNotice from "../src/components/OfflineNotice";
 import { useAuth } from "../src/hooks/useAuth";
+import "../src/i18n"; // Init i18n
 import { theme } from "../src/theme";
 
 function AuthHandler() {
@@ -68,6 +70,7 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <StatusBar style="dark" />
       <PaperProvider theme={theme}>
+        <OfflineNotice />
         <AuthHandler />
         <Stack screenOptions={{ headerShown: false }}>
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />

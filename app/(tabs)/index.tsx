@@ -1,9 +1,15 @@
 import { useRouter } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
-import { ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
 import {
-  ActivityIndicator,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import {
   Avatar,
+  Button,
   Chip,
   Searchbar,
   Text,
@@ -11,6 +17,8 @@ import {
 } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 import PackageCard from "../../src/components/PackageCard";
+import { PackageCardSkeleton } from "../../src/components/Skeleton";
+import { useSearch } from "../../src/hooks/useSearch";
 import databaseService from "../../src/lib/databaseService";
 import { useStore } from "../../src/store/useStore";
 import type { TravelPackage } from "../../src/types";
@@ -27,41 +35,61 @@ const DESTINATION_CATEGORIES = [
 export default function CatalogScreen() {
   const theme = useTheme();
   const router = useRouter();
-  const user = useStore((state) => state.user);
+  const { user, comparisonList, clearComparison } = useStore((state) => ({
+    user: state.user,
+    comparisonList: state.comparisonList,
+    clearComparison: state.clearComparison,
+  }));
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [packages, setPackages] = useState<TravelPackage[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const { history, addToHistory } = useSearch();
 
   // Fetch packages from Appwrite
-  const fetchPackages = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const filters: any = {};
-      if (selectedCategory !== "all") {
-        filters.category = selectedCategory;
+  const fetchPackages = useCallback(
+    async (isRefresh = false) => {
+      if (!isRefresh) setIsLoading(true);
+      try {
+        const filters: any = {};
+        if (selectedCategory !== "all") {
+          filters.category = selectedCategory;
+        }
+        if (searchQuery) {
+          filters.search = searchQuery;
+        }
+        const response = await databaseService.packages.getPackages(filters);
+        setPackages(response.documents);
+      } catch {
+        // Fallback handled by service
+      } finally {
+        setIsLoading(false);
+        setRefreshing(false);
       }
-      if (searchQuery) {
-        filters.search = searchQuery;
-      }
-      const response = await databaseService.packages.getPackages(filters);
-      setPackages(response.documents);
-    } catch {
-      // Fallback handled by service
-    } finally {
-      setIsLoading(false);
-    }
-  }, [selectedCategory, searchQuery]);
+    },
+    [selectedCategory, searchQuery]
+  );
 
   useEffect(() => {
     fetchPackages();
+  }, [fetchPackages]);
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    fetchPackages(true);
   }, [fetchPackages]);
 
   return (
     <SafeAreaView
       style={[styles.container, { backgroundColor: theme.colors.background }]}
     >
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+      >
         {/* Header */}
         <View style={styles.header}>
           <View>
@@ -95,7 +123,30 @@ export default function CatalogScreen() {
             style={styles.searchbar}
             elevation={1}
             iconColor={theme.colors.primary}
+            onSubmitEditing={() => addToHistory(searchQuery)}
           />
+          {searchQuery === "" && history.length > 0 && (
+            <View style={styles.historyContainer}>
+              <Text
+                variant="labelMedium"
+                style={{ marginBottom: 8, color: "#666" }}
+              >
+                Recent Searches
+              </Text>
+              <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+                {history.map((term, index) => (
+                  <Chip
+                    key={index}
+                    onPress={() => setSearchQuery(term)}
+                    icon="history"
+                    compact
+                  >
+                    {term}
+                  </Chip>
+                ))}
+              </View>
+            </View>
+          )}
         </View>
         {/* Categories */}
         <View style={styles.sectionHeader}>
@@ -157,9 +208,11 @@ export default function CatalogScreen() {
         </View>
         <View style={styles.packagesGrid}>
           {isLoading ? (
-            <View style={{ padding: 40, alignItems: "center" }}>
-              <ActivityIndicator size="large" />
-            </View>
+            <>
+              <PackageCardSkeleton />
+              <PackageCardSkeleton />
+              <PackageCardSkeleton />
+            </>
           ) : packages.length === 0 ? (
             <View style={{ padding: 40, alignItems: "center" }}>
               <Text
@@ -181,6 +234,33 @@ export default function CatalogScreen() {
         </View>
         <View style={styles.footerSpacer} />
       </ScrollView>
+
+      {/* Comparison Floating Bar */}
+      {comparisonList.length > 0 && (
+        <View style={styles.compareBar}>
+          <Text style={{ color: "#fff", fontWeight: "bold" }}>
+            {comparisonList.length} packages selected
+          </Text>
+          <View style={{ flexDirection: "row", gap: 8 }}>
+            <Button
+              mode="contained"
+              onPress={() => clearComparison()}
+              style={{ backgroundColor: "#444" }}
+              compact
+            >
+              Clear
+            </Button>
+            <Button
+              mode="contained"
+              onPress={() => router.push("/compare" as any)}
+              buttonColor={theme.colors.primary}
+              compact
+            >
+              Compare
+            </Button>
+          </View>
+        </View>
+      )}
     </SafeAreaView>
   );
 }
@@ -188,6 +268,23 @@ export default function CatalogScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  compareBar: {
+    position: "absolute",
+    bottom: 20,
+    left: 20,
+    right: 20,
+    backgroundColor: "#1A1A2E",
+    padding: 12,
+    borderRadius: 12,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    elevation: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
   },
   header: {
     flexDirection: "row",
@@ -208,6 +305,9 @@ const styles = StyleSheet.create({
   searchbar: {
     backgroundColor: "#fff",
     borderRadius: 12,
+  },
+  historyContainer: {
+    marginTop: 12,
   },
   sectionHeader: {
     flexDirection: "row",

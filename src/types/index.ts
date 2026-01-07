@@ -159,6 +159,18 @@ export interface SupportTicket extends Models.Document {
   updatedAt: string;
 }
 
+// ============ Review Types ============
+export interface Review extends Models.Document {
+  userId: string;
+  userName: string;
+  userAvatar?: string;
+  packageId: string;
+  bookingId: string;
+  rating: number;
+  comment: string;
+  createdAt: string;
+}
+
 // ============ API Response Types ============
 export interface ApiError {
   message: string;

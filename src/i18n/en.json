@@ -1,0 +1,20 @@
+{
+  "welcome": "Welcome",
+  "search_placeholder": "Where to next?",
+  "destinations": "Destinations",
+  "recommended": "Recommended for You",
+  "see_all": "See All",
+  "home": "Home",
+  "my_trips": "My Trips",
+  "profile": "Profile",
+  "login": "Login",
+  "signup": "Sign Up",
+  "email": "Email",
+  "password": "Password",
+  "logout": "Logout",
+  "travel_vault": "Travel Vault",
+  "support": "Support",
+  "change_password": "Change Password",
+  "language": "Language",
+  "biometrics": "Biometrics"
+}

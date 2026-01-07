@@ -1,7 +1,7 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { format } from "date-fns";
 import { useRouter } from "expo-router";
-import React from "react";
+import React, { useState } from "react";
 import {
   Alert,
   FlatList,
@@ -19,6 +19,7 @@ import {
 } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Toast } from "toastify-react-native";
+import ReviewModal from "../../src/components/ReviewModal";
 import StepTracker from "../../src/components/StepTracker";
 import { BookedTrip, useStore } from "../../src/store/useStore";
 
@@ -27,6 +28,15 @@ export default function MyTripsScreen() {
   const router = useRouter();
   const bookedTrips = useStore((state) => state.bookedTrips);
   const removeBookedTrip = useStore((state) => state.removeBookedTrip);
+
+  const [isReviewModalVisible, setIsReviewModalVisible] = useState(false);
+  const [selectedTripForReview, setSelectedTripForReview] =
+    useState<BookedTrip | null>(null);
+
+  const handleOpenReview = (trip: BookedTrip) => {
+    setSelectedTripForReview(trip);
+    setIsReviewModalVisible(true);
+  };
 
   const handleCancelTrip = (tripId: string, tripTitle: string) => {
     Alert.alert(
@@ -156,15 +166,28 @@ export default function MyTripsScreen() {
                 </Text>
               </View>
 
-              <Button
-                mode="outlined"
-                compact
-                textColor={theme.colors.error}
-                style={{ borderColor: theme.colors.errorContainer }}
-                onPress={() => handleCancelTrip(trip.id, trip.packageTitle)}
-              >
-                Cancel
-              </Button>
+              {/* Show Review button if completed/ready_to_fly, else Cancel */}
+              {trip.status === "completed" || trip.status === "ready_to_fly" ? (
+                <Button
+                  mode="contained"
+                  compact
+                  buttonColor={theme.colors.secondary}
+                  onPress={() => handleOpenReview(trip)}
+                  icon="star"
+                >
+                  Review
+                </Button>
+              ) : (
+                <Button
+                  mode="outlined"
+                  compact
+                  textColor={theme.colors.error}
+                  style={{ borderColor: theme.colors.errorContainer }}
+                  onPress={() => handleCancelTrip(trip.id, trip.packageTitle)}
+                >
+                  Cancel
+                </Button>
+              )}
             </View>
           </Card.Content>
         </Card>
@@ -192,6 +215,20 @@ export default function MyTripsScreen() {
         ListEmptyComponent={renderEmptyState}
         showsVerticalScrollIndicator={false}
       />
+
+      {selectedTripForReview && (
+        <ReviewModal
+          visible={isReviewModalVisible}
+          onDismiss={() => setIsReviewModalVisible(false)}
+          bookingId={selectedTripForReview.id}
+          packageId={selectedTripForReview.packageId}
+          packageTitle={selectedTripForReview.packageTitle}
+          onSuccess={() => {
+            // Refresh trips or update UI if needed
+            // In a real app, we might mark this trip as reviewed to hide the button
+          }}
+        />
+      )}
     </SafeAreaView>
   );
 }
