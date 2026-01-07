@@ -55,7 +55,8 @@ jobs:
       - name: Build APK (Debug)
         run: |
           cd android
-          ./gradlew assembleDebug --no-daemon
+          # We use assembleDebug with bundling enabled to make it standalone
+          ./gradlew assembleDebug -PbundleInDebug=true --no-daemon
 
       - name: Upload APK to R2 & Notify Telegram
         run: |
