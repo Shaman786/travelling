@@ -1,4 +1,4 @@
-name: Android APK Build
+name: Android APK Build (R2)
 
 on:
   push:
@@ -21,10 +21,14 @@ jobs:
     env:
       ANDROID_HOME: /home/builder/build-station/toolchains/android-sdk
       ANDROID_SDK_ROOT: /home/builder/build-station/toolchains/android-sdk
-      # CRITICAL: These are needed for the app to work!
+      # Appwrite Secrets
       EXPO_PUBLIC_APPWRITE_ENDPOINT: ${{ secrets.EXPO_PUBLIC_APPWRITE_ENDPOINT }}
       EXPO_PUBLIC_APPWRITE_PROJECT_ID: ${{ secrets.EXPO_PUBLIC_APPWRITE_PROJECT_ID }}
       EXPO_PUBLIC_APPWRITE_PLATFORM: ${{ secrets.EXPO_PUBLIC_APPWRITE_PLATFORM }}
+      # Worker/Public Domain for Downloads (Replace this!)
+      DOWNLOAD_DOMAIN: "https://tv-palace-builds.r2.cloudflarestorage.com" 
+      # ^ If you have a custom worker domain like dl.tvpalace.com, put it here.
+      # Otherwise, use your R2 public bucket link if enabled.
 
     steps:
       - name: Checkout code
@@ -46,38 +50,41 @@ jobs:
 
       - name: Configure Android SDK
         run: |
-          echo "Using ANDROID_HOME=$ANDROID_HOME"
           echo "sdk.dir=$ANDROID_HOME" > android/local.properties
           chmod +x android/gradlew
 
       - name: Build APK (Debug)
-        env:
-          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
         run: |
           cd android
-          # We use assembleDebug to avoid keystore/signing errors
           ./gradlew assembleDebug --no-daemon
 
-      - name: Upload to transfer.sh & Send Link
+      - name: Upload APK to R2 & Notify Telegram
         run: |
           STAMP=$(date +%Y%m%d-%H%M)
           APK_NAME=travelling-debug-$STAMP.apk
           
-          # Rename the file
-          mv android/app/build/outputs/apk/debug/app-debug.apk $APK_NAME
+          # 1. Move to Artifacts Folder
+          mkdir -p ~/build-station/artifacts
+          mv android/app/build/outputs/apk/debug/app-debug.apk ~/build-station/artifacts/$APK_NAME
           
-          echo "Uploading $APK_NAME to transfer.sh..."
+          echo "🚀 Uploading $APK_NAME to R2..."
           
-          # Upload using curl and save the URL
-          # transfer.sh returns the URL as the response body
-          DOWNLOAD_URL=$(curl --upload-file ./$APK_NAME https://transfer.sh/$APK_NAME)
+          # 2. Call your Server Script
+          # We pass "travelling" as the 2nd argument so it goes into the 'travelling' folder in R2
+          ~/build-station/scripts/upload_artifact.sh \
+              ~/build-station/artifacts/$APK_NAME \
+              "travelling"
+          
+          # 3. Construct Download Link
+          # Link format: DOMAIN / FOLDER / FILENAME
+          DOWNLOAD_URL="${{ env.DOWNLOAD_DOMAIN }}/travelling/$APK_NAME"
           
           echo "Link: $DOWNLOAD_URL"
           
-          # Send the LINK to Telegram (instead of the file)
+          # 4. Send Link to Telegram
           curl -s -X POST https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage \
               -d chat_id=${{ secrets.TELEGRAM_CHAT_ID }} \
-              -d text="🚀 *Build Complete!* %0A📦 File: $APK_NAME %0A🔗 Download: $DOWNLOAD_URL" \
+              -d text="🚀 *Build Complete!* %0A📦 File: $APK_NAME %0A☁️ Stored in: R2/travelling %0A🔗 Download: $DOWNLOAD_URL" \
               -d parse_mode="Markdown"
 
       - name: Cleanup
