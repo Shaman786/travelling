@@ -11,11 +11,19 @@ import { supportService } from "../lib/databaseService";
 import { useStore } from "../store/useStore";
 import type { SupportTicket } from "../types";
 
+interface CreateTicketPayload {
+  subject: string;
+  message: string;
+  category: SupportTicket["category"];
+  priority: SupportTicket["priority"];
+  bookingId?: string;
+}
+
 interface UseSupportReturn {
   tickets: SupportTicket[];
   isLoading: boolean;
   error: string | null;
-  createTicket: (data: Omit<SupportTicket, "$id" | "createdAt" | "updatedAt" | "status" | "userId">) => Promise<boolean>;
+  createTicket: (data: CreateTicketPayload) => Promise<boolean>;
   fetchTickets: () => Promise<void>;
 }
 
@@ -41,6 +49,12 @@ export function useSupport(): UseSupportReturn {
         setTickets([
           {
             $id: "mock_ticket_1",
+            $collectionId: "mock_tickets",
+            $databaseId: "mock_db",
+            $permissions: [],
+            $sequence: 0,
+            $createdAt: new Date().toISOString(),
+            $updatedAt: new Date().toISOString(),
             userId: user.$id,
             subject: "Help with booking",
             message: "I need to change my dates",
@@ -60,7 +74,7 @@ export function useSupport(): UseSupportReturn {
   }, [user?.$id]);
 
   const createTicket = useCallback(async (
-    data: Omit<SupportTicket, "$id" | "createdAt" | "updatedAt" | "status" | "userId">
+    data: CreateTicketPayload
   ): Promise<boolean> => {
     if (!user?.$id) {
       setError("You must be logged in to create a ticket");
@@ -76,12 +90,18 @@ export function useSupport(): UseSupportReturn {
           ...data,
           userId: user.$id,
           status: "open",
-        });
+        } as any);
         setTickets((prev) => [newTicket, ...prev]);
       } else {
         // Mock creation
         const mockTicket: SupportTicket = {
           $id: `mock_ticket_${Date.now()}`,
+          $collectionId: "mock_tickets",
+          $databaseId: "mock_db",
+          $permissions: [],
+          $sequence: 0,
+          $createdAt: new Date().toISOString(),
+          $updatedAt: new Date().toISOString(),
           userId: user.$id,
           ...data,
           status: "open",

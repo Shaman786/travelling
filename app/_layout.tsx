@@ -1,10 +1,11 @@
+import * as Notifications from "expo-notifications";
 import {
   Stack,
   useRootNavigationState,
   useRouter,
   useSegments,
 } from "expo-router";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { PaperProvider } from "react-native-paper";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import ToastManager from "toastify-react-native";
@@ -38,6 +39,29 @@ function AuthHandler() {
 }
 
 export default function RootLayout() {
+  const notificationListener = useRef<Notifications.Subscription | null>(null);
+  const responseListener = useRef<Notifications.Subscription | null>(null);
+
+  useEffect(() => {
+    // This listener is fired whenever a notification is received while the app is foregrounded
+    notificationListener.current =
+      Notifications.addNotificationReceivedListener((notification) => {
+        console.log("Notification received:", notification);
+      });
+
+    // This listener is fired whenever a user taps on or interacts with a notification
+    responseListener.current =
+      Notifications.addNotificationResponseReceivedListener((response) => {
+        console.log("Notification response:", response);
+        // Example: router.push(response.notification.request.content.data.url);
+      });
+
+    return () => {
+      notificationListener.current?.remove();
+      responseListener.current?.remove();
+    };
+  }, []);
+
   return (
     <SafeAreaProvider>
       <PaperProvider theme={theme}>

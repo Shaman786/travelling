@@ -3,6 +3,8 @@
  * All entities match Appwrite collection schemas
  */
 
+import { Models } from "react-native-appwrite";
+
 // ============ User Types ============
 export interface User {
   $id: string;
@@ -11,6 +13,7 @@ export interface User {
   phone?: string;
   avatar?: string;
   createdAt: string;
+  pushToken?: string;
 }
 
 export interface AuthUser {
@@ -30,8 +33,7 @@ export interface PackageItineraryDay {
   activities: string[];
 }
 
-export interface TravelPackage {
-  $id: string;
+export interface TravelPackage extends Models.Document {
   title: string;
   destination: string;
   country: string;
@@ -63,8 +65,7 @@ export interface Traveler {
   type: "adult" | "child" | "infant";
 }
 
-export interface SavedTraveler {
-  $id: string;
+export interface SavedTraveler extends Models.Document {
   userId: string;
   name: string;
   age: number;
@@ -94,8 +95,7 @@ export interface StatusHistoryEntry {
   note?: string;
 }
 
-export interface Booking {
-  $id: string;
+export interface Booking extends Models.Document {
   userId: string;
   packageId: string;
   packageTitle: string;
@@ -117,8 +117,7 @@ export interface Booking {
 }
 
 // ============ Document (Travel Vault) Types ============
-export interface TravelDocument {
-  $id: string;
+export interface TravelDocument extends Models.Document {
   userId: string;
   fileName: string;
   fileId: string;
@@ -148,8 +147,7 @@ export interface BookingDraft {
 export type TicketStatus = "open" | "in_progress" | "resolved" | "closed";
 export type TicketPriority = "low" | "medium" | "high" | "urgent";
 
-export interface SupportTicket {
-  $id: string;
+export interface SupportTicket extends Models.Document {
   userId: string;
   subject: string;
   message: string;

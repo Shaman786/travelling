@@ -7,8 +7,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { authService } from "../lib/authService";
-import { useStore } from "../store/useStore";
-import type { User } from "../types";
+import { registerForPushNotificationsAsync, savePushToken } from "../lib/notifications";
+import { User, useStore } from "../store/useStore";
 
 interface UseAuthReturn {
   user: User | null;
@@ -51,6 +51,11 @@ export function useAuth(): UseAuthReturn {
             createdAt: new Date().toISOString(),
           });
         }
+        
+        // Register for push notifications
+        registerForPushNotificationsAsync().then(token => {
+          if (token) savePushToken(token, authUser.$id);
+        });
       }
     } catch {
       // No active session, that's fine
@@ -77,6 +82,11 @@ export function useAuth(): UseAuthReturn {
         name: authUser.name,
         email: authUser.email,
         createdAt: new Date().toISOString(),
+      });
+      
+      // Register for push notifications
+      registerForPushNotificationsAsync().then(token => {
+        if (token) savePushToken(token, authUser.$id);
       });
       
       return true;

@@ -3,9 +3,10 @@ import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import React from "react";
-import { StyleSheet, View } from "react-native";
+import { StyleSheet, TouchableOpacity, View } from "react-native";
 import { Card, Chip, Text, useTheme } from "react-native-paper";
-import { TravelPackage } from "../data/mockData";
+import { useStore } from "../store/useStore";
+import type { TravelPackage } from "../types";
 
 interface PackageCardProps {
   item: TravelPackage;
@@ -15,16 +16,27 @@ interface PackageCardProps {
 const PackageCard = ({ item, style }: PackageCardProps) => {
   const theme = useTheme();
   const router = useRouter();
+  const favoritePackages = useStore((state) => state.favoritePackages);
+  const toggleFavorite = useStore((state) => state.toggleFavorite);
+
+  const isFavorite = favoritePackages.includes(item.$id);
 
   const handlePress = () => {
-    router.push(`/details/${item.id}`);
+    router.push(`/details/${item.$id}`);
   };
+
+  const handleToggleFavorite = () => {
+    toggleFavorite(item.$id);
+  };
+
+  // Parse duration string (e.g., "7 Days / 6 Nights") to get days
+  const durationDays = item.duration?.match(/(\d+)\s*Days?/i)?.[1] || "N/A";
 
   return (
     <Card style={[styles.card, style]} onPress={handlePress} mode="elevated">
       <View style={styles.imageContainer}>
         <Image
-          source={{ uri: item.image }}
+          source={{ uri: item.imageUrl }}
           style={styles.image}
           contentFit="cover"
           transition={500}
@@ -33,10 +45,22 @@ const PackageCard = ({ item, style }: PackageCardProps) => {
           colors={["transparent", "rgba(0,0,0,0.7)"]}
           style={styles.gradient}
         />
+
+        {/* Favorite Heart Button */}
+        <TouchableOpacity
+          style={styles.favoriteButton}
+          onPress={handleToggleFavorite}
+          activeOpacity={0.7}
+        >
+          <MaterialCommunityIcons
+            name={isFavorite ? "heart" : "heart-outline"}
+            size={24}
+            color={isFavorite ? "#FF4757" : "#fff"}
+          />
+        </TouchableOpacity>
+
         <View style={styles.priceTag}>
-          <Text style={styles.priceText}>
-            ${item.base_price.toLocaleString()}
-          </Text>
+          <Text style={styles.priceText}>${item.price.toLocaleString()}</Text>
         </View>
         <Chip
           icon="clock-outline"
@@ -44,7 +68,7 @@ const PackageCard = ({ item, style }: PackageCardProps) => {
           textStyle={styles.chipText}
           compact
         >
-          {item.duration_days} Days
+          {durationDays} Days
         </Chip>
       </View>
 
@@ -67,7 +91,7 @@ const PackageCard = ({ item, style }: PackageCardProps) => {
               color={theme.colors.secondary}
             />
             <Text variant="bodySmall" style={{ color: theme.colors.secondary }}>
-              {item.region}
+              {item.destination}
             </Text>
           </View>
 
@@ -106,6 +130,17 @@ const styles = StyleSheet.create({
     height: "50%",
     borderBottomLeftRadius: 12,
     borderBottomRightRadius: 12,
+  },
+  favoriteButton: {
+    position: "absolute",
+    top: 12,
+    right: 12,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "rgba(0,0,0,0.4)",
+    justifyContent: "center",
+    alignItems: "center",
   },
   priceTag: {
     position: "absolute",

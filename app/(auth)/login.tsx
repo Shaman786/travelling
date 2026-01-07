@@ -20,7 +20,7 @@ export default function LoginScreen() {
     // Mock login delay
     setTimeout(() => {
       login({
-        id: "user_123",
+        $id: "user_123",
         name: "Fayaj J",
         email: email,
         avatar: "https://i.pravatar.cc/300",

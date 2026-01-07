@@ -1,20 +1,21 @@
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
+import { ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
 import {
-  Dimensions,
-  ScrollView,
-  StyleSheet,
-  TouchableOpacity,
-  View,
-} from "react-native";
-import { Avatar, Chip, Searchbar, Text, useTheme } from "react-native-paper";
+  ActivityIndicator,
+  Avatar,
+  Chip,
+  Searchbar,
+  Text,
+  useTheme,
+} from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 import PackageCard from "../../src/components/PackageCard";
-import { categories, packages } from "../../src/data/mockData";
+import { categories } from "../../src/data/mockData";
+import databaseService from "../../src/lib/databaseService";
 import { useStore } from "../../src/store/useStore";
-
-const { width } = Dimensions.get("window");
+import type { TravelPackage } from "../../src/types";
 
 export default function CatalogScreen() {
   const theme = useTheme();
@@ -22,17 +23,32 @@ export default function CatalogScreen() {
   const user = useStore((state) => state.user);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
+  const [packages, setPackages] = useState<TravelPackage[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Filter logic
-  const filteredPackages = packages.filter((pkg) => {
-    const matchesCategory =
-      selectedCategory === "all" ||
-      pkg.region.toLowerCase() === selectedCategory.toLowerCase();
-    const matchesSearch = pkg.title
-      .toLowerCase()
-      .includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesSearch;
-  });
+  // Fetch packages from Appwrite
+  const fetchPackages = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const filters: any = {};
+      if (selectedCategory !== "all") {
+        filters.category = selectedCategory;
+      }
+      if (searchQuery) {
+        filters.search = searchQuery;
+      }
+      const response = await databaseService.packages.getPackages(filters);
+      setPackages(response.documents);
+    } catch {
+      // Fallback handled by service
+    } finally {
+      setIsLoading(false);
+    }
+  }, [selectedCategory, searchQuery]);
+
+  useEffect(() => {
+    fetchPackages();
+  }, [fetchPackages]);
 
   return (
     <SafeAreaView
@@ -159,9 +175,28 @@ export default function CatalogScreen() {
         </View>
 
         <View style={styles.packagesGrid}>
-          {filteredPackages.map((item) => (
-            <PackageCard key={item.id} item={item} style={styles.packageCard} />
-          ))}
+          {isLoading ? (
+            <View style={{ padding: 40, alignItems: "center" }}>
+              <ActivityIndicator size="large" />
+            </View>
+          ) : packages.length === 0 ? (
+            <View style={{ padding: 40, alignItems: "center" }}>
+              <Text
+                variant="bodyMedium"
+                style={{ color: theme.colors.outline }}
+              >
+                No packages found. Try adjusting your search.
+              </Text>
+            </View>
+          ) : (
+            packages.map((item) => (
+              <PackageCard
+                key={item.$id}
+                item={item}
+                style={styles.packageCard}
+              />
+            ))
+          )}
         </View>
 
         <View style={styles.footerSpacer} />

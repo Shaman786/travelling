@@ -1,0 +1,188 @@
+{
+  "info": {
+    "name": "Travelling App - Appwrite TablesDB",
+    "description": "API collection for Appwrite TablesDB backend",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "endpoint",
+      "value": "https://fra.cloud.appwrite.io/v1",
+      "type": "string"
+    },
+    {
+      "key": "projectId",
+      "value": "YOUR_PROJECT_ID",
+      "type": "string"
+    },
+    {
+      "key": "databaseId",
+      "value": "travelling_db",
+      "type": "string"
+    },
+    {
+      "key": "apiKey",
+      "value": "YOUR_API_KEY",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Packages",
+      "item": [
+        {
+          "name": "List All Packages",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Appwrite-Project", "value": "{{projectId}}" },
+              { "key": "X-Appwrite-Key", "value": "{{apiKey}}" }
+            ],
+            "url": {
+              "raw": "{{endpoint}}/tablesdb/{{databaseId}}/tables/packages/rows",
+              "host": ["{{endpoint}}"],
+              "path": ["tablesdb", "{{databaseId}}", "tables", "packages", "rows"]
+            }
+          }
+        },
+        {
+          "name": "Get Package by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Appwrite-Project", "value": "{{projectId}}" },
+              { "key": "X-Appwrite-Key", "value": "{{apiKey}}" }
+            ],
+            "url": {
+              "raw": "{{endpoint}}/tablesdb/{{databaseId}}/tables/packages/rows/:rowId",
+              "host": ["{{endpoint}}"],
+              "path": ["tablesdb", "{{databaseId}}", "tables", "packages", "rows", ":rowId"],
+              "variable": [{ "key": "rowId", "value": "ROW_ID_HERE" }]
+            }
+          }
+        },
+        {
+          "name": "Create Package",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Appwrite-Project", "value": "{{projectId}}" },
+              { "key": "X-Appwrite-Key", "value": "{{apiKey}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rowId\": \"unique()\",\n  \"data\": {\n    \"title\": \"Dubai Luxury Escape\",\n    \"destination\": \"Dubai\",\n    \"country\": \"UAE\",\n    \"category\": \"luxury\",\n    \"price\": 899,\n    \"duration\": \"5 Days / 4 Nights\",\n    \"rating\": 4.9,\n    \"reviewCount\": 340,\n    \"imageUrl\": \"https://images.unsplash.com/photo-1512453979798-5ea904ac66de\",\n    \"images\": [\"https://images.unsplash.com/photo-1512453979798-5ea904ac66de\"],\n    \"description\": \"Witness the glitz and glamour of Dubai.\",\n    \"highlights\": [\"Burj Khalifa\", \"Desert Safari\"],\n    \"inclusions\": [\"5-Star Hotel\", \"Airport Transfers\"],\n    \"exclusions\": [\"Flights\", \"Visa\"],\n    \"itinerary\": \"[{\\\"day\\\":1,\\\"title\\\":\\\"Arrival\\\",\\\"description\\\":\\\"Arrive in Dubai\\\",\\\"activities\\\":[\\\"Airport Transfer\\\"]}]\",\n    \"isActive\": true\n  }\n}"
+            },
+            "url": {
+              "raw": "{{endpoint}}/tablesdb/{{databaseId}}/tables/packages/rows",
+              "host": ["{{endpoint}}"],
+              "path": ["tablesdb", "{{databaseId}}", "tables", "packages", "rows"]
+            }
+          }
+        },
+        {
+          "name": "Update Package",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Appwrite-Project", "value": "{{projectId}}" },
+              { "key": "X-Appwrite-Key", "value": "{{apiKey}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"data\": {\n    \"price\": 799,\n    \"rating\": 4.95\n  }\n}"
+            },
+            "url": {
+              "raw": "{{endpoint}}/tablesdb/{{databaseId}}/tables/packages/rows/:rowId",
+              "host": ["{{endpoint}}"],
+              "path": ["tablesdb", "{{databaseId}}", "tables", "packages", "rows", ":rowId"],
+              "variable": [{ "key": "rowId", "value": "ROW_ID_HERE" }]
+            }
+          }
+        },
+        {
+          "name": "Delete Package",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "X-Appwrite-Project", "value": "{{projectId}}" },
+              { "key": "X-Appwrite-Key", "value": "{{apiKey}}" }
+            ],
+            "url": {
+              "raw": "{{endpoint}}/tablesdb/{{databaseId}}/tables/packages/rows/:rowId",
+              "host": ["{{endpoint}}"],
+              "path": ["tablesdb", "{{databaseId}}", "tables", "packages", "rows", ":rowId"],
+              "variable": [{ "key": "rowId", "value": "ROW_ID_HERE" }]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bookings",
+      "item": [
+        {
+          "name": "List All Bookings",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Appwrite-Project", "value": "{{projectId}}" },
+              { "key": "X-Appwrite-Key", "value": "{{apiKey}}" }
+            ],
+            "url": {
+              "raw": "{{endpoint}}/tablesdb/{{databaseId}}/tables/bookings/rows",
+              "host": ["{{endpoint}}"],
+              "path": ["tablesdb", "{{databaseId}}", "tables", "bookings", "rows"]
+            }
+          }
+        },
+        {
+          "name": "Create Booking",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Appwrite-Project", "value": "{{projectId}}" },
+              { "key": "X-Appwrite-Key", "value": "{{apiKey}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rowId\": \"unique()\",\n  \"data\": {\n    \"userId\": \"user_123\",\n    \"packageId\": \"PACKAGE_ID\",\n    \"packageTitle\": \"Dubai Luxury Escape\",\n    \"destination\": \"Dubai\",\n    \"departureDate\": \"2026-02-01T00:00:00.000Z\",\n    \"returnDate\": \"2026-02-05T00:00:00.000Z\",\n    \"travelers\": \"[{\\\"id\\\":\\\"t1\\\",\\\"name\\\":\\\"John Doe\\\",\\\"age\\\":30,\\\"type\\\":\\\"adult\\\"}]\",\n    \"adultsCount\": 1,\n    \"childrenCount\": 0,\n    \"infantsCount\": 0,\n    \"totalPrice\": 899,\n    \"status\": \"processing\",\n    \"statusHistory\": \"[{\\\"status\\\":\\\"processing\\\",\\\"date\\\":\\\"2026-01-07T00:00:00.000Z\\\"}]\",\n    \"paymentStatus\": \"paid\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{endpoint}}/tablesdb/{{databaseId}}/tables/bookings/rows",
+              "host": ["{{endpoint}}"],
+              "path": ["tablesdb", "{{databaseId}}", "tables", "bookings", "rows"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "List All Users",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Appwrite-Project", "value": "{{projectId}}" },
+              { "key": "X-Appwrite-Key", "value": "{{apiKey}}" }
+            ],
+            "url": {
+              "raw": "{{endpoint}}/tablesdb/{{databaseId}}/tables/users/rows",
+              "host": ["{{endpoint}}"],
+              "path": ["tablesdb", "{{databaseId}}", "tables", "users", "rows"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

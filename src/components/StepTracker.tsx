@@ -3,13 +3,6 @@ import React from "react";
 import { StyleSheet, View } from "react-native";
 import { Text, useTheme } from "react-native-paper";
 
-interface Step {
-  title: string;
-  status: "completed" | "current" | "upcoming";
-  date?: string;
-  description?: string;
-}
-
 interface StepTrackerProps {
   currentStatus: string;
 }

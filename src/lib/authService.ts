@@ -9,7 +9,7 @@
  */
 
 import type { AuthUser, User } from "../types";
-import { account, COLLECTIONS, DATABASE_ID, databases, ID } from "./appwrite";
+import { account, DATABASE_ID, databases, ID, TABLES } from "./appwrite";
 
 // ============ Auth Service ============
 
@@ -20,22 +20,39 @@ export const authService = {
   async register(email: string, password: string, name: string): Promise<AuthUser> {
     try {
       // Create the account
-      const newAccount = await account.create(ID.unique(), email, password, name);
+      const newAccount = await account.create({
+        userId: ID.unique(),
+        email,
+        password,
+        name
+      });
       
       // Automatically log in after registration
-      await account.createEmailPasswordSession(email, password);
+      await account.createEmailPasswordSession({
+        email,
+        password
+      });
       
       // Create user profile in database
-      await databases.createDocument(
-        DATABASE_ID,
-        COLLECTIONS.USERS,
-        newAccount.$id,
-        {
+      await databases.createDocument({
+        databaseId: DATABASE_ID,
+        collectionId: TABLES.USERS,
+        documentId: newAccount.$id,
+        data: {
           name,
           email,
           createdAt: new Date().toISOString(),
         }
-      );
+      });
+      
+      // Send verification email
+      try {
+        await account.createEmailVerification({
+          url: "travelling://verify"
+        });
+      } catch (e) {
+        console.log("Failed to send verification email:", e);
+      }
       
       return newAccount as unknown as AuthUser;
     } catch (error: any) {
@@ -49,7 +66,10 @@ export const authService = {
    */
   async login(email: string, password: string): Promise<AuthUser> {
     try {
-      await account.createEmailPasswordSession(email, password);
+      await account.createEmailPasswordSession({
+        email,
+        password
+      });
       const user = await account.get();
       return user as unknown as AuthUser;
     } catch (error: any) {
@@ -75,11 +95,11 @@ export const authService = {
    */
   async getUserProfile(userId: string): Promise<User | null> {
     try {
-      const profile = await databases.getDocument(
-        DATABASE_ID,
-        COLLECTIONS.USERS,
-        userId
-      );
+      const profile = await databases.getDocument({
+        databaseId: DATABASE_ID,
+        collectionId: TABLES.USERS,
+        documentId: userId
+      });
       return profile as unknown as User;
     } catch {
       return null;
@@ -91,12 +111,12 @@ export const authService = {
    */
   async updateProfile(userId: string, updates: Partial<User>): Promise<User> {
     try {
-      const updated = await databases.updateDocument(
-        DATABASE_ID,
-        COLLECTIONS.USERS,
-        userId,
-        updates
-      );
+      const updated = await databases.updateDocument({
+        databaseId: DATABASE_ID,
+        collectionId: TABLES.USERS,
+        documentId: userId,
+        data: updates
+      });
       return updated as unknown as User;
     } catch (error: any) {
       console.error("Update profile error:", error);
@@ -109,7 +129,7 @@ export const authService = {
    */
   async logout(): Promise<void> {
     try {
-      await account.deleteSession("current");
+      await account.deleteSession({ sessionId: "current" });
     } catch (error: any) {
       console.error("Logout error:", error);
       // Don't throw - user might already be logged out
@@ -121,10 +141,10 @@ export const authService = {
    */
   async requestPasswordReset(email: string): Promise<void> {
     try {
-      await account.createRecovery(
+      await account.createRecovery({
         email,
-        "travelling://reset-password" // Deep link URL
-      );
+        url: "travelling://reset-password"
+      });
     } catch (error: any) {
       console.error("Password reset error:", error);
       throw new Error(error.message || "Failed to send reset email");
@@ -140,7 +160,11 @@ export const authService = {
     newPassword: string
   ): Promise<void> {
     try {
-      await account.updateRecovery(userId, secret, newPassword);
+      await account.updateRecovery({
+        userId,
+        secret,
+        password: newPassword,
+      });
     } catch (error: any) {
       console.error("Password reset error:", error);
       throw new Error(error.message || "Failed to reset password");
@@ -164,7 +188,7 @@ export const authService = {
    */
   async updateName(name: string): Promise<void> {
     try {
-      await account.updateName(name);
+      await account.updateName({ name });
     } catch (error: any) {
       console.error("Update name error:", error);
       throw new Error(error.message || "Failed to update name");
@@ -176,7 +200,7 @@ export const authService = {
    */
   async updateEmail(email: string, password: string): Promise<void> {
     try {
-      await account.updateEmail(email, password);
+      await account.updateEmail({ email, password });
     } catch (error: any) {
       console.error("Update email error:", error);
       throw new Error(error.message || "Failed to update email");
@@ -188,7 +212,10 @@ export const authService = {
    */
   async changePassword(oldPassword: string, newPassword: string): Promise<void> {
     try {
-      await account.updatePassword(newPassword, oldPassword);
+      await account.updatePassword({
+        password: newPassword,
+        oldPassword
+      });
     } catch (error: any) {
       console.error("Change password error:", error);
       throw new Error(error.message || "Failed to change password");
@@ -217,6 +244,34 @@ export const authService = {
     } catch (error: any) {
       console.error("Create JWT error:", error);
       throw new Error(error.message || "Failed to create JWT");
+    }
+  },
+  /**
+   * Send verification email
+   */
+  async sendVerificationEmail(): Promise<void> {
+    try {
+      await account.createEmailVerification({
+        url: "travelling://verify"
+      });
+    } catch (error: any) {
+      console.error("Verification email error:", error);
+      throw new Error(error.message || "Failed to send verification email");
+    }
+  },
+
+  /**
+   * Complete email verification
+   */
+  async completeVerification(userId: string, secret: string): Promise<void> {
+    try {
+      await account.updateEmailVerification({
+        userId,
+        secret
+      });
+    } catch (error: any) {
+      console.error("Verification error:", error);
+      throw new Error(error.message || "Failed to verify email");
     }
   },
 };

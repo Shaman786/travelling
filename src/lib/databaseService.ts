@@ -1,5 +1,5 @@
 /**
- * Appwrite Database Services
+ * Appwrite TablesDB Services
  * 
  * Handles all database operations for:
  * - Travel Packages
@@ -18,7 +18,7 @@ import type {
     TravelDocument,
     TravelPackage
 } from "../types";
-import { APPWRITE_ENDPOINT, APPWRITE_PROJECT_ID, BUCKETS, COLLECTIONS, DATABASE_ID, databases, ID, Query, storage } from "./appwrite";
+import { APPWRITE_ENDPOINT, APPWRITE_PROJECT_ID, BUCKETS, DATABASE_ID, databases, ID, Query, storage, TABLES } from "./appwrite";
 
 // ============ Package Service ============
 
@@ -64,19 +64,25 @@ export const packageService = {
             queries.push(Query.orderDesc("rating"));
             break;
           case "newest":
-            queries.push(Query.orderDesc("createdAt"));
+            queries.push(Query.orderDesc("$createdAt"));
             break;
         }
       }
 
-      const response = await databases.listDocuments(
+      const response = await databases.listDocuments<TravelPackage>(
         DATABASE_ID,
-        COLLECTIONS.PACKAGES,
+        TABLES.PACKAGES,
         queries
       );
 
+      // Parse itinerary JSON string to object
+      const documents = response.documents.map(pkg => ({
+        ...pkg,
+        itinerary: typeof pkg.itinerary === "string" ? JSON.parse(pkg.itinerary || "[]") : pkg.itinerary,
+      }));
+
       return {
-        documents: response.documents as unknown as TravelPackage[],
+        documents: documents as TravelPackage[],
         total: response.total,
       };
     } catch (error: any) {
@@ -90,12 +96,15 @@ export const packageService = {
    */
   async getPackageById(packageId: string): Promise<TravelPackage | null> {
     try {
-      const doc = await databases.getDocument(
+      const pkg = await databases.getDocument<TravelPackage>(
         DATABASE_ID,
-        COLLECTIONS.PACKAGES,
+        TABLES.PACKAGES,
         packageId
       );
-      return doc as unknown as TravelPackage;
+      return {
+        ...pkg,
+        itinerary: typeof pkg.itinerary === "string" ? JSON.parse(pkg.itinerary || "[]") : pkg.itinerary,
+      } as TravelPackage;
     } catch {
       return null;
     }
@@ -106,16 +115,19 @@ export const packageService = {
    */
   async getPackagesByCategory(category: string, limit = 10): Promise<TravelPackage[]> {
     try {
-      const response = await databases.listDocuments(
+      const response = await databases.listDocuments<TravelPackage>(
         DATABASE_ID,
-        COLLECTIONS.PACKAGES,
+        TABLES.PACKAGES,
         [
           Query.equal("isActive", true),
           Query.equal("category", category),
           Query.limit(limit),
         ]
       );
-      return response.documents as unknown as TravelPackage[];
+      return response.documents.map(pkg => ({
+        ...pkg,
+        itinerary: typeof pkg.itinerary === "string" ? JSON.parse(pkg.itinerary || "[]") : pkg.itinerary,
+      })) as TravelPackage[];
     } catch (error: any) {
       console.error("Get packages by category error:", error);
       return [];
@@ -127,16 +139,19 @@ export const packageService = {
    */
   async getFeaturedPackages(limit = 5): Promise<TravelPackage[]> {
     try {
-      const response = await databases.listDocuments(
+      const response = await databases.listDocuments<TravelPackage>(
         DATABASE_ID,
-        COLLECTIONS.PACKAGES,
+        TABLES.PACKAGES,
         [
           Query.equal("isActive", true),
           Query.orderDesc("rating"),
           Query.limit(limit),
         ]
       );
-      return response.documents as unknown as TravelPackage[];
+      return response.documents.map(pkg => ({
+        ...pkg,
+        itinerary: typeof pkg.itinerary === "string" ? JSON.parse(pkg.itinerary || "[]") : pkg.itinerary,
+      })) as TravelPackage[];
     } catch (error: any) {
       console.error("Get featured packages error:", error);
       return [];
@@ -148,20 +163,19 @@ export const packageService = {
    */
   async searchPackages(query: string, limit = 20): Promise<TravelPackage[]> {
     try {
-      const response = await databases.listDocuments(
+      const response = await databases.listDocuments<TravelPackage>(
         DATABASE_ID,
-        COLLECTIONS.PACKAGES,
+        TABLES.PACKAGES,
         [
           Query.equal("isActive", true),
-          Query.or([
-            Query.search("title", query),
-            Query.search("destination", query),
-            Query.search("country", query),
-          ]),
+          Query.search("title", query),
           Query.limit(limit),
         ]
       );
-      return response.documents as unknown as TravelPackage[];
+      return response.documents.map(pkg => ({
+        ...pkg,
+        itinerary: typeof pkg.itinerary === "string" ? JSON.parse(pkg.itinerary || "[]") : pkg.itinerary,
+      })) as TravelPackage[];
     } catch (error: any) {
       console.error("Search packages error:", error);
       return [];
@@ -175,20 +189,32 @@ export const bookingService = {
   /**
    * Create a new booking
    */
-  async createBooking(bookingData: Omit<Booking, "$id" | "createdAt" | "updatedAt">): Promise<Booking> {
+  async createBooking(bookingData: Omit<Booking, "$id" | "createdAt" | "updatedAt" | "$createdAt" | "$updatedAt" | "$collectionId" | "$databaseId" | "$permissions" | "$sequence">): Promise<Booking> {
     try {
       const now = new Date().toISOString();
-      const doc = await databases.createDocument(
+      const data = {
+        ...bookingData,
+        // Stringify complex objects for TablesDB
+        travelers: JSON.stringify(bookingData.travelers),
+        statusHistory: JSON.stringify(bookingData.statusHistory),
+        createdAt: now,
+        updatedAt: now,
+      };
+      
+      const row = await databases.createDocument<Booking>(
         DATABASE_ID,
-        COLLECTIONS.BOOKINGS,
+        TABLES.BOOKINGS,
         ID.unique(),
-        {
-          ...bookingData,
-          createdAt: now,
-          updatedAt: now,
-        }
+        data as any
       );
-      return doc as unknown as Booking;
+
+      return {
+        ...row,
+        travelers: typeof row.travelers === "string" ? JSON.parse(row.travelers) : row.travelers,
+        statusHistory: typeof row.statusHistory === "string" ? JSON.parse(row.statusHistory) : row.statusHistory,
+        createdAt: row.$createdAt,
+        updatedAt: row.$updatedAt,
+      } as Booking;
     } catch (error: any) {
       console.error("Create booking error:", error);
       throw new Error(error.message || "Failed to create booking");
@@ -200,15 +226,21 @@ export const bookingService = {
    */
   async getUserBookings(userId: string): Promise<Booking[]> {
     try {
-      const response = await databases.listDocuments(
+      const response = await databases.listDocuments<Booking>(
         DATABASE_ID,
-        COLLECTIONS.BOOKINGS,
+        TABLES.BOOKINGS,
         [
           Query.equal("userId", userId),
-          Query.orderDesc("createdAt"),
+          Query.orderDesc("$createdAt"),
         ]
       );
-      return response.documents as unknown as Booking[];
+      return response.documents.map(booking => ({
+        ...booking,
+        travelers: typeof booking.travelers === "string" ? JSON.parse(booking.travelers) : booking.travelers,
+        statusHistory: typeof booking.statusHistory === "string" ? JSON.parse(booking.statusHistory) : booking.statusHistory,
+        createdAt: booking.$createdAt,
+        updatedAt: booking.$updatedAt,
+      })) as Booking[];
     } catch (error: any) {
       console.error("Get user bookings error:", error);
       return [];
@@ -220,12 +252,18 @@ export const bookingService = {
    */
   async getBookingById(bookingId: string): Promise<Booking | null> {
     try {
-      const doc = await databases.getDocument(
+      const booking = await databases.getDocument<Booking>(
         DATABASE_ID,
-        COLLECTIONS.BOOKINGS,
+        TABLES.BOOKINGS,
         bookingId
       );
-      return doc as unknown as Booking;
+      return {
+        ...booking,
+        travelers: typeof booking.travelers === "string" ? JSON.parse(booking.travelers) : booking.travelers,
+        statusHistory: typeof booking.statusHistory === "string" ? JSON.parse(booking.statusHistory) : booking.statusHistory,
+        createdAt: booking.$createdAt,
+        updatedAt: booking.$updatedAt,
+      } as Booking;
     } catch {
       return null;
     }
@@ -250,17 +288,26 @@ export const bookingService = {
         note,
       };
 
-      const doc = await databases.updateDocument(
+      const updatedHistory = [...current.statusHistory, statusHistoryEntry];
+
+      const row = await databases.updateDocument<Booking>(
         DATABASE_ID,
-        COLLECTIONS.BOOKINGS,
+        TABLES.BOOKINGS,
         bookingId,
         {
           status,
-          statusHistory: [...current.statusHistory, statusHistoryEntry],
+          statusHistory: JSON.stringify(updatedHistory),
           updatedAt: new Date().toISOString(),
-        }
+        } as any
       );
-      return doc as unknown as Booking;
+      
+      return {
+        ...row,
+        travelers: typeof row.travelers === "string" ? JSON.parse(row.travelers) : row.travelers,
+        statusHistory: typeof row.statusHistory === "string" ? JSON.parse(row.statusHistory) : row.statusHistory,
+        createdAt: row.$createdAt,
+        updatedAt: row.$updatedAt,
+      } as Booking;
     } catch (error: any) {
       console.error("Update booking status error:", error);
       throw new Error(error.message || "Failed to update booking status");
@@ -276,9 +323,9 @@ export const bookingService = {
     paymentId?: string
   ): Promise<Booking> {
     try {
-      const doc = await databases.updateDocument(
+      const row = await databases.updateDocument<Booking>(
         DATABASE_ID,
-        COLLECTIONS.BOOKINGS,
+        TABLES.BOOKINGS,
         bookingId,
         {
           paymentStatus,
@@ -286,7 +333,13 @@ export const bookingService = {
           updatedAt: new Date().toISOString(),
         }
       );
-      return doc as unknown as Booking;
+      return {
+        ...row,
+        travelers: typeof row.travelers === "string" ? JSON.parse(row.travelers) : row.travelers,
+        statusHistory: typeof row.statusHistory === "string" ? JSON.parse(row.statusHistory) : row.statusHistory,
+        createdAt: row.$createdAt,
+        updatedAt: row.$updatedAt,
+      } as Booking;
     } catch (error: any) {
       console.error("Update payment status error:", error);
       throw new Error(error.message || "Failed to update payment status");
@@ -305,7 +358,7 @@ export const bookingService = {
 
 export const documentService = {
   /**
-   * Upload a document to storage and save metadata
+   * Upload a document - Note: File upload requires Storage API
    */
   async uploadDocument(
     userId: string,
@@ -317,30 +370,32 @@ export const documentService = {
     }
   ): Promise<TravelDocument> {
     try {
-      // Upload file to storage
-      const uploadedFile = await storage.createFile(
-        BUCKETS.TRAVEL_DOCUMENTS,
-        ID.unique(),
-        {
-          uri: file.uri,
-          name: file.name,
-          type: file.type,
-          size: file.size,
-        } as any
-      );
+      // Construct file object for React Native
+      const filePayload = {
+        name: file.name,
+        type: file.type,
+        uri: file.uri,
+        size: file.size,
+      };
 
-      // Get file URL - Construct manually to avoid SDK type issues
-      const fileUrl = `${APPWRITE_ENDPOINT}/storage/buckets/${BUCKETS.TRAVEL_DOCUMENTS}/files/${uploadedFile.$id}/view?project=${APPWRITE_PROJECT_ID}`;
+      // Upload to Storage
+      const uploaded = await storage.createFile({
+        bucketId: BUCKETS.TRAVEL_DOCUMENTS,
+        fileId: ID.unique(),
+        file: filePayload as any,
+      });
 
-      // Save metadata to database
-      const doc = await databases.createDocument(
+      // Get view URL manually as SDK returns ArrayBuffer
+      const fileUrl = `${APPWRITE_ENDPOINT}/storage/buckets/${BUCKETS.TRAVEL_DOCUMENTS}/files/${uploaded.$id}/view?project=${APPWRITE_PROJECT_ID}`;
+      
+      const row = await databases.createDocument<TravelDocument>(
         DATABASE_ID,
-        COLLECTIONS.DOCUMENTS,
+        TABLES.DOCUMENTS,
         ID.unique(),
         {
           userId,
           fileName: file.name,
-          fileId: uploadedFile.$id,
+          fileId: uploaded.$id,
           fileUrl: fileUrl,
           fileType: file.type,
           fileSize: file.size,
@@ -348,7 +403,10 @@ export const documentService = {
         }
       );
 
-      return doc as unknown as TravelDocument;
+      return {
+        ...row,
+        uploadedAt: row.$createdAt,
+      } as TravelDocument;
     } catch (error: any) {
       console.error("Upload document error:", error);
       throw new Error(error.message || "Failed to upload document");
@@ -360,15 +418,18 @@ export const documentService = {
    */
   async getUserDocuments(userId: string): Promise<TravelDocument[]> {
     try {
-      const response = await databases.listDocuments(
+      const response = await databases.listDocuments<TravelDocument>(
         DATABASE_ID,
-        COLLECTIONS.DOCUMENTS,
+        TABLES.DOCUMENTS,
         [
           Query.equal("userId", userId),
-          Query.orderDesc("uploadedAt"),
+          Query.orderDesc("$createdAt"),
         ]
       );
-      return response.documents as unknown as TravelDocument[];
+      return response.documents.map(doc => ({
+        ...doc,
+        uploadedAt: doc.$createdAt,
+      })) as TravelDocument[];
     } catch (error: any) {
       console.error("Get user documents error:", error);
       return [];
@@ -380,13 +441,19 @@ export const documentService = {
    */
   async deleteDocument(documentId: string, fileId: string): Promise<void> {
     try {
-      // Delete from storage
-      await storage.deleteFile(BUCKETS.TRAVEL_DOCUMENTS, fileId);
-      
-      // Delete metadata
+      if (fileId) {
+        try {
+          await storage.deleteFile({
+            bucketId: BUCKETS.TRAVEL_DOCUMENTS,
+            fileId: fileId,
+          });
+        } catch (e) {
+          console.warn("Failed to delete file from storage:", e);
+        }
+      }
       await databases.deleteDocument(
         DATABASE_ID,
-        COLLECTIONS.DOCUMENTS,
+        TABLES.DOCUMENTS,
         documentId
       );
     } catch (error: any) {
@@ -409,12 +476,12 @@ export const supportService = {
   /**
    * Create a support ticket
    */
-  async createTicket(ticketData: Omit<SupportTicket, "$id" | "createdAt" | "updatedAt">): Promise<SupportTicket> {
+  async createTicket(ticketData: Omit<SupportTicket, "$id" | "createdAt" | "updatedAt" | "$createdAt" | "$updatedAt" | "$collectionId" | "$databaseId" | "$permissions" | "$sequence">): Promise<SupportTicket> {
     try {
       const now = new Date().toISOString();
-      const doc = await databases.createDocument(
+      const row = await databases.createDocument<SupportTicket>(
         DATABASE_ID,
-        COLLECTIONS.TICKETS,
+        TABLES.TICKETS,
         ID.unique(),
         {
           ...ticketData,
@@ -423,7 +490,11 @@ export const supportService = {
           updatedAt: now,
         }
       );
-      return doc as unknown as SupportTicket;
+      return {
+        ...row,
+        createdAt: row.$createdAt,
+        updatedAt: row.$updatedAt,
+      } as SupportTicket;
     } catch (error: any) {
       console.error("Create ticket error:", error);
       throw new Error(error.message || "Failed to create support ticket");
@@ -435,15 +506,19 @@ export const supportService = {
    */
   async getUserTickets(userId: string): Promise<SupportTicket[]> {
     try {
-      const response = await databases.listDocuments(
+      const response = await databases.listDocuments<SupportTicket>(
         DATABASE_ID,
-        COLLECTIONS.TICKETS,
+        TABLES.TICKETS,
         [
           Query.equal("userId", userId),
-          Query.orderDesc("createdAt"),
+          Query.orderDesc("$createdAt"),
         ]
       );
-      return response.documents as unknown as SupportTicket[];
+      return response.documents.map(ticket => ({
+        ...ticket,
+        createdAt: ticket.$createdAt,
+        updatedAt: ticket.$updatedAt,
+      })) as SupportTicket[];
     } catch (error: any) {
       console.error("Get user tickets error:", error);
       return [];
@@ -455,12 +530,16 @@ export const supportService = {
    */
   async getTicketById(ticketId: string): Promise<SupportTicket | null> {
     try {
-      const doc = await databases.getDocument(
+      const ticket = await databases.getDocument<SupportTicket>(
         DATABASE_ID,
-        COLLECTIONS.TICKETS,
+        TABLES.TICKETS,
         ticketId
       );
-      return doc as unknown as SupportTicket;
+      return {
+        ...ticket,
+        createdAt: ticket.$createdAt,
+        updatedAt: ticket.$updatedAt,
+      } as SupportTicket;
     } catch {
       return null;
     }
@@ -473,19 +552,22 @@ export const travelerService = {
   /**
    * Add a saved traveler
    */
-  async createTraveler(travelerData: Omit<SavedTraveler, "$id" | "createdAt">): Promise<SavedTraveler> {
+  async createTraveler(travelerData: Omit<SavedTraveler, "$id" | "createdAt" | "$createdAt" | "$updatedAt" | "$collectionId" | "$databaseId" | "$permissions" | "$sequence">): Promise<SavedTraveler> {
     try {
       const now = new Date().toISOString();
-      const doc = await databases.createDocument(
+      const row = await databases.createDocument<SavedTraveler>(
         DATABASE_ID,
-        COLLECTIONS.SAVED_TRAVELERS,
+        TABLES.SAVED_TRAVELERS,
         ID.unique(),
         {
           ...travelerData,
           createdAt: now,
         }
       );
-      return doc as unknown as SavedTraveler;
+      return {
+        ...row,
+        createdAt: row.$createdAt,
+      } as SavedTraveler;
     } catch (error: any) {
       console.error("Create traveler error:", error);
       throw new Error(error.message || "Failed to add traveler");
@@ -497,15 +579,18 @@ export const travelerService = {
    */
   async getUserTravelers(userId: string): Promise<SavedTraveler[]> {
     try {
-      const response = await databases.listDocuments(
+      const response = await databases.listDocuments<SavedTraveler>(
         DATABASE_ID,
-        COLLECTIONS.SAVED_TRAVELERS,
+        TABLES.SAVED_TRAVELERS,
         [
           Query.equal("userId", userId),
-          Query.orderDesc("createdAt"),
+          Query.orderDesc("$createdAt"),
         ]
       );
-      return response.documents as unknown as SavedTraveler[];
+      return response.documents.map(traveler => ({
+        ...traveler,
+        createdAt: traveler.$createdAt,
+      })) as SavedTraveler[];
     } catch (error: any) {
       console.error("Get travelers error:", error);
       return [];
@@ -519,7 +604,7 @@ export const travelerService = {
     try {
       await databases.deleteDocument(
         DATABASE_ID,
-        COLLECTIONS.SAVED_TRAVELERS,
+        TABLES.SAVED_TRAVELERS,
         travelerId
       );
     } catch (error: any) {

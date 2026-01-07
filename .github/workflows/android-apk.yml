@@ -58,22 +58,27 @@ jobs:
           # We use assembleDebug to avoid keystore/signing errors
           ./gradlew assembleDebug --no-daemon
 
-      - name: Send APK to Telegram
+      - name: Upload to transfer.sh & Send Link
         run: |
-          # 1. Identify the APK file
           STAMP=$(date +%Y%m%d-%H%M)
           APK_NAME=travelling-debug-$STAMP.apk
-
-          # 2. Rename the standard debug output
-          # Note: Debug output location is slightly different than release
+          
+          # Rename the file
           mv android/app/build/outputs/apk/debug/app-debug.apk $APK_NAME
-
-          # 3. Send to Telegram
-          echo "Sending $APK_NAME to Telegram..."
-          curl -v -F "chat_id=${{ secrets.TELEGRAM_CHAT_ID }}" \
-               -F document=@$APK_NAME \
-               -F caption="🚀 Build Complete: $APK_NAME" \
-               https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendDocument
+          
+          echo "Uploading $APK_NAME to transfer.sh..."
+          
+          # Upload using curl and save the URL
+          # transfer.sh returns the URL as the response body
+          DOWNLOAD_URL=$(curl --upload-file ./$APK_NAME https://transfer.sh/$APK_NAME)
+          
+          echo "Link: $DOWNLOAD_URL"
+          
+          # Send the LINK to Telegram (instead of the file)
+          curl -s -X POST https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage \
+              -d chat_id=${{ secrets.TELEGRAM_CHAT_ID }} \
+              -d text="🚀 *Build Complete!* %0A📦 File: $APK_NAME %0A🔗 Download: $DOWNLOAD_URL" \
+              -d parse_mode="Markdown"
 
       - name: Cleanup
         if: always()

@@ -161,6 +161,13 @@ export default function ProfileScreen() {
                   <List.Icon {...props} icon="account-edit-outline" />
                 )}
                 right={(props) => <List.Icon {...props} icon="chevron-right" />}
+                onPress={() => router.push("/profile/edit" as any)}
+              />
+              <List.Item
+                title="Change Password"
+                left={(props) => <List.Icon {...props} icon="lock-reset" />}
+                right={(props) => <List.Icon {...props} icon="chevron-right" />}
+                onPress={() => router.push("/profile/change-password" as any)}
               />
               <Divider />
               <List.Item

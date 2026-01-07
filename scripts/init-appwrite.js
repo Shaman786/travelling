@@ -38,6 +38,7 @@ const COLLECTIONS = {
       { key: "email", type: "string", size: 128, required: true },
       { key: "phone", type: "string", size: 20, required: false },
       { key: "avatar", type: "string", size: 500, required: false },
+      { key: "pushToken", type: "string", size: 255, required: false },
     ]
   },
   packages: {
@@ -103,6 +104,7 @@ const COLLECTIONS = {
       { key: "statusHistory", type: "string", size: 2000, required: false }, 
       { key: "specialRequests", type: "string", size: 1000, required: false },
       { key: "createdAt", type: "string", size: 32, required: false },
+      { key: "updatedAt", type: "string", size: 32, required: false },
     ],
     indexes: [
       { key: "user_index", type: "key", attributes: ["userId"] },
@@ -147,6 +149,7 @@ const COLLECTIONS = {
       { key: "status", type: "string", size: 32, required: false, default: "open" },
       { key: "bookingId", type: "string", size: 36, required: false },
       { key: "createdAt", type: "string", size: 32, required: false },
+      { key: "updatedAt", type: "string", size: 32, required: false },
     ],
     indexes: [
       { key: "user_index", type: "key", attributes: ["userId"] },

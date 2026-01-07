@@ -28,7 +28,8 @@ export default function SearchScreen() {
   const router = useRouter();
 
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<TravelPackage[]>([]);
+  // Using any[] to handle both Appwrite and mockData TravelPackage formats
+  const [results, setResults] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   // Filters
@@ -57,7 +58,7 @@ export default function SearchScreen() {
       );
       data = response.documents;
 
-      setResults(data);
+      setResults(data as any[]);
     } catch {
       // Quiet fail
     } finally {
@@ -111,13 +112,10 @@ export default function SearchScreen() {
       ) : (
         <FlatList
           data={results}
-          keyExtractor={(item) => item.$id}
+          keyExtractor={(item) => item.$id || item.id}
           renderItem={({ item }) => (
             <View style={{ marginBottom: 16 }}>
-              <PackageCard
-                package={item}
-                onPress={() => router.push(`/details/${item.$id}`)}
-              />
+              <PackageCard item={item} />
             </View>
           )}
           contentContainerStyle={styles.list}

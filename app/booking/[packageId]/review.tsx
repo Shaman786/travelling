@@ -8,7 +8,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { differenceInDays, format } from "date-fns";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useCallback, useState } from "react";
-import { ScrollView, StyleSheet, View } from "react-native";
+import { ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
 import {
   Button,
   Checkbox,
@@ -74,7 +74,18 @@ export default function ReviewScreen() {
     setIsSubmitting(true);
 
     try {
-      const bookingData: Omit<Booking, "$id" | "createdAt" | "updatedAt"> = {
+      const bookingData: Omit<
+        Booking,
+        | "$id"
+        | "createdAt"
+        | "updatedAt"
+        | "$createdAt"
+        | "$updatedAt"
+        | "$collectionId"
+        | "$databaseId"
+        | "$permissions"
+        | "$sequence"
+      > = {
         userId: user.$id,
         packageId: packageId,
         packageTitle: bookingDraft.packageTitle || pkg?.title || "",
@@ -120,6 +131,12 @@ export default function ReviewScreen() {
         const mockBooking: Booking = {
           ...bookingData,
           $id: `booking_${Date.now()}`,
+          $collectionId: "mock_bookings",
+          $databaseId: "mock_db",
+          $permissions: [],
+          $sequence: 0,
+          $createdAt: new Date().toISOString(),
+          $updatedAt: new Date().toISOString(),
           status: "processing",
           paymentStatus: "paid",
           paymentId: `PAY_${Date.now()}`,
@@ -221,34 +238,39 @@ export default function ReviewScreen() {
           <Text variant="labelLarge" style={styles.cardTitle}>
             Travelers ({bookingDraft.travelers.length})
           </Text>
-          {bookingDraft.travelers.map((traveler, index) => (
-            <View key={traveler.id} style={styles.travelerRow}>
-              <MaterialCommunityIcons
-                name={
-                  traveler.type === "adult"
-                    ? "account"
-                    : traveler.type === "child"
-                    ? "account-child"
-                    : "baby-face-outline"
-                }
-                size={20}
-                color={theme.colors.outline}
-              />
-              <View style={{ marginLeft: 12, flex: 1 }}>
-                <Text variant="bodyMedium" style={{ fontWeight: "600" }}>
-                  {traveler.name || `Traveler ${index + 1}`}
-                </Text>
-                <Text
-                  variant="bodySmall"
-                  style={{ color: theme.colors.outline }}
-                >
-                  {traveler.type.charAt(0).toUpperCase() +
-                    traveler.type.slice(1)}
-                  , Age {traveler.age}
-                </Text>
+          {bookingDraft.travelers.map(
+            (
+              traveler: { id: string; name: string; age: number; type: string },
+              index: number
+            ) => (
+              <View key={traveler.id} style={styles.travelerRow}>
+                <MaterialCommunityIcons
+                  name={
+                    traveler.type === "adult"
+                      ? "account"
+                      : traveler.type === "child"
+                      ? "account-child"
+                      : "baby-face-outline"
+                  }
+                  size={20}
+                  color={theme.colors.outline}
+                />
+                <View style={{ marginLeft: 12, flex: 1 }}>
+                  <Text variant="bodyMedium" style={{ fontWeight: "600" }}>
+                    {traveler.name || `Traveler ${index + 1}`}
+                  </Text>
+                  <Text
+                    variant="bodySmall"
+                    style={{ color: theme.colors.outline }}
+                  >
+                    {traveler.type.charAt(0).toUpperCase() +
+                      traveler.type.slice(1)}
+                    , Age {traveler.age}
+                  </Text>
+                </View>
               </View>
-            </View>
-          ))}
+            )
+          )}
         </Surface>
 
         {/* Special Requests */}
@@ -333,13 +355,31 @@ export default function ReviewScreen() {
           />
           <Text variant="bodySmall" style={{ flex: 1 }}>
             I agree to the{" "}
-            <Text style={{ color: theme.colors.primary }}>
-              Terms and Conditions
-            </Text>{" "}
+            <TouchableOpacity
+              onPress={() => router.push("/(legal)/terms" as any)}
+            >
+              <Text
+                style={{
+                  color: theme.colors.primary,
+                  textDecorationLine: "underline",
+                }}
+              >
+                Terms and Conditions
+              </Text>
+            </TouchableOpacity>{" "}
             and{" "}
-            <Text style={{ color: theme.colors.primary }}>
-              Cancellation Policy
-            </Text>
+            <TouchableOpacity
+              onPress={() => router.push("/(legal)/cancellation-policy" as any)}
+            >
+              <Text
+                style={{
+                  color: theme.colors.primary,
+                  textDecorationLine: "underline",
+                }}
+              >
+                Cancellation Policy
+              </Text>
+            </TouchableOpacity>
           </Text>
         </View>
 

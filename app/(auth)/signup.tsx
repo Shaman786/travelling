@@ -3,31 +3,32 @@ import React, { useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { Button, Text, TextInput, useTheme } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useStore } from "../../src/store/useStore";
+import { useAuth } from "../../src/hooks/useAuth";
 
 export default function SignupScreen() {
   const theme = useTheme();
   const router = useRouter();
-  const login = useStore((state) => state.login);
+  const { signup } = useAuth();
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleSignup = () => {
+  const handleSignup = async () => {
+    if (!name || !email || !password) {
+      alert("Please fill in all fields");
+      return;
+    }
+
     setLoading(true);
-    // Mock signup delay
-    setTimeout(() => {
-      login({
-        id: "user_new_" + Date.now(),
-        name: name,
-        email: email,
-        avatar: `https://ui-avatars.com/api/?name=${name}`,
-      });
-      setLoading(false);
+    const success = await signup(email, password, name);
+    setLoading(false);
+
+    if (success) {
+      alert("Account created! Please check your email to verify your account.");
       router.replace("/(tabs)");
-    }, 1000);
+    }
   };
 
   return (

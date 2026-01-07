@@ -2,7 +2,13 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { format } from "date-fns";
 import { useRouter } from "expo-router";
 import React from "react";
-import { FlatList, StyleSheet, View } from "react-native";
+import {
+  Alert,
+  FlatList,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import {
   Button,
   Card,
@@ -20,9 +26,28 @@ export default function MyTripsScreen() {
   const theme = useTheme();
   const router = useRouter();
   const bookedTrips = useStore((state) => state.bookedTrips);
+  const removeBookedTrip = useStore((state) => state.removeBookedTrip);
 
-  const handleCancelTrip = (tripId: string) => {
-    Toast.info("Cancellation coming soon!");
+  const handleCancelTrip = (tripId: string, tripTitle: string) => {
+    Alert.alert(
+      "Cancel Trip",
+      `Are you sure you want to cancel "${tripTitle}"? This action cannot be undone.`,
+      [
+        { text: "Keep Trip", style: "cancel" },
+        {
+          text: "Yes, Cancel",
+          style: "destructive",
+          onPress: () => {
+            removeBookedTrip(tripId);
+            Toast.success("Trip cancelled successfully");
+          },
+        },
+      ]
+    );
+  };
+
+  const handleViewDetails = (tripId: string) => {
+    router.push(`/bookings/${tripId}` as any);
   };
 
   const renderEmptyState = () => (
@@ -73,69 +98,77 @@ export default function MyTripsScreen() {
       .join(" ");
 
     return (
-      <Card style={styles.card} mode="elevated">
-        {/* Header with Image if available - keeping simple text header for now based on mock data */}
-        <View
-          style={[
-            styles.cardHeader,
-            {
-              borderBottomColor: theme.colors.outlineVariant,
-              borderBottomWidth: 0.5,
-            },
-          ]}
-        >
-          <View style={{ flex: 1 }}>
-            <Text variant="titleMedium" style={{ fontWeight: "bold" }}>
-              {trip.packageTitle}
-            </Text>
-            <Text variant="bodySmall" style={{ color: theme.colors.outline }}>
-              {format(
-                new Date(trip.departureDate || Date.now()),
-                "MMM dd, yyyy"
-              )}{" "}
-              • {trip.destination}
-            </Text>
-          </View>
-          <Chip
-            icon="information"
-            style={{ backgroundColor: statusColor + "20" }}
-            textStyle={{ color: statusColor, fontSize: 12 }}
+      <TouchableOpacity
+        activeOpacity={0.8}
+        onPress={() => handleViewDetails(trip.id)}
+      >
+        <Card style={styles.card} mode="elevated">
+          {/* Header with Image if available - keeping simple text header for now based on mock data */}
+          <View
+            style={[
+              styles.cardHeader,
+              {
+                borderBottomColor: theme.colors.outlineVariant,
+                borderBottomWidth: 0.5,
+              },
+            ]}
           >
-            {statusText}
-          </Chip>
-        </View>
-
-        <Card.Content style={{ paddingTop: 16 }}>
-          {/* Use StepTracker for visual progress */}
-          <StepTracker currentStatus={trip.status} />
-
-          <Divider style={{ marginVertical: 12 }} />
-
-          <View style={styles.actions}>
-            <View>
-              <Text variant="bodySmall" style={{ color: theme.colors.outline }}>
-                Total Paid
+            <View style={{ flex: 1 }}>
+              <Text variant="titleMedium" style={{ fontWeight: "bold" }}>
+                {trip.packageTitle}
               </Text>
-              <Text
-                variant="titleMedium"
-                style={{ fontWeight: "bold", color: theme.colors.primary }}
-              >
-                ${trip.totalPrice}
+              <Text variant="bodySmall" style={{ color: theme.colors.outline }}>
+                {format(
+                  new Date(trip.departureDate || Date.now()),
+                  "MMM dd, yyyy"
+                )}{" "}
+                • {trip.destination}
               </Text>
             </View>
-
-            <Button
-              mode="outlined"
-              compact
-              textColor={theme.colors.error}
-              style={{ borderColor: theme.colors.errorContainer }}
-              onPress={() => handleCancelTrip(trip.id)}
+            <Chip
+              icon="information"
+              style={{ backgroundColor: statusColor + "20" }}
+              textStyle={{ color: statusColor, fontSize: 12 }}
             >
-              Cancel
-            </Button>
+              {statusText}
+            </Chip>
           </View>
-        </Card.Content>
-      </Card>
+
+          <Card.Content style={{ paddingTop: 16 }}>
+            {/* Use StepTracker for visual progress */}
+            <StepTracker currentStatus={trip.status} />
+
+            <Divider style={{ marginVertical: 12 }} />
+
+            <View style={styles.actions}>
+              <View>
+                <Text
+                  variant="bodySmall"
+                  style={{ color: theme.colors.outline }}
+                >
+                  Total Paid
+                </Text>
+                <Text
+                  variant="titleMedium"
+                  style={{ fontWeight: "bold", color: theme.colors.primary }}
+                >
+                  ${trip.totalPrice}
+                </Text>
+              </View>
+
+              <Button
+                mode="outlined"
+                compact
+                textColor={theme.colors.error}
+                style={{ borderColor: theme.colors.errorContainer }}
+                onPress={() => handleCancelTrip(trip.id, trip.packageTitle)}
+              >
+                Cancel
+              </Button>
+            </View>
+          </Card.Content>
+        </Card>
+      </TouchableOpacity>
     );
   };
 

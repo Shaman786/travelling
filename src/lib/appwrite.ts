@@ -1,19 +1,62 @@
-import { Account, Client, ID } from "react-native-appwrite";
+import { Account, Client, Databases, ID, Query, Storage } from "react-native-appwrite";
 import "react-native-url-polyfill/auto";
 
 // Appwrite Configuration from environment variables
-const endpoint = process.env.EXPO_PUBLIC_APPWRITE_ENDPOINT!;
-const projectId = process.env.EXPO_PUBLIC_APPWRITE_PROJECT_ID!;
-const platform = process.env.EXPO_PUBLIC_APPWRITE_PLATFORM!;
+const endpoint = process.env.EXPO_PUBLIC_APPWRITE_ENDPOINT || "";
+const projectId = process.env.EXPO_PUBLIC_APPWRITE_PROJECT_ID || "";
+const platform = process.env.EXPO_PUBLIC_APPWRITE_PLATFORM || "";
+
+// Export constants for use in other services
+export const APPWRITE_ENDPOINT = endpoint;
+export const APPWRITE_PROJECT_ID = projectId;
+
+// Database and Table IDs
+export const DATABASE_ID = process.env.EXPO_PUBLIC_APPWRITE_DATABASE_ID || "travelling_db";
+
+export const TABLES = {
+  USERS: "users",
+  PACKAGES: "packages",
+  BOOKINGS: "bookings",
+  DOCUMENTS: "documents",
+  TICKETS: "tickets",
+  SAVED_TRAVELERS: "saved_travelers",
+};
+
+export const BUCKETS = {
+  TRAVEL_DOCUMENTS: "travel_documents",
+  PACKAGE_IMAGES: "package_images",
+  AVATARS: "avatars",
+};
 
 // Initialize Client
-const client = new Client()
-  .setEndpoint(endpoint)
-  .setProject(projectId)
-  .setPlatform(platform);
+const client = new Client();
 
-// Initialize Account service
+// Only set up client if configuration exists
+if (endpoint && projectId) {
+  client
+    .setEndpoint(endpoint)
+    .setProject(projectId);
+  
+  if (platform) {
+    client.setPlatform(platform);
+  }
+}
+
+// Initialize Account service (for auth)
 export const account = new Account(client);
+export const storage = new Storage(client);
+export const databases = new Databases(client);
+
+// Check if Appwrite is configured
+export const isAppwriteConfigured = (): boolean => {
+  return !!(endpoint && projectId);
+};
+
+
+
+// ============ Query Builder ============
 
 // Export utilities
-export { client, ID };
+export { client, ID, Query };
+
+

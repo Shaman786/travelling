@@ -95,7 +95,7 @@ export default function TravelerDetailsScreen() {
   };
 
   // Validate form
-  const validateForm = (): boolean => {
+  const validateForm = useCallback((): boolean => {
     const newErrors: Record<string, string> = {};
     let isValid = true;
 
@@ -121,7 +121,7 @@ export default function TravelerDetailsScreen() {
 
     setErrors(newErrors);
     return isValid;
-  };
+  }, [travelers]);
 
   // Continue to next step
   const handleContinue = useCallback(() => {
@@ -137,7 +137,7 @@ export default function TravelerDetailsScreen() {
     });
 
     router.push(`/booking/${packageId}/review` as any);
-  }, [travelers, packageId, updateBookingDraft, router]);
+  }, [validateForm, updateBookingDraft, router, packageId, travelers]);
 
   // Get traveler icon
   const getTravelerIcon = (type: string) => {

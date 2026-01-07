@@ -5,7 +5,7 @@
  * Syncs between Appwrite and local Zustand cache.
  */
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { isAppwriteConfigured } from "../lib/appwrite";
 import { bookingService } from "../lib/databaseService";
 import { useStore } from "../store/useStore";
@@ -40,6 +40,39 @@ export function useBookings(): UseBookingsReturn {
   const updateBookedTrip = useStore((state) => state.updateBookedTrip);
   const removeBookedTrip = useStore((state) => state.removeBookedTrip);
 
+  // Convert BookedTrips to Booking format for return
+  const bookings = useMemo<Booking[]>(() => {
+    return bookedTrips.map((trip) => ({
+      $id: trip.id,
+      $collectionId: "mock_bookings",
+      $databaseId: "mock_db",
+      $permissions: [],
+      $sequence: 0,
+      $createdAt: trip.bookingDate.toISOString(),
+      $updatedAt: trip.bookingDate.toISOString(),
+      userId: user?.$id || "",
+      packageId: trip.packageId,
+      packageTitle: trip.packageTitle,
+      destination: trip.destination,
+      departureDate: trip.departureDate.toISOString(),
+      returnDate: trip.returnDate.toISOString(),
+      travelers: trip.travelers,
+      adultsCount: trip.travelers.filter((t) => t.type === "adult").length,
+      childrenCount: trip.travelers.filter((t) => t.type === "child").length,
+      infantsCount: trip.travelers.filter((t) => t.type === "infant").length,
+      totalPrice: trip.totalPrice,
+      status: trip.status as BookingStatus,
+      statusHistory: trip.statusHistory.map((h) => ({
+        status: h.status as BookingStatus,
+        date: h.date.toISOString(),
+        note: h.note,
+      })),
+      paymentStatus: "paid" as const,
+      createdAt: trip.bookingDate.toISOString(),
+      updatedAt: trip.bookingDate.toISOString(),
+    }));
+  }, [bookedTrips, user?.$id]);
+
   const fetchBookings = useCallback(async () => {
     if (!user?.$id) {
       setIsLoading(false);
@@ -51,8 +84,8 @@ export function useBookings(): UseBookingsReturn {
 
     try {
       if (isAppwriteConfigured()) {
-        const bookings = await bookingService.getUserBookings(user.$id);
-        setBookedTrips(bookings);
+        const bookingsData = await bookingService.getUserBookings(user.$id);
+        setBookedTrips(bookingsData);
       }
       // If Appwrite not configured, use cached data from store
     } catch (err: any) {
@@ -104,7 +137,7 @@ export function useBookings(): UseBookingsReturn {
   }, [removeBookedTrip]);
 
   return {
-    bookings: bookedTrips,
+    bookings,
     isLoading,
     error,
     refresh: fetchBookings,
@@ -121,10 +154,46 @@ export function useBooking(bookingId: string): UseBookingReturn {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const user = useStore((state) => state.user);
+  
   // Check local cache first
-  const cachedBooking = useStore((state) => 
-    state.bookedTrips.find((b) => b.$id === bookingId)
+  const cachedTrip = useStore((state) => 
+    state.bookedTrips.find((b) => b.id === bookingId)
   );
+
+  // Convert cached trip to Booking format
+  const cachedBooking = useMemo<Booking | null>(() => {
+    if (!cachedTrip) return null;
+    return {
+      $id: cachedTrip.id,
+      $collectionId: "mock_bookings",
+      $databaseId: "mock_db",
+      $permissions: [],
+      $sequence: 0,
+      $createdAt: cachedTrip.bookingDate.toISOString(),
+      $updatedAt: cachedTrip.bookingDate.toISOString(),
+      userId: user?.$id || "",
+      packageId: cachedTrip.packageId,
+      packageTitle: cachedTrip.packageTitle,
+      destination: cachedTrip.destination,
+      departureDate: cachedTrip.departureDate.toISOString(),
+      returnDate: cachedTrip.returnDate.toISOString(),
+      travelers: cachedTrip.travelers,
+      adultsCount: cachedTrip.travelers.filter((t) => t.type === "adult").length,
+      childrenCount: cachedTrip.travelers.filter((t) => t.type === "child").length,
+      infantsCount: cachedTrip.travelers.filter((t) => t.type === "infant").length,
+      totalPrice: cachedTrip.totalPrice,
+      status: cachedTrip.status as BookingStatus,
+      statusHistory: cachedTrip.statusHistory.map((h) => ({
+        status: h.status as BookingStatus,
+        date: h.date.toISOString(),
+        note: h.note,
+      })),
+      paymentStatus: "paid" as const,
+      createdAt: cachedTrip.bookingDate.toISOString(),
+      updatedAt: cachedTrip.bookingDate.toISOString(),
+    };
+  }, [cachedTrip, user?.$id]);
 
   const fetchBooking = useCallback(async () => {
     setIsLoading(true);
@@ -167,3 +236,4 @@ export function useBooking(bookingId: string): UseBookingReturn {
 }
 
 export default useBookings;
+

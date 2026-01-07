@@ -32,6 +32,12 @@ const PAGE_SIZE = 20;
 
 const mapMockToTravelPackage = (p: any): TravelPackage => ({
   $id: p.id,
+  $collectionId: "mock_packages",
+  $databaseId: "mock_db",
+  $createdAt: new Date().toISOString(),
+  $updatedAt: new Date().toISOString(),
+  $permissions: [],
+  $sequence: 0,
   title: p.title,
   destination: p.title, // Fallback since mock doesn't have explicit city
   country: p.region,
