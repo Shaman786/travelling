@@ -2,32 +2,34 @@ import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import { StyleSheet, View } from "react-native";
-import { Button, Text, TextInput, useTheme } from "react-native-paper";
+import {
+  Button,
+  HelperText,
+  Text,
+  TextInput,
+  useTheme,
+} from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useStore } from "../../src/store/useStore";
+import { useAuth } from "../../src/hooks/useAuth";
 
 export default function LoginScreen() {
   const theme = useTheme();
   const router = useRouter();
-  const login = useStore((state) => state.login);
+  const { login: authLogin, error: authError, isLoading } = useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
+  // Local loading state is handled by useAuth but we can sync if needed
+  // or just use isLoading from hook. Let's use hook's isLoading.
 
-  const handleLogin = () => {
-    setLoading(true);
-    // Mock login delay
-    setTimeout(() => {
-      login({
-        $id: "user_123",
-        name: "Fayaj J",
-        email: email,
-        avatar: "https://i.pravatar.cc/300",
-      });
-      setLoading(false);
+  const handleLogin = async () => {
+    if (!email || !password) return;
+
+    // Call the real login method
+    const success = await authLogin(email, password);
+    if (success) {
       router.replace("/(tabs)");
-    }, 1000);
+    }
   };
 
   return (
@@ -68,10 +70,17 @@ export default function LoginScreen() {
           style={styles.input}
         />
 
+        {authError ? (
+          <HelperText type="error" visible={!!authError}>
+            {authError}
+          </HelperText>
+        ) : null}
+
         <Button
           mode="contained"
           onPress={handleLogin}
-          loading={loading}
+          loading={isLoading}
+          disabled={isLoading}
           style={styles.button}
           contentStyle={{ height: 50 }}
         >

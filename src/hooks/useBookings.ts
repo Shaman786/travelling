@@ -6,7 +6,7 @@
  */
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { isAppwriteConfigured } from "../lib/appwrite";
+import { DATABASE_ID, TABLES } from "../lib/appwrite";
 import { bookingService } from "../lib/databaseService";
 import { useStore } from "../store/useStore";
 import type { Booking, BookingStatus } from "../types";
@@ -44,8 +44,8 @@ export function useBookings(): UseBookingsReturn {
   const bookings = useMemo<Booking[]>(() => {
     return bookedTrips.map((trip) => ({
       $id: trip.id,
-      $collectionId: "mock_bookings",
-      $databaseId: "mock_db",
+      $collectionId: TABLES.BOOKINGS,
+      $databaseId: DATABASE_ID,
       $permissions: [],
       $sequence: 0,
       $createdAt: trip.bookingDate.toISOString(),
@@ -83,11 +83,8 @@ export function useBookings(): UseBookingsReturn {
     setError(null);
 
     try {
-      if (isAppwriteConfigured()) {
-        const bookingsData = await bookingService.getUserBookings(user.$id);
-        setBookedTrips(bookingsData);
-      }
-      // If Appwrite not configured, use cached data from store
+      const bookingsData = await bookingService.getUserBookings(user.$id);
+      setBookedTrips(bookingsData);
     } catch (err: any) {
       setError(err.message || "Failed to load bookings");
     } finally {
@@ -106,13 +103,8 @@ export function useBookings(): UseBookingsReturn {
     note?: string
   ): Promise<boolean> => {
     try {
-      if (isAppwriteConfigured()) {
-        const updated = await bookingService.updateBookingStatus(bookingId, status, note);
-        updateBookedTrip(bookingId, updated);
-      } else {
-        // Update local state only
-        updateBookedTrip(bookingId, { status });
-      }
+      const updated = await bookingService.updateBookingStatus(bookingId, status, note);
+      updateBookedTrip(bookingId, updated);
       return true;
     } catch (err: any) {
       setError(err.message);
@@ -125,9 +117,7 @@ export function useBookings(): UseBookingsReturn {
     reason?: string
   ): Promise<boolean> => {
     try {
-      if (isAppwriteConfigured()) {
-        await bookingService.cancelBooking(bookingId, reason);
-      }
+      await bookingService.cancelBooking(bookingId, reason);
       removeBookedTrip(bookingId);
       return true;
     } catch (err: any) {
@@ -166,8 +156,8 @@ export function useBooking(bookingId: string): UseBookingReturn {
     if (!cachedTrip) return null;
     return {
       $id: cachedTrip.id,
-      $collectionId: "mock_bookings",
-      $databaseId: "mock_db",
+      $collectionId: TABLES.BOOKINGS,
+      $databaseId: DATABASE_ID,
       $permissions: [],
       $sequence: 0,
       $createdAt: cachedTrip.bookingDate.toISOString(),
@@ -200,20 +190,14 @@ export function useBooking(bookingId: string): UseBookingReturn {
     setError(null);
 
     try {
-      if (isAppwriteConfigured()) {
-        const data = await bookingService.getBookingById(bookingId);
-        setBooking(data);
-      } else if (cachedBooking) {
-        setBooking(cachedBooking);
-      } else {
-        setError("Booking not found");
-      }
+      const data = await bookingService.getBookingById(bookingId);
+      setBooking(data);
     } catch (err: any) {
       setError(err.message || "Failed to load booking");
     } finally {
       setIsLoading(false);
     }
-  }, [bookingId, cachedBooking]);
+  }, [bookingId]);
 
   useEffect(() => {
     if (bookingId) {

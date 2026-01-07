@@ -5,7 +5,7 @@ import * as Print from "expo-print";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import * as Sharing from "expo-sharing";
 import React from "react";
-import { ScrollView, StyleSheet, View } from "react-native";
+import { ActivityIndicator, ScrollView, StyleSheet, View } from "react-native";
 import {
   Button,
   Chip,
@@ -15,7 +15,7 @@ import {
   useTheme,
 } from "react-native-paper";
 import { Toast } from "toastify-react-native";
-import { getPackageById } from "../../src/data/mockData";
+import { usePackage } from "../../src/hooks/usePackages";
 import { useStore } from "../../src/store/useStore";
 
 export default function PackageDetailsScreen() {
@@ -25,9 +25,22 @@ export default function PackageDetailsScreen() {
   const bookTrip = useStore((state) => state.bookTrip);
   const user = useStore((state) => state.user);
 
-  const pkg = getPackageById(typeof id === "string" ? id : "");
+  // Use the usePackage hook to fetch from Appwrite
+  const {
+    package: pkg,
+    isLoading,
+    error,
+  } = usePackage(typeof id === "string" ? id : "");
 
-  if (!pkg) {
+  if (isLoading) {
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
+
+  if (error || !pkg) {
     return (
       <View style={styles.center}>
         <Text>Package not found</Text>
@@ -42,13 +55,15 @@ export default function PackageDetailsScreen() {
     }
 
     bookTrip({
-      packageId: pkg.id,
+      packageId: pkg.$id,
       packageTitle: pkg.title,
-      destination: pkg.region,
-      departureDate: new Date(), // Mock date
-      returnDate: new Date(Date.now() + pkg.duration_days * 86400000),
-      travelers: [], // Use draft travelers in real app
-      totalPrice: pkg.base_price,
+      destination: pkg.country || pkg.destination,
+      departureDate: new Date(),
+      returnDate: new Date(
+        Date.now() + (parseInt(pkg.duration) || 7) * 86400000
+      ),
+      travelers: [],
+      totalPrice: pkg.price,
     });
 
     Toast.success("Trip booked successfully!");
@@ -78,10 +93,10 @@ export default function PackageDetailsScreen() {
           <body>
             <div class="header">
               <div class="title">${pkg.title}</div>
-              <div class="price">$${pkg.base_price}</div>
+              <div class="price">$${pkg.price}</div>
             </div>
             
-            <img src="${pkg.image}" class="image" />
+            <img src="${pkg.imageUrl}" class="image" />
             
             <div class="section-title">Overview</div>
             <p>${pkg.description}</p>
@@ -143,7 +158,7 @@ export default function PackageDetailsScreen() {
         {/* Same Hero Container Code... adjusted slightly for header */}
         <View style={styles.heroContainer}>
           <Image
-            source={{ uri: pkg.image }}
+            source={{ uri: pkg.imageUrl }}
             style={styles.heroImage}
             contentFit="cover"
           />
@@ -154,7 +169,7 @@ export default function PackageDetailsScreen() {
 
           <View style={styles.titleContainer}>
             <Chip style={styles.regionChip} textStyle={{ color: "#fff" }}>
-              {pkg.region}
+              {pkg.country}
             </Chip>
             <Text variant="headlineMedium" style={styles.heroTitle}>
               {pkg.title}
@@ -171,7 +186,7 @@ export default function PackageDetailsScreen() {
                 size={24}
                 color={theme.colors.primary}
               />
-              <Text variant="labelMedium">{pkg.duration_days} Days</Text>
+              <Text variant="labelMedium">{pkg.duration}</Text>
             </View>
             <View style={styles.statItem}>
               <MaterialCommunityIcons name="star" size={24} color="#FFC107" />
@@ -267,7 +282,7 @@ export default function PackageDetailsScreen() {
           </Text>
           <View style={styles.priceRow}>
             <Text variant="headlineSmall" style={styles.price}>
-              ${pkg.base_price}
+              ${pkg.price}
             </Text>
             <Text variant="bodySmall"> / person</Text>
           </View>

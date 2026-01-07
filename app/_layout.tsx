@@ -9,31 +9,32 @@ import { useEffect, useRef } from "react";
 import { PaperProvider } from "react-native-paper";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import ToastManager from "toastify-react-native";
-import { useStore } from "../src/store/useStore";
+import { useAuth } from "../src/hooks/useAuth";
 import { theme } from "../src/theme";
 
 function AuthHandler() {
   const segments = useSegments();
   const router = useRouter();
-  const isLoggedIn = useStore((state) => state.isLoggedIn);
+  // Use useAuth instead of reading directly from store
+  // This ensures checkSession() runs and verifies with backend
+  const { isLoggedIn, isLoading } = useAuth();
   const navigationState = useRootNavigationState();
 
   useEffect(() => {
     if (!navigationState?.key) return;
 
-    // Slight delay to ensure navigation is ready
-    const timer = setTimeout(() => {
-      const inAuthGroup = segments[0] === "(auth)";
+    // IMPORTANT: Wait until auth check is complete before redirecting
+    // This prevents redirecting based on stale persisted state
+    if (isLoading) return;
 
-      if (!isLoggedIn && !inAuthGroup) {
-        router.replace("/(auth)/login" as any);
-      } else if (isLoggedIn && inAuthGroup) {
-        router.replace("/(tabs)" as any);
-      }
-    }, 100);
+    const inAuthGroup = segments[0] === "(auth)";
 
-    return () => clearTimeout(timer);
-  }, [isLoggedIn, segments, navigationState?.key, router]);
+    if (!isLoggedIn && !inAuthGroup) {
+      router.replace("/(auth)/login" as any);
+    } else if (isLoggedIn && inAuthGroup) {
+      router.replace("/(tabs)" as any);
+    }
+  }, [isLoggedIn, isLoading, segments, navigationState?.key, router]);
 
   return null;
 }

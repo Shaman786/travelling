@@ -6,7 +6,6 @@
  */
 
 import { useCallback, useState } from "react";
-import { isAppwriteConfigured } from "../lib/appwrite";
 import { supportService } from "../lib/databaseService";
 import { useStore } from "../store/useStore";
 import type { SupportTicket } from "../types";
@@ -41,31 +40,8 @@ export function useSupport(): UseSupportReturn {
     setError(null);
 
     try {
-      if (isAppwriteConfigured()) {
-        const fetchedTickets = await supportService.getUserTickets(user.$id);
-        setTickets(fetchedTickets);
-      } else {
-        // Mock data
-        setTickets([
-          {
-            $id: "mock_ticket_1",
-            $collectionId: "mock_tickets",
-            $databaseId: "mock_db",
-            $permissions: [],
-            $sequence: 0,
-            $createdAt: new Date().toISOString(),
-            $updatedAt: new Date().toISOString(),
-            userId: user.$id,
-            subject: "Help with booking",
-            message: "I need to change my dates",
-            category: "booking",
-            status: "open",
-            priority: "medium",
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-          }
-        ]);
-      }
+      const fetchedTickets = await supportService.getUserTickets(user.$id);
+      setTickets(fetchedTickets);
     } catch (err: any) {
       setError(err.message || "Failed to fetch tickets");
     } finally {
@@ -85,34 +61,12 @@ export function useSupport(): UseSupportReturn {
     setError(null);
 
     try {
-      if (isAppwriteConfigured()) {
-        const newTicket = await supportService.createTicket({
-          ...data,
-          userId: user.$id,
-          status: "open",
-        } as any);
-        setTickets((prev) => [newTicket, ...prev]);
-      } else {
-        // Mock creation
-        const mockTicket: SupportTicket = {
-          $id: `mock_ticket_${Date.now()}`,
-          $collectionId: "mock_tickets",
-          $databaseId: "mock_db",
-          $permissions: [],
-          $sequence: 0,
-          $createdAt: new Date().toISOString(),
-          $updatedAt: new Date().toISOString(),
-          userId: user.$id,
-          ...data,
-          status: "open",
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        };
-        setTickets((prev) => [mockTicket, ...prev]);
-        
-        // Simulate delay
-        await new Promise(resolve => setTimeout(resolve, 1000));
-      }
+      const newTicket = await supportService.createTicket({
+        ...data,
+        userId: user.$id,
+        status: "open",
+      } as any);
+      setTickets((prev) => [newTicket, ...prev]);
       return true;
     } catch (err: any) {
       setError(err.message || "Failed to create ticket");

@@ -14,6 +14,7 @@ import {
   useTheme,
 } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useAuth } from "../../src/hooks/useAuth";
 import { useStore } from "../../src/store/useStore";
 
 interface UploadedFile {
@@ -25,11 +26,12 @@ interface UploadedFile {
 export default function ProfileScreen() {
   const theme = useTheme();
   const router = useRouter();
-  const { user, logout } = useStore();
+  const { user } = useStore(); // Keep user from store
+  const { logout } = useAuth(); // Use useAuth for proper server logout
   const [documents, setDocuments] = useState<UploadedFile[]>([]);
 
   const handleLogout = async () => {
-    logout();
+    await logout(); // This now calls authService.logout() to delete server session
     router.replace("/(auth)/login");
   };
 
@@ -52,15 +54,22 @@ export default function ProfileScreen() {
     }
   };
 
+  // WhatsApp support - configure number in Admin Dashboard
   const openWhatsApp = () => {
-    const phoneNumber = "919876543210"; // Replace with your number
+    // TODO: Get support number from backend/config
+    const supportNumber = ""; // Configure via Admin Dashboard
+    if (!supportNumber) {
+      alert(
+        "WhatsApp support not configured. Please use the Support Tickets feature."
+      );
+      return;
+    }
     const message = "Hello! I need help with my travel booking.";
-    const url = `whatsapp://send?phone=${phoneNumber}&text=${encodeURIComponent(
+    const url = `whatsapp://send?phone=${supportNumber}&text=${encodeURIComponent(
       message
     )}`;
     Linking.openURL(url).catch(() => {
-      // Fallback or alert
-      console.log("Cannot open WhatsApp");
+      alert("WhatsApp is not installed on this device.");
     });
   };
 
@@ -70,10 +79,14 @@ export default function ProfileScreen() {
     >
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
-          <Avatar.Image
-            size={100}
-            source={{ uri: user?.avatar || "https://i.pravatar.cc/300" }}
-          />
+          {user?.avatar ? (
+            <Avatar.Image size={100} source={{ uri: user.avatar }} />
+          ) : (
+            <Avatar.Text
+              size={100}
+              label={user?.name?.substring(0, 2).toUpperCase() || "U"}
+            />
+          )}
           <Text variant="headlineMedium" style={styles.name}>
             {user?.name || "Guest"}
           </Text>
@@ -87,7 +100,7 @@ export default function ProfileScreen() {
           <Card style={styles.card} mode="elevated">
             <Card.Title
               title="Travel Vault"
-              subtitle="Securely store your passports & visas"
+              subtitle="Store passports, visas & IDs"
               left={(props) => (
                 <Avatar.Icon
                   {...props}
@@ -164,10 +177,22 @@ export default function ProfileScreen() {
                 onPress={() => router.push("/profile/edit" as any)}
               />
               <List.Item
+                title="My Favorites"
+                left={(props) => <List.Icon {...props} icon="heart" />}
+                right={(props) => <List.Icon {...props} icon="chevron-right" />}
+                onPress={() => router.push("/favorites" as any)}
+              />
+              <List.Item
                 title="Change Password"
                 left={(props) => <List.Icon {...props} icon="lock-reset" />}
                 right={(props) => <List.Icon {...props} icon="chevron-right" />}
                 onPress={() => router.push("/profile/change-password" as any)}
+              />
+              <List.Item
+                title="Support Tickets"
+                left={(props) => <List.Icon {...props} icon="ticket-account" />}
+                right={(props) => <List.Icon {...props} icon="chevron-right" />}
+                onPress={() => router.push("/support" as any)}
               />
               <Divider />
               <List.Item
@@ -223,6 +248,7 @@ const styles = StyleSheet.create({
     color: "#999",
     fontStyle: "italic",
     marginBottom: 10,
+    textAlign: "center",
   },
   docItem: {
     flexDirection: "row",

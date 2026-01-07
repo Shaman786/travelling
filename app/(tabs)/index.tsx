@@ -1,4 +1,3 @@
-import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
 import { ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
@@ -12,10 +11,18 @@ import {
 } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 import PackageCard from "../../src/components/PackageCard";
-import { categories } from "../../src/data/mockData";
 import databaseService from "../../src/lib/databaseService";
 import { useStore } from "../../src/store/useStore";
 import type { TravelPackage } from "../../src/types";
+
+// Destination categories - to be managed via Admin Dashboard
+const DESTINATION_CATEGORIES = [
+  { id: "india", name: "India" },
+  { id: "gulf", name: "Gulf" },
+  { id: "uk", name: "UK & Europe" },
+  { id: "usa", name: "USA" },
+  { id: "asia", name: "Asia" },
+];
 
 export default function CatalogScreen() {
   const theme = useTheme();
@@ -69,15 +76,16 @@ export default function CatalogScreen() {
             </Text>
           </View>
           <TouchableOpacity onPress={() => router.push("/profile")}>
-            <Avatar.Image
-              size={44}
-              source={{
-                uri: user?.avatar || "https://i.pravatar.cc/300",
-              }}
-            />
+            {user?.avatar ? (
+              <Avatar.Image size={44} source={{ uri: user.avatar }} />
+            ) : (
+              <Avatar.Text
+                size={44}
+                label={user?.name?.substring(0, 2).toUpperCase() || "U"}
+              />
+            )}
           </TouchableOpacity>
         </View>
-
         {/* Search Bar */}
         <View style={styles.searchContainer}>
           <Searchbar
@@ -89,14 +97,12 @@ export default function CatalogScreen() {
             iconColor={theme.colors.primary}
           />
         </View>
-
         {/* Categories */}
         <View style={styles.sectionHeader}>
           <Text variant="titleLarge" style={styles.sectionTitle}>
             Destinations
           </Text>
         </View>
-
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -116,46 +122,22 @@ export default function CatalogScreen() {
           >
             All
           </Chip>
-          {categories.map((cat) => (
-            <TouchableOpacity
+          {DESTINATION_CATEGORIES.map((cat) => (
+            <Chip
               key={cat.id}
+              selected={selectedCategory === cat.id}
               onPress={() => setSelectedCategory(cat.id)}
-              style={styles.categoryItem}
+              style={[
+                styles.categoryChip,
+                selectedCategory === cat.id && {
+                  backgroundColor: theme.colors.primary,
+                },
+              ]}
+              textStyle={selectedCategory === cat.id ? { color: "#fff" } : {}}
+              showSelectedOverlay
             >
-              <View
-                style={[
-                  styles.categoryImageContainer,
-                  selectedCategory === cat.id && styles.categorySelected,
-                  { borderColor: theme.colors.primary },
-                ]}
-              >
-                <Image
-                  source={{ uri: cat.image }}
-                  style={styles.categoryImage}
-                  contentFit="cover"
-                />
-                {selectedCategory === cat.id && (
-                  <View
-                    style={[
-                      styles.activeOverlay,
-                      { backgroundColor: theme.colors.primary },
-                    ]}
-                  />
-                )}
-              </View>
-              <Text
-                variant="labelMedium"
-                style={[
-                  styles.categoryName,
-                  selectedCategory === cat.id && {
-                    color: theme.colors.primary,
-                    fontWeight: "bold",
-                  },
-                ]}
-              >
-                {cat.name}
-              </Text>
-            </TouchableOpacity>
+              {cat.name}
+            </Chip>
           ))}
         </ScrollView>
 
@@ -173,7 +155,6 @@ export default function CatalogScreen() {
             </Text>
           </TouchableOpacity>
         </View>
-
         <View style={styles.packagesGrid}>
           {isLoading ? (
             <View style={{ padding: 40, alignItems: "center" }}>
@@ -198,7 +179,6 @@ export default function CatalogScreen() {
             ))
           )}
         </View>
-
         <View style={styles.footerSpacer} />
       </ScrollView>
     </SafeAreaView>

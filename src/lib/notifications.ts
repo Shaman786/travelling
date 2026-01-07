@@ -54,8 +54,12 @@ export async function registerForPushNotificationsAsync(): Promise<string | unde
         projectId,
       })).data;
       
-    } catch (e) {
-      console.log("Error getting push token:", e);
+    } catch (e: any) {
+      if (e.message?.includes("FirebaseApp is not initialized") || e.message?.includes("Default FirebaseApp is not initialized")) {
+        console.warn("Push Notifications skipped: Missing google-services.json configuration.");
+      } else {
+        console.log("Error getting push token:", e);
+      }
     }
   } else {
     console.log('Must use physical device for Push Notifications');

@@ -1,95 +1,238 @@
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
-import { StyleSheet, View } from "react-native";
-import { Button, Text, TextInput, useTheme } from "react-native-paper";
+import { KeyboardAvoidingView, Platform, StyleSheet, View } from "react-native";
+import {
+  Button,
+  HelperText,
+  Text,
+  TextInput,
+  useTheme,
+} from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "../../src/hooks/useAuth";
+import { authService } from "../../src/lib/authService";
+
+type Step = "register" | "verify";
 
 export default function SignupScreen() {
   const theme = useTheme();
   const router = useRouter();
   const { signup } = useAuth();
 
+  const [step, setStep] = useState<Step>("register");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [otp, setOtp] = useState("");
+  const [userId, setUserId] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const handleSignup = async () => {
     if (!name || !email || !password) {
-      alert("Please fill in all fields");
+      setError("Please fill in all fields");
+      return;
+    }
+
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters");
       return;
     }
 
     setLoading(true);
-    const success = await signup(email, password, name);
-    setLoading(false);
+    setError("");
 
-    if (success) {
-      alert("Account created! Please check your email to verify your account.");
-      router.replace("/(tabs)");
+    try {
+      const success = await signup(email, password, name);
+      if (success) {
+        // Account created and verification email sent
+        // Move to OTP verification step
+        setStep("verify");
+      }
+    } catch (err: any) {
+      setError(err.message || "Failed to create account");
+    } finally {
+      setLoading(false);
     }
   };
+
+  const handleVerifyOtp = async () => {
+    if (!otp || otp.length < 6) {
+      setError("Please enter the verification code from your email");
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+
+    try {
+      // For email link verification, redirect to home
+      // The user will click the link in their email
+      // For now, just proceed to home
+      router.replace("/(tabs)");
+    } catch (err: any) {
+      setError(err.message || "Verification failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResendCode = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      await authService.sendVerificationEmail();
+      setError(""); // Clear error
+      alert("Verification email resent! Check your inbox.");
+    } catch (err: any) {
+      setError(err.message || "Failed to resend email");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSkipVerification = () => {
+    // Allow user to skip for now and verify later
+    router.replace("/(tabs)");
+  };
+
+  if (step === "verify") {
+    return (
+      <SafeAreaView
+        style={[styles.container, { backgroundColor: theme.colors.background }]}
+      >
+        <View style={styles.header}>
+          <Text
+            variant="headlineMedium"
+            style={[styles.title, { color: theme.colors.primary }]}
+          >
+            Verify Your Email
+          </Text>
+          <Text variant="bodyMedium" style={styles.subtitle}>
+            We sent a verification link to:
+          </Text>
+          <Text
+            variant="bodyLarge"
+            style={[styles.email, { color: theme.colors.primary }]}
+          >
+            {email}
+          </Text>
+        </View>
+
+        <View style={styles.verifyContent}>
+          <Text variant="bodyMedium" style={styles.instructions}>
+            Please check your email and click the verification link to complete
+            your registration.
+          </Text>
+
+          {error ? (
+            <HelperText type="error" visible={!!error}>
+              {error}
+            </HelperText>
+          ) : null}
+
+          <Button
+            mode="contained"
+            onPress={handleSkipVerification}
+            style={styles.button}
+            contentStyle={{ height: 50 }}
+          >
+            Continue to App
+          </Button>
+
+          <Button
+            mode="outlined"
+            onPress={handleResendCode}
+            loading={loading}
+            style={styles.button}
+          >
+            Resend Verification Email
+          </Button>
+
+          <Button
+            mode="text"
+            onPress={() => setStep("register")}
+            style={styles.textButton}
+          >
+            Use a different email
+          </Button>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView
       style={[styles.container, { backgroundColor: theme.colors.background }]}
     >
-      <View style={styles.header}>
-        <Text
-          variant="headlineMedium"
-          style={[styles.title, { color: theme.colors.primary }]}
-        >
-          Join Travelling
-        </Text>
-        <Text variant="bodyMedium" style={styles.subtitle}>
-          Start your journey with us
-        </Text>
-      </View>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={styles.keyboardView}
+      >
+        <View style={styles.header}>
+          <Text
+            variant="headlineMedium"
+            style={[styles.title, { color: theme.colors.primary }]}
+          >
+            Join Travelling
+          </Text>
+          <Text variant="bodyMedium" style={styles.subtitle}>
+            Start your journey with us
+          </Text>
+        </View>
 
-      <View style={styles.form}>
-        <TextInput
-          label="Full Name"
-          value={name}
-          onChangeText={setName}
-          mode="outlined"
-          style={styles.input}
-        />
-        <TextInput
-          label="Email"
-          value={email}
-          onChangeText={setEmail}
-          mode="outlined"
-          style={styles.input}
-          autoCapitalize="none"
-        />
-        <TextInput
-          label="Password"
-          value={password}
-          onChangeText={setPassword}
-          mode="outlined"
-          secureTextEntry
-          style={styles.input}
-        />
+        <View style={styles.form}>
+          <TextInput
+            label="Full Name"
+            value={name}
+            onChangeText={setName}
+            mode="outlined"
+            style={styles.input}
+          />
+          <TextInput
+            label="Email"
+            value={email}
+            onChangeText={setEmail}
+            mode="outlined"
+            style={styles.input}
+            autoCapitalize="none"
+            keyboardType="email-address"
+          />
+          <TextInput
+            label="Password"
+            value={password}
+            onChangeText={setPassword}
+            mode="outlined"
+            secureTextEntry
+            style={styles.input}
+          />
 
-        <Button
-          mode="contained"
-          onPress={handleSignup}
-          loading={loading}
-          style={styles.button}
-          contentStyle={{ height: 50 }}
-        >
-          Create Account
-        </Button>
+          {error ? (
+            <HelperText type="error" visible={!!error}>
+              {error}
+            </HelperText>
+          ) : null}
 
-        <Button
-          mode="text"
-          onPress={() => router.back()}
-          style={styles.textButton}
-        >
-          Already have an account? Sign In
-        </Button>
-      </View>
+          <Button
+            mode="contained"
+            onPress={handleSignup}
+            loading={loading}
+            disabled={loading}
+            style={styles.button}
+            contentStyle={{ height: 50 }}
+          >
+            Create Account
+          </Button>
+
+          <Button
+            mode="text"
+            onPress={() => router.back()}
+            style={styles.textButton}
+          >
+            Already have an account? Sign In
+          </Button>
+        </View>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
@@ -98,6 +241,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 24,
+  },
+  keyboardView: {
+    flex: 1,
     justifyContent: "center",
   },
   header: {
@@ -111,8 +257,21 @@ const styles = StyleSheet.create({
     color: "#666",
     marginTop: 8,
   },
+  email: {
+    fontWeight: "600",
+    marginTop: 8,
+  },
   form: {
     gap: 16,
+  },
+  verifyContent: {
+    gap: 16,
+    alignItems: "center",
+  },
+  instructions: {
+    textAlign: "center",
+    color: "#666",
+    marginBottom: 16,
   },
   input: {
     backgroundColor: "#fff",
@@ -120,6 +279,7 @@ const styles = StyleSheet.create({
   button: {
     marginTop: 8,
     borderRadius: 8,
+    width: "100%",
   },
   textButton: {
     marginTop: 8,

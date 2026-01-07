@@ -24,15 +24,13 @@ interface UseAuthReturn {
 
 export function useAuth(): UseAuthReturn {
   const [isLoading, setIsLoading] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(true); // NEW: Track initial session check
   const [error, setError] = useState<string | null>(null);
   
   const user = useStore((state) => state.user);
   const isLoggedIn = useStore((state) => state.isLoggedIn);
   const setUser = useStore((state) => state.setUser);
   const storeLogout = useStore((state) => state.logout);
-
-  // Check for existing session on mount
-
 
   const checkSession = useCallback(async () => {
     try {
@@ -56,11 +54,17 @@ export function useAuth(): UseAuthReturn {
         registerForPushNotificationsAsync().then(token => {
           if (token) savePushToken(token, authUser.$id);
         });
+      } else {
+        // No user returned, clear local state
+        storeLogout();
       }
     } catch {
-      // No active session, that's fine
+      // No active session on backend, so clear local state to be safe
+      storeLogout(); 
+    } finally {
+      setIsInitializing(false); // Session check complete
     }
-  }, [setUser]);
+  }, [setUser, storeLogout]);
 
   // Check for existing session on mount
   useEffect(() => {
@@ -150,7 +154,7 @@ export function useAuth(): UseAuthReturn {
   return {
     user,
     isLoggedIn,
-    isLoading,
+    isLoading: isLoading || isInitializing, // Include initial check in loading state
     error,
     login,
     signup,

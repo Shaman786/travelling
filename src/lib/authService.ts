@@ -20,7 +20,7 @@ export const authService = {
   async register(email: string, password: string, name: string): Promise<AuthUser> {
     try {
       // Create the account
-      const newAccount = await account.create({
+      const newaccount = await account.create({
         userId: ID.unique(),
         email,
         password,
@@ -37,11 +37,11 @@ export const authService = {
       await databases.createDocument({
         databaseId: DATABASE_ID,
         collectionId: TABLES.USERS,
-        documentId: newAccount.$id,
+        documentId: newaccount.$id,
         data: {
           name,
           email,
-          createdAt: new Date().toISOString(),
+          // createdAt: handled by system as $createdAt
         }
       });
       
@@ -54,7 +54,7 @@ export const authService = {
         console.log("Failed to send verification email:", e);
       }
       
-      return newAccount as unknown as AuthUser;
+      return newaccount as unknown as AuthUser;
     } catch (error: any) {
       console.error("Registration error:", error);
       throw new Error(error.message || "Failed to create account");
@@ -100,7 +100,10 @@ export const authService = {
         collectionId: TABLES.USERS,
         documentId: userId
       });
-      return profile as unknown as User;
+      return {
+        ...profile,
+        createdAt: profile.$createdAt,
+      } as unknown as User;
     } catch {
       return null;
     }
@@ -129,7 +132,9 @@ export const authService = {
    */
   async logout(): Promise<void> {
     try {
-      await account.deleteSession({ sessionId: "current" });
+      // Delete ALL sessions to ensure complete logout
+      // (deleteSession only deletes current device, other sessions may remain)
+      await account.deleteSessions();
     } catch (error: any) {
       console.error("Logout error:", error);
       // Don't throw - user might already be logged out
@@ -225,7 +230,7 @@ export const authService = {
   /**
    * Delete account (GDPR compliance)
    */
-  async deleteAccount(): Promise<void> {
+  async deleteaccount(): Promise<void> {
     try {
       // Note: This requires special permissions in Appwrite
       await account.updateStatus();

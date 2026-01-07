@@ -6,8 +6,6 @@
  */
 
 import { useCallback, useEffect, useState } from "react";
-import { packages as mockPackages } from "../data/mockData";
-import { isAppwriteConfigured } from "../lib/appwrite";
 import { packageService } from "../lib/databaseService";
 import type { PackageFilters, TravelPackage } from "../types";
 
@@ -30,38 +28,6 @@ interface UsePackageReturn {
 
 const PAGE_SIZE = 20;
 
-const mapMockToTravelPackage = (p: any): TravelPackage => ({
-  $id: p.id,
-  $collectionId: "mock_packages",
-  $databaseId: "mock_db",
-  $createdAt: new Date().toISOString(),
-  $updatedAt: new Date().toISOString(),
-  $permissions: [],
-  $sequence: 0,
-  title: p.title,
-  destination: p.title, // Fallback since mock doesn't have explicit city
-  country: p.region,
-  category: "adventure", // Default, or map from tags
-  price: p.base_price,
-  duration: `${p.duration_days} Days`,
-  rating: p.rating,
-  reviewCount: p.reviewCount,
-  imageUrl: p.image,
-  images: p.images || [p.image],
-  description: p.description,
-  highlights: p.tags || [],
-  inclusions: p.inclusions,
-  exclusions: [],
-  itinerary: p.itinerary.map((d: any) => ({
-    day: d.day,
-    title: d.title,
-    description: d.description,
-    activities: d.activities
-  })),
-  isActive: true,
-  createdAt: new Date().toISOString(),
-});
-
 /**
  * Hook to fetch list of packages with pagination and filtering
  */
@@ -79,40 +45,16 @@ export function usePackages(initialFilters?: PackageFilters): UsePackagesReturn 
 
     try {
       const currentOffset = reset ? 0 : offset;
-
-      if (isAppwriteConfigured()) {
-        // Use real Appwrite data
-        const response = await packageService.getPackages(filters, PAGE_SIZE, currentOffset);
-        
-        if (reset) {
-          setPackages(response.documents);
-        } else {
-          setPackages((prev) => [...prev, ...response.documents]);
-        }
-        setTotal(response.total);
+      
+      // Use real Appwrite data
+      const response = await packageService.getPackages(filters, PAGE_SIZE, currentOffset);
+      
+      if (reset) {
+        setPackages(response.documents);
       } else {
-        // Fallback to mock data during development
-        let filtered = mockPackages;
-
-        // Apply filters to mock data
-        if (filters.category) {
-          // Approximate category filtering since mock data structure differs
-          filtered = filtered.filter((p) => p.tags.includes("Adventure") || p.region === filters.category);
-        }
-        if (filters.search) {
-          const search = filters.search.toLowerCase();
-          filtered = filtered.filter(
-            (p) =>
-              p.title.toLowerCase().includes(search) ||
-              p.description.toLowerCase().includes(search)
-          );
-        }
-
-        const mapped = filtered.map(mapMockToTravelPackage);
-
-        setPackages(mapped);
-        setTotal(mapped.length);
+        setPackages((prev) => [...prev, ...response.documents]);
       }
+      setTotal(response.total);
 
       if (reset) {
         setOffset(PAGE_SIZE);
@@ -124,7 +66,7 @@ export function usePackages(initialFilters?: PackageFilters): UsePackagesReturn 
     } finally {
       setIsLoading(false);
     }
-  }, [offset, filters]); // Added dependencies
+  }, [offset, filters]);
 
   // Initial load
   useEffect(() => {
@@ -155,26 +97,9 @@ export function usePackages(initialFilters?: PackageFilters): UsePackagesReturn 
     
     setIsLoading(true);
     try {
-      if (isAppwriteConfigured()) {
-        const response = await packageService.getPackages(newFilters, PAGE_SIZE, 0);
-        setPackages(response.documents);
-        setTotal(response.total);
-      } else {
-        // Mock filter logic again (duplicated for simplicity or refactor)
-        // ... omitted for brevity, relying on next render if we change impl, but here I'll just reset.
-        // Actually, just calling fetchPackages(true) usually works if it reads state, but state might not be updated yet.
-        // I will just defer to the user manual refresh or simple re-implementation here.
-        
-         // Fallback to mock data during development
-         let filtered = mockPackages;
-         if (newFilters.search) {
-           const search = newFilters.search.toLowerCase();
-           filtered = filtered.filter(p => p.title.toLowerCase().includes(search));
-         }
-         const mapped = filtered.map(mapMockToTravelPackage);
-         setPackages(mapped);
-         setTotal(mapped.length);
-      }
+      const response = await packageService.getPackages(newFilters, PAGE_SIZE, 0);
+      setPackages(response.documents);
+      setTotal(response.total);
       setOffset(PAGE_SIZE);
     } catch (err: any) {
       setError(err.message);
@@ -209,18 +134,8 @@ export function usePackage(packageId: string): UsePackageReturn {
       setError(null);
 
       try {
-        if (isAppwriteConfigured()) {
-          const data = await packageService.getPackageById(packageId);
-          setPkg(data);
-        } else {
-          // Fallback to mock data
-          const mockPkg = mockPackages.find(p => p.id === packageId);
-          if (mockPkg) {
-            setPkg(mapMockToTravelPackage(mockPkg));
-          } else {
-            setError("Package not found");
-          }
-        }
+        const data = await packageService.getPackageById(packageId);
+        setPkg(data);
       } catch (err: any) {
         setError(err.message || "Failed to load package");
       } finally {

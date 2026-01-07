@@ -5,7 +5,7 @@
  */
 
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import * as ImagePicker from "expo-image-picker";
+import * as ImagePicker from "expo-image-picker"; // Keep star import for other methods if needed, or switch specific
 import { Stack, useRouter } from "expo-router";
 import React, { useState } from "react";
 import { ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
@@ -29,7 +29,10 @@ export default function EditProfileScreen() {
   const handlePickImage = async () => {
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        // Use new MediaType if available to avoid warning, fallback to Options
+        mediaTypes: (ImagePicker as any).MediaType
+          ? (ImagePicker as any).MediaType.Images
+          : ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
         aspect: [1, 1],
         quality: 0.8,

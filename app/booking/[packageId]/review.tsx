@@ -22,7 +22,6 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Toast } from "toastify-react-native";
 
 import { usePackage } from "../../../src/hooks/usePackages";
-import { isAppwriteConfigured } from "../../../src/lib/appwrite";
 import { bookingService } from "../../../src/lib/databaseService";
 import { useStore } from "../../../src/store/useStore";
 import type { Booking } from "../../../src/types";
@@ -109,42 +108,22 @@ export default function ReviewScreen() {
         specialRequests: specialRequests || undefined,
       };
 
-      if (isAppwriteConfigured()) {
-        // Create in Appwrite
-        const booking = await bookingService.createBooking(bookingData);
-        addBookedTrip(booking);
+      // Create in Appwrite
+      const booking = await bookingService.createBooking(bookingData);
+      addBookedTrip(booking);
 
-        // TODO: Initiate Razorpay payment here
-        // For now, simulate success
-        await bookingService.updatePaymentStatus(
-          booking.$id,
-          "paid",
-          `PAY_${Date.now()}`
-        );
-        await bookingService.updateBookingStatus(
-          booking.$id,
-          "processing",
-          "Payment received"
-        );
-      } else {
-        // Mock booking for development
-        const mockBooking: Booking = {
-          ...bookingData,
-          $id: `booking_${Date.now()}`,
-          $collectionId: "mock_bookings",
-          $databaseId: "mock_db",
-          $permissions: [],
-          $sequence: 0,
-          $createdAt: new Date().toISOString(),
-          $updatedAt: new Date().toISOString(),
-          status: "processing",
-          paymentStatus: "paid",
-          paymentId: `PAY_${Date.now()}`,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        };
-        addBookedTrip(mockBooking);
-      }
+      // TODO: Initiate Razorpay payment here
+      // For now, simulate success
+      await bookingService.updatePaymentStatus(
+        booking.$id,
+        "paid",
+        `PAY_${Date.now()}`
+      );
+      await bookingService.updateBookingStatus(
+        booking.$id,
+        "processing",
+        "Payment received"
+      );
 
       // Clear draft and navigate
       resetBookingDraft();
