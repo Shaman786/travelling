@@ -49,14 +49,13 @@ export default function RootLayout() {
   useEffect(() => {
     // This listener is fired whenever a notification is received while the app is foregrounded
     notificationListener.current =
-      Notifications.addNotificationReceivedListener((notification) => {
-        console.log("Notification received:", notification);
+      Notifications.addNotificationReceivedListener(() => {
+        // Could show in-app notification banner here
       });
 
     // This listener is fired whenever a user taps on or interacts with a notification
     responseListener.current =
-      Notifications.addNotificationResponseReceivedListener((response) => {
-        console.log("Notification response:", response);
+      Notifications.addNotificationResponseReceivedListener(() => {
         // Example: router.push(response.notification.request.content.data.url);
       });
 

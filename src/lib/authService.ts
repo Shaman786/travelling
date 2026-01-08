@@ -1,6 +1,6 @@
 /**
  * Appwrite Authentication Service
- * 
+ *
  * Handles all authentication operations:
  * - Email/Password login & registration
  * - OAuth (Google, Apple)
@@ -17,22 +17,26 @@ export const authService = {
   /**
    * Create a new user account with email and password
    */
-  async register(email: string, password: string, name: string): Promise<AuthUser> {
+  async register(
+    email: string,
+    password: string,
+    name: string
+  ): Promise<AuthUser> {
     try {
       // Create the account
       const newaccount = await account.create({
         userId: ID.unique(),
         email,
         password,
-        name
+        name,
       });
-      
+
       // Automatically log in after registration
       await account.createEmailPasswordSession({
         email,
-        password
+        password,
       });
-      
+
       // Create user profile in database
       await databases.createDocument({
         databaseId: DATABASE_ID,
@@ -42,18 +46,18 @@ export const authService = {
           name,
           email,
           // createdAt: handled by system as $createdAt
-        }
+        },
       });
-      
+
       // Send verification email
       try {
         await account.createEmailVerification({
-          url: "travelling://verify"
+          url: "travelling://verify",
         });
-      } catch (e) {
-        console.log("Failed to send verification email:", e);
+      } catch {
+        // Verification email is optional - silently ignore failure
       }
-      
+
       return newaccount as unknown as AuthUser;
     } catch (error: any) {
       console.error("Registration error:", error);
@@ -68,7 +72,7 @@ export const authService = {
     try {
       await account.createEmailPasswordSession({
         email,
-        password
+        password,
       });
       const user = await account.get();
       return user as unknown as AuthUser;
@@ -98,7 +102,7 @@ export const authService = {
       const profile = await databases.getDocument({
         databaseId: DATABASE_ID,
         collectionId: TABLES.USERS,
-        documentId: userId
+        documentId: userId,
       });
       return {
         ...profile,
@@ -118,7 +122,7 @@ export const authService = {
         databaseId: DATABASE_ID,
         collectionId: TABLES.USERS,
         documentId: userId,
-        data: updates
+        data: updates,
       });
       return updated as unknown as User;
     } catch (error: any) {
@@ -148,7 +152,7 @@ export const authService = {
     try {
       await account.createRecovery({
         email,
-        url: "travelling://reset-password"
+        url: "travelling://reset-password",
       });
     } catch (error: any) {
       console.error("Password reset error:", error);
@@ -215,11 +219,14 @@ export const authService = {
   /**
    * Change password
    */
-  async changePassword(oldPassword: string, newPassword: string): Promise<void> {
+  async changePassword(
+    oldPassword: string,
+    newPassword: string
+  ): Promise<void> {
     try {
       await account.updatePassword({
         password: newPassword,
-        oldPassword
+        oldPassword,
       });
     } catch (error: any) {
       console.error("Change password error:", error);
@@ -257,7 +264,7 @@ export const authService = {
   async sendVerificationEmail(): Promise<void> {
     try {
       await account.createEmailVerification({
-        url: "travelling://verify"
+        url: "travelling://verify",
       });
     } catch (error: any) {
       console.error("Verification email error:", error);
@@ -272,7 +279,7 @@ export const authService = {
     try {
       await account.updateEmailVerification({
         userId,
-        secret
+        secret,
       });
     } catch (error: any) {
       console.error("Verification error:", error);

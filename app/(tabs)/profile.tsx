@@ -59,14 +59,13 @@ export default function ProfileScreen() {
           { name: file.name, uri: file.uri, size: file.size },
         ]);
       }
-    } catch (err) {
-      console.log("Document Picker Error", err);
+    } catch {
+      // Document picker cancelled or error
     }
   };
 
   const openWhatsApp = () => {
-    // ... implementation unchanged
-    const supportNumber = "";
+    const supportNumber = process.env.EXPO_PUBLIC_SUPPORT_PHONE || "";
     if (!supportNumber) {
       alert(
         "WhatsApp support not configured. Please use the Support Tickets feature."

@@ -87,7 +87,17 @@ export default function BookingDetailsScreen() {
   }, [booking, fetchBooking]);
 
   const handleContactSupport = () => {
-    Linking.openURL("whatsapp://send?phone=+919876543210");
+    const supportPhone = process.env.EXPO_PUBLIC_SUPPORT_PHONE || "";
+    if (!supportPhone) {
+      Alert.alert(
+        "Support",
+        "Please use the Support Tickets feature in the app."
+      );
+      return;
+    }
+    Linking.openURL(`whatsapp://send?phone=${supportPhone}`).catch(() => {
+      Alert.alert("Error", "WhatsApp is not installed.");
+    });
   };
 
   const statusColor = (status: BookingStatus) => {
