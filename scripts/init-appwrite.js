@@ -177,6 +177,38 @@ const COLLECTIONS = {
     indexes: [
       { key: "user_index", type: "key", attributes: ["userId"] },
     ]
+  },
+  payments: {
+    name: "Payments",
+    documentSecurity: true,
+    permissions: [
+      Permission.create(Role.users()),
+      Permission.read(Role.users()),
+      Permission.update(Role.team("admin")),
+    ],
+    attributes: [
+      { key: "bookingId", type: "string", size: 36, required: true },
+      { key: "userId", type: "string", size: 36, required: true },
+      { key: "amount", type: "integer", required: true },
+      { key: "currency", type: "string", size: 3, required: true },
+      { key: "gatewayProvider", type: "string", size: 32, required: false }, // razorpay/stripe/paypal
+      { key: "gatewayOrderId", type: "string", size: 128, required: false },
+      { key: "gatewayPaymentId", type: "string", size: 128, required: false },
+      { key: "gatewaySignature", type: "string", size: 256, required: false },
+      { key: "status", type: "string", size: 32, required: true },
+      { key: "method", type: "string", size: 32, required: false }, // upi/card/netbanking
+      { key: "refundId", type: "string", size: 128, required: false },
+      { key: "refundAmount", type: "integer", required: false },
+      { key: "refundReason", type: "string", size: 500, required: false },
+      { key: "metadata", type: "string", size: 2000, required: false },
+      { key: "createdAt", type: "string", size: 32, required: false },
+      { key: "updatedAt", type: "string", size: 32, required: false },
+    ],
+    indexes: [
+      { key: "booking_index", type: "key", attributes: ["bookingId"] },
+      { key: "user_index", type: "key", attributes: ["userId"] },
+      { key: "status_index", type: "key", attributes: ["status"] },
+    ]
   }
 };
 

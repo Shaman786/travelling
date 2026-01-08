@@ -1,12 +1,7 @@
+import { FlashList } from "@shopify/flash-list";
 import { useRouter } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
-import {
-  RefreshControl,
-  ScrollView,
-  StyleSheet,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { StyleSheet, TouchableOpacity, View } from "react-native";
 import {
   Avatar,
   Button,
@@ -35,6 +30,7 @@ const DESTINATION_CATEGORIES = [
 export default function CatalogScreen() {
   const theme = useTheme();
   const router = useRouter();
+
   /*
    * FIX: Split useStore selectors to avoid object identity loop.
    * Do NOT return an object literal from useStore without useShallow.
@@ -42,8 +38,6 @@ export default function CatalogScreen() {
   const user = useStore((state) => state.user);
   const comparisonList = useStore((state) => state.comparisonList);
   const clearComparison = useStore((state) => state.clearComparison);
-
-  // const [searchQuery, setSearchQuery] = useState(""); <-- Leaving this next line alone
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
@@ -85,16 +79,18 @@ export default function CatalogScreen() {
     fetchPackages(true);
   }, [fetchPackages]);
 
-  return (
-    <SafeAreaView
-      style={[styles.container, { backgroundColor: theme.colors.background }]}
-    >
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
-      >
+  const renderItem = useCallback(
+    ({ item }: { item: TravelPackage }) => (
+      <View style={styles.packageCardWrapper}>
+        <PackageCard item={item} />
+      </View>
+    ),
+    []
+  );
+
+  const ListHeader = useCallback(
+    () => (
+      <View>
         {/* Header */}
         <View style={styles.header}>
           <View>
@@ -119,6 +115,7 @@ export default function CatalogScreen() {
             )}
           </TouchableOpacity>
         </View>
+
         {/* Search Bar */}
         <View style={styles.searchContainer}>
           <Searchbar
@@ -153,52 +150,50 @@ export default function CatalogScreen() {
             </View>
           )}
         </View>
+
         {/* Categories */}
         <View style={styles.sectionHeader}>
           <Text variant="titleLarge" style={styles.sectionTitle}>
             Destinations
           </Text>
         </View>
-        <ScrollView
+        <FlashList
           horizontal
+          data={["all", ...DESTINATION_CATEGORIES.map((cat) => cat.id)]}
           showsHorizontalScrollIndicator={false}
+          estimatedItemSize={80}
           contentContainerStyle={styles.categoryScroll}
-        >
-          <Chip
-            selected={selectedCategory === "all"}
-            onPress={() => setSelectedCategory("all")}
-            style={[
-              styles.categoryChip,
-              selectedCategory === "all" && {
-                backgroundColor: theme.colors.primary,
-              },
-            ]}
-            textStyle={selectedCategory === "all" ? { color: "#fff" } : {}}
-            showSelectedOverlay
-          >
-            All
-          </Chip>
-          {DESTINATION_CATEGORIES.map((cat) => (
-            <Chip
-              key={cat.id}
-              selected={selectedCategory === cat.id}
-              onPress={() => setSelectedCategory(cat.id)}
-              style={[
-                styles.categoryChip,
-                selectedCategory === cat.id && {
-                  backgroundColor: theme.colors.primary,
-                },
-              ]}
-              textStyle={selectedCategory === cat.id ? { color: "#fff" } : {}}
-              showSelectedOverlay
-            >
-              {cat.name}
-            </Chip>
-          ))}
-        </ScrollView>
+          renderItem={({ item }) => {
+            const isAll = item === "all";
+            const categoryObj = isAll
+              ? { id: "all", name: "All" }
+              : DESTINATION_CATEGORIES.find((c) => c.id === item);
 
-        {/* Featured Packages */}
-        <View style={styles.sectionHeader}>
+            if (!categoryObj) return null;
+
+            return (
+              <Chip
+                selected={selectedCategory === categoryObj.id}
+                onPress={() => setSelectedCategory(categoryObj.id)}
+                style={[
+                  styles.categoryChip,
+                  selectedCategory === categoryObj.id && {
+                    backgroundColor: theme.colors.primary,
+                  },
+                ]}
+                textStyle={
+                  selectedCategory === categoryObj.id ? { color: "#fff" } : {}
+                }
+                showSelectedOverlay
+              >
+                {categoryObj.name}
+              </Chip>
+            );
+          }}
+        />
+
+        {/* Featured Packages Title */}
+        <View style={[styles.sectionHeader, { marginTop: 24 }]}>
           <Text variant="titleLarge" style={styles.sectionTitle}>
             Recommended for You
           </Text>
@@ -211,34 +206,53 @@ export default function CatalogScreen() {
             </Text>
           </TouchableOpacity>
         </View>
-        <View style={styles.packagesGrid}>
-          {isLoading ? (
-            <>
-              <PackageCardSkeleton />
-              <PackageCardSkeleton />
-              <PackageCardSkeleton />
-            </>
-          ) : packages.length === 0 ? (
-            <View style={{ padding: 40, alignItems: "center" }}>
-              <Text
-                variant="bodyMedium"
-                style={{ color: theme.colors.outline }}
-              >
-                No packages found. Try adjusting your search.
-              </Text>
-            </View>
-          ) : (
-            packages.map((item) => (
-              <PackageCard
-                key={item.$id}
-                item={item}
-                style={styles.packageCard}
-              />
-            ))
-          )}
+      </View>
+    ),
+    [
+      theme.colors,
+      user,
+      searchQuery,
+      history,
+      selectedCategory,
+      addToHistory,
+      router,
+    ]
+  );
+
+  const ListEmptyComponent = useCallback(() => {
+    if (isLoading) {
+      return (
+        <View style={{ paddingHorizontal: 20 }}>
+          <PackageCardSkeleton />
+          <PackageCardSkeleton />
+          <PackageCardSkeleton />
         </View>
-        <View style={styles.footerSpacer} />
-      </ScrollView>
+      );
+    }
+    return (
+      <View style={{ padding: 40, alignItems: "center" }}>
+        <Text variant="bodyMedium" style={{ color: theme.colors.outline }}>
+          No packages found. Try adjusting your search.
+        </Text>
+      </View>
+    );
+  }, [isLoading, theme.colors.outline]);
+
+  return (
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
+    >
+      <FlashList
+        data={packages}
+        renderItem={renderItem}
+        estimatedItemSize={280}
+        keyExtractor={(item) => item.$id}
+        ListHeaderComponent={ListHeader}
+        ListEmptyComponent={ListEmptyComponent}
+        contentContainerStyle={{ paddingBottom: 100 }}
+        refreshing={refreshing}
+        onRefresh={onRefresh}
+      />
 
       {/* Comparison Floating Bar */}
       {comparisonList.length > 0 && (
@@ -327,48 +341,14 @@ const styles = StyleSheet.create({
   },
   categoryScroll: {
     paddingHorizontal: 20,
-    gap: 16,
-    paddingBottom: 24,
-    alignItems: "center",
+    paddingBottom: 8, // FlashList handled
   },
   categoryChip: {
     marginRight: 8,
     height: 40,
   },
-  categoryItem: {
-    alignItems: "center",
-    marginRight: 8,
-  },
-  categoryImageContainer: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    overflow: "hidden",
-    marginBottom: 8,
-    borderWidth: 2,
-    borderColor: "transparent",
-  },
-  categorySelected: {
-    // Border color applied via inline style
-  },
-  categoryImage: {
-    width: "100%",
-    height: "100%",
-  },
-  activeOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    opacity: 0.3,
-  },
-  categoryName: {
-    color: "#6B7280",
-  },
-  packagesGrid: {
+  packageCardWrapper: {
     paddingHorizontal: 20,
-  },
-  packageCard: {
     marginBottom: 20,
-  },
-  footerSpacer: {
-    height: 100,
   },
 });

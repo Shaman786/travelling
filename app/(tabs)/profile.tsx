@@ -109,7 +109,7 @@ export default function ProfileScreen() {
           <Card style={styles.card} mode="elevated">
             <Card.Title
               title={t("travel_vault")}
-              subtitle="Store passports, visas & IDs"
+              subtitle={t("store_docs_subtitle")}
               left={(props) => (
                 <Avatar.Icon
                   {...props}
@@ -121,7 +121,7 @@ export default function ProfileScreen() {
             <Card.Content>
               {documents.length === 0 ? (
                 <Text variant="bodySmall" style={styles.emptyText}>
-                  No documents uploaded yet.
+                  {t("no_docs")}
                 </Text>
               ) : (
                 documents.map((doc, idx) => (
@@ -146,7 +146,7 @@ export default function ProfileScreen() {
                 icon="cloud-upload"
                 style={styles.actionBtn}
               >
-                Upload Document
+                {t("upload_doc")}
               </Button>
             </Card.Content>
           </Card>
@@ -158,9 +158,7 @@ export default function ProfileScreen() {
                 <Text variant="titleMedium" style={{ fontWeight: "bold" }}>
                   {t("support")}
                 </Text>
-                <Text variant="bodySmall">
-                  Chat with our travel experts instantly via WhatsApp.
-                </Text>
+                <Text variant="bodySmall">{t("chat_expert_subtitle")}</Text>
               </View>
               <IconButton
                 icon="whatsapp"
@@ -176,7 +174,7 @@ export default function ProfileScreen() {
           {/* Account Actions */}
           <Surface style={styles.menuContainer} elevation={0}>
             <List.Section>
-              <List.Subheader>Account Settings</List.Subheader>
+              <List.Subheader>{t("account_settings")}</List.Subheader>
 
               <List.Item
                 title={`${t("language")}: ${i18n.language.toUpperCase()}`}
@@ -186,7 +184,7 @@ export default function ProfileScreen() {
               />
 
               <List.Item
-                title="Edit Profile"
+                title={t("edit_profile")}
                 left={(props) => (
                   <List.Icon {...props} icon="account-edit-outline" />
                 )}
@@ -194,7 +192,7 @@ export default function ProfileScreen() {
                 onPress={() => router.push("/profile/edit" as any)}
               />
               <List.Item
-                title="My Favorites"
+                title={t("my_favorites")}
                 left={(props) => <List.Icon {...props} icon="heart" />}
                 right={(props) => <List.Icon {...props} icon="chevron-right" />}
                 onPress={() => router.push("/favorites" as any)}
@@ -206,7 +204,7 @@ export default function ProfileScreen() {
                 onPress={() => router.push("/profile/change-password" as any)}
               />
               <List.Item
-                title="Support Tickets"
+                title={t("support_tickets")}
                 left={(props) => <List.Icon {...props} icon="ticket-account" />}
                 right={(props) => <List.Icon {...props} icon="chevron-right" />}
                 onPress={() => router.push("/support" as any)}

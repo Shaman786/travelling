@@ -1,17 +1,26 @@
-import { Account, Client, Databases, ID, Query, Storage } from "react-native-appwrite";
+import {
+  Account,
+  Client,
+  Databases,
+  ID,
+  Query,
+  Storage,
+} from "react-native-appwrite";
 import "react-native-url-polyfill/auto";
 
 // Appwrite Configuration from environment variables
 const endpoint = process.env.EXPO_PUBLIC_APPWRITE_ENDPOINT || "";
 const projectId = process.env.EXPO_PUBLIC_APPWRITE_PROJECT_ID || "";
-const platform = process.env.EXPO_PUBLIC_APPWRITE_PLATFORM || "com.travels.travelling";
+const platform =
+  process.env.EXPO_PUBLIC_APPWRITE_PLATFORM || "com.travels.travelling";
 
 // Export constants for use in other services
 export const APPWRITE_ENDPOINT = endpoint;
 export const APPWRITE_PROJECT_ID = projectId;
 
 // Database and Table IDs
-export const DATABASE_ID = process.env.EXPO_PUBLIC_APPWRITE_DATABASE_ID || "travelling_db";
+export const DATABASE_ID =
+  process.env.EXPO_PUBLIC_APPWRITE_DATABASE_ID || "travelling_db";
 
 export const TABLES = {
   USERS: "users",
@@ -21,6 +30,7 @@ export const TABLES = {
   TICKETS: "tickets",
   SAVED_TRAVELERS: "saved_travelers",
   REVIEWS: "reviews",
+  PAYMENTS: "payments",
 };
 
 export const BUCKETS = {
@@ -34,10 +44,8 @@ const client = new Client();
 
 // Only set up client if configuration exists
 if (endpoint && projectId) {
-  client
-    .setEndpoint(endpoint)
-    .setProject(projectId);
-  
+  client.setEndpoint(endpoint).setProject(projectId);
+
   if (platform) {
     client.setPlatform(platform);
   }
@@ -53,11 +61,7 @@ export const isAppwriteConfigured = (): boolean => {
   return !!(endpoint && projectId);
 };
 
-
-
 // ============ Query Builder ============
 
 // Export utilities
 export { client, ID, Query };
-
-

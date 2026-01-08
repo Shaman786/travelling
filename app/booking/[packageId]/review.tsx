@@ -112,17 +112,51 @@ export default function ReviewScreen() {
       const booking = await bookingService.createBooking(bookingData);
       addBookedTrip(booking);
 
-      // TODO: Initiate Razorpay payment here
-      // For now, simulate success
+      // ================================================================
+      // PAYMENT GATEWAY INTEGRATION PLACEHOLDER
+      // ================================================================
+      //
+      // To integrate a payment gateway (Razorpay, Stripe, etc.):
+      // 1. Install the gateway SDK
+      // 2. Create an order with the gateway
+      // 3. Open the payment sheet/checkout
+      // 4. On success callback, update payment record
+      //
+      // Example flow:
+      // const payment = await paymentService.createPayment({
+      //   bookingId: booking.$id,
+      //   userId: user.$id,
+      //   amount: totalPrice,
+      //   currency: "INR",
+      //   gatewayProvider: "razorpay",
+      // });
+      //
+      // const options = {
+      //   key: RAZORPAY_KEY,
+      //   amount: totalPrice * 100,
+      //   order_id: gatewayOrderId,
+      //   handler: async (response) => {
+      //     await paymentService.updatePaymentFromGateway(payment.$id, {
+      //       gatewayPaymentId: response.razorpay_payment_id,
+      //       gatewaySignature: response.razorpay_signature,
+      //       status: "completed",
+      //     });
+      //   }
+      // };
+      // RazorpayCheckout.open(options);
+      // ================================================================
+
+      // TEMPORARY: Simulate payment success until gateway is configured
+      // This marks the booking as paid immediately (remove when gateway is integrated)
       await bookingService.updatePaymentStatus(
         booking.$id,
         "paid",
-        `PAY_${Date.now()}`
+        `SIMULATED_${Date.now()}`
       );
       await bookingService.updateBookingStatus(
         booking.$id,
         "processing",
-        "Payment received"
+        "Payment simulated - Replace with actual gateway"
       );
 
       // Clear draft and navigate
@@ -228,8 +262,8 @@ export default function ReviewScreen() {
                     traveler.type === "adult"
                       ? "account"
                       : traveler.type === "child"
-                      ? "account-child"
-                      : "baby-face-outline"
+                        ? "account-child"
+                        : "baby-face-outline"
                   }
                   size={20}
                   color={theme.colors.outline}

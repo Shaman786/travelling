@@ -1,6 +1,6 @@
 /**
  * Appwrite TablesDB Services
- * 
+ *
  * Handles all database operations for:
  * - Travel Packages
  * - Bookings
@@ -9,17 +9,30 @@
  */
 
 import type {
-    Booking,
-    BookingStatus,
-    PackageFilters,
-    PaginatedResponse,
-    Review,
-    SavedTraveler,
-    SupportTicket,
-    TravelDocument,
-    TravelPackage,
+  Booking,
+  BookingStatus,
+  PackageFilters,
+  PaginatedResponse,
+  Payment,
+  Review,
+  SavedTraveler,
+  SupportTicket,
+  TravelDocument,
+  TravelPackage,
 } from "../types";
-import { APPWRITE_ENDPOINT, APPWRITE_PROJECT_ID, BUCKETS, DATABASE_ID, databases, ID, Query, storage, TABLES } from "./appwrite";
+import {
+  APPWRITE_ENDPOINT,
+  APPWRITE_PROJECT_ID,
+  BUCKETS,
+  DATABASE_ID,
+  databases,
+  ID,
+  Query,
+  storage,
+  TABLES,
+} from "./appwrite";
+
+// ============ Payment Service ============
 
 // ============ Package Service ============
 
@@ -27,7 +40,11 @@ export const packageService = {
   /**
    * Get all active packages with optional filters
    */
-  async getPackages(filters?: PackageFilters, limit = 25, offset = 0): Promise<PaginatedResponse<TravelPackage>> {
+  async getPackages(
+    filters?: PackageFilters,
+    limit = 25,
+    offset = 0
+  ): Promise<PaginatedResponse<TravelPackage>> {
     try {
       const queries: string[] = [
         Query.equal("isActive", true),
@@ -77,9 +94,12 @@ export const packageService = {
       );
 
       // Parse itinerary JSON string to object
-      const documents = response.documents.map(pkg => ({
+      const documents = response.documents.map((pkg) => ({
         ...pkg,
-        itinerary: typeof pkg.itinerary === "string" ? JSON.parse(pkg.itinerary || "[]") : pkg.itinerary,
+        itinerary:
+          typeof pkg.itinerary === "string"
+            ? JSON.parse(pkg.itinerary || "[]")
+            : pkg.itinerary,
       }));
 
       return {
@@ -104,7 +124,10 @@ export const packageService = {
       );
       return {
         ...pkg,
-        itinerary: typeof pkg.itinerary === "string" ? JSON.parse(pkg.itinerary || "[]") : pkg.itinerary,
+        itinerary:
+          typeof pkg.itinerary === "string"
+            ? JSON.parse(pkg.itinerary || "[]")
+            : pkg.itinerary,
       } as TravelPackage;
     } catch {
       return null;
@@ -114,7 +137,10 @@ export const packageService = {
   /**
    * Get packages by category
    */
-  async getPackagesByCategory(category: string, limit = 10): Promise<TravelPackage[]> {
+  async getPackagesByCategory(
+    category: string,
+    limit = 10
+  ): Promise<TravelPackage[]> {
     try {
       const response = await databases.listDocuments<TravelPackage>(
         DATABASE_ID,
@@ -125,9 +151,12 @@ export const packageService = {
           Query.limit(limit),
         ]
       );
-      return response.documents.map(pkg => ({
+      return response.documents.map((pkg) => ({
         ...pkg,
-        itinerary: typeof pkg.itinerary === "string" ? JSON.parse(pkg.itinerary || "[]") : pkg.itinerary,
+        itinerary:
+          typeof pkg.itinerary === "string"
+            ? JSON.parse(pkg.itinerary || "[]")
+            : pkg.itinerary,
       })) as TravelPackage[];
     } catch (error: any) {
       console.error("Get packages by category error:", error);
@@ -149,9 +178,12 @@ export const packageService = {
           Query.limit(limit),
         ]
       );
-      return response.documents.map(pkg => ({
+      return response.documents.map((pkg) => ({
         ...pkg,
-        itinerary: typeof pkg.itinerary === "string" ? JSON.parse(pkg.itinerary || "[]") : pkg.itinerary,
+        itinerary:
+          typeof pkg.itinerary === "string"
+            ? JSON.parse(pkg.itinerary || "[]")
+            : pkg.itinerary,
       })) as TravelPackage[];
     } catch (error: any) {
       console.error("Get featured packages error:", error);
@@ -173,9 +205,12 @@ export const packageService = {
           Query.limit(limit),
         ]
       );
-      return response.documents.map(pkg => ({
+      return response.documents.map((pkg) => ({
         ...pkg,
-        itinerary: typeof pkg.itinerary === "string" ? JSON.parse(pkg.itinerary || "[]") : pkg.itinerary,
+        itinerary:
+          typeof pkg.itinerary === "string"
+            ? JSON.parse(pkg.itinerary || "[]")
+            : pkg.itinerary,
       })) as TravelPackage[];
     } catch (error: any) {
       console.error("Search packages error:", error);
@@ -190,7 +225,20 @@ export const bookingService = {
   /**
    * Create a new booking
    */
-  async createBooking(bookingData: Omit<Booking, "$id" | "createdAt" | "updatedAt" | "$createdAt" | "$updatedAt" | "$collectionId" | "$databaseId" | "$permissions" | "$sequence">): Promise<Booking> {
+  async createBooking(
+    bookingData: Omit<
+      Booking,
+      | "$id"
+      | "createdAt"
+      | "updatedAt"
+      | "$createdAt"
+      | "$updatedAt"
+      | "$collectionId"
+      | "$databaseId"
+      | "$permissions"
+      | "$sequence"
+    >
+  ): Promise<Booking> {
     try {
       const now = new Date().toISOString();
       const data = {
@@ -201,7 +249,7 @@ export const bookingService = {
         createdAt: now,
         updatedAt: now,
       };
-      
+
       const row = await databases.createDocument<Booking>(
         DATABASE_ID,
         TABLES.BOOKINGS,
@@ -211,8 +259,14 @@ export const bookingService = {
 
       return {
         ...row,
-        travelers: typeof row.travelers === "string" ? JSON.parse(row.travelers) : row.travelers,
-        statusHistory: typeof row.statusHistory === "string" ? JSON.parse(row.statusHistory) : row.statusHistory,
+        travelers:
+          typeof row.travelers === "string"
+            ? JSON.parse(row.travelers)
+            : row.travelers,
+        statusHistory:
+          typeof row.statusHistory === "string"
+            ? JSON.parse(row.statusHistory)
+            : row.statusHistory,
         createdAt: row.$createdAt,
         updatedAt: row.$updatedAt,
       } as Booking;
@@ -230,15 +284,18 @@ export const bookingService = {
       const response = await databases.listDocuments<Booking>(
         DATABASE_ID,
         TABLES.BOOKINGS,
-        [
-          Query.equal("userId", userId),
-          Query.orderDesc("$createdAt"),
-        ]
+        [Query.equal("userId", userId), Query.orderDesc("$createdAt")]
       );
-      return response.documents.map(booking => ({
+      return response.documents.map((booking) => ({
         ...booking,
-        travelers: typeof booking.travelers === "string" ? JSON.parse(booking.travelers) : booking.travelers,
-        statusHistory: typeof booking.statusHistory === "string" ? JSON.parse(booking.statusHistory) : booking.statusHistory,
+        travelers:
+          typeof booking.travelers === "string"
+            ? JSON.parse(booking.travelers)
+            : booking.travelers,
+        statusHistory:
+          typeof booking.statusHistory === "string"
+            ? JSON.parse(booking.statusHistory)
+            : booking.statusHistory,
         createdAt: booking.$createdAt,
         updatedAt: booking.$updatedAt,
       })) as Booking[];
@@ -260,8 +317,14 @@ export const bookingService = {
       );
       return {
         ...booking,
-        travelers: typeof booking.travelers === "string" ? JSON.parse(booking.travelers) : booking.travelers,
-        statusHistory: typeof booking.statusHistory === "string" ? JSON.parse(booking.statusHistory) : booking.statusHistory,
+        travelers:
+          typeof booking.travelers === "string"
+            ? JSON.parse(booking.travelers)
+            : booking.travelers,
+        statusHistory:
+          typeof booking.statusHistory === "string"
+            ? JSON.parse(booking.statusHistory)
+            : booking.statusHistory,
         createdAt: booking.$createdAt,
         updatedAt: booking.$updatedAt,
       } as Booking;
@@ -274,8 +337,8 @@ export const bookingService = {
    * Update booking status
    */
   async updateBookingStatus(
-    bookingId: string, 
-    status: BookingStatus, 
+    bookingId: string,
+    status: BookingStatus,
     note?: string
   ): Promise<Booking> {
     try {
@@ -301,11 +364,17 @@ export const bookingService = {
           updatedAt: new Date().toISOString(),
         } as any
       );
-      
+
       return {
         ...row,
-        travelers: typeof row.travelers === "string" ? JSON.parse(row.travelers) : row.travelers,
-        statusHistory: typeof row.statusHistory === "string" ? JSON.parse(row.statusHistory) : row.statusHistory,
+        travelers:
+          typeof row.travelers === "string"
+            ? JSON.parse(row.travelers)
+            : row.travelers,
+        statusHistory:
+          typeof row.statusHistory === "string"
+            ? JSON.parse(row.statusHistory)
+            : row.statusHistory,
         createdAt: row.$createdAt,
         updatedAt: row.$updatedAt,
       } as Booking;
@@ -336,8 +405,14 @@ export const bookingService = {
       );
       return {
         ...row,
-        travelers: typeof row.travelers === "string" ? JSON.parse(row.travelers) : row.travelers,
-        statusHistory: typeof row.statusHistory === "string" ? JSON.parse(row.statusHistory) : row.statusHistory,
+        travelers:
+          typeof row.travelers === "string"
+            ? JSON.parse(row.travelers)
+            : row.travelers,
+        statusHistory:
+          typeof row.statusHistory === "string"
+            ? JSON.parse(row.statusHistory)
+            : row.statusHistory,
         createdAt: row.$createdAt,
         updatedAt: row.$updatedAt,
       } as Booking;
@@ -351,7 +426,11 @@ export const bookingService = {
    * Cancel a booking
    */
   async cancelBooking(bookingId: string, reason?: string): Promise<Booking> {
-    return this.updateBookingStatus(bookingId, "cancelled", reason || "Cancelled by user");
+    return this.updateBookingStatus(
+      bookingId,
+      "cancelled",
+      reason || "Cancelled by user"
+    );
   },
 };
 
@@ -388,7 +467,7 @@ export const documentService = {
 
       // Get view URL manually as SDK returns ArrayBuffer
       const fileUrl = `${APPWRITE_ENDPOINT}/storage/buckets/${BUCKETS.TRAVEL_DOCUMENTS}/files/${uploaded.$id}/view?project=${APPWRITE_PROJECT_ID}`;
-      
+
       const row = await databases.createDocument<TravelDocument>(
         DATABASE_ID,
         TABLES.DOCUMENTS,
@@ -422,12 +501,9 @@ export const documentService = {
       const response = await databases.listDocuments<TravelDocument>(
         DATABASE_ID,
         TABLES.DOCUMENTS,
-        [
-          Query.equal("userId", userId),
-          Query.orderDesc("$createdAt"),
-        ]
+        [Query.equal("userId", userId), Query.orderDesc("$createdAt")]
       );
-      return response.documents.map(doc => ({
+      return response.documents.map((doc) => ({
         ...doc,
         uploadedAt: doc.$createdAt,
       })) as TravelDocument[];
@@ -452,11 +528,7 @@ export const documentService = {
           console.warn("Failed to delete file from storage:", e);
         }
       }
-      await databases.deleteDocument(
-        DATABASE_ID,
-        TABLES.DOCUMENTS,
-        documentId
-      );
+      await databases.deleteDocument(DATABASE_ID, TABLES.DOCUMENTS, documentId);
     } catch (error: any) {
       console.error("Delete document error:", error);
       throw new Error(error.message || "Failed to delete document");
@@ -477,7 +549,20 @@ export const supportService = {
   /**
    * Create a support ticket
    */
-  async createTicket(ticketData: Omit<SupportTicket, "$id" | "createdAt" | "updatedAt" | "$createdAt" | "$updatedAt" | "$collectionId" | "$databaseId" | "$permissions" | "$sequence">): Promise<SupportTicket> {
+  async createTicket(
+    ticketData: Omit<
+      SupportTicket,
+      | "$id"
+      | "createdAt"
+      | "updatedAt"
+      | "$createdAt"
+      | "$updatedAt"
+      | "$collectionId"
+      | "$databaseId"
+      | "$permissions"
+      | "$sequence"
+    >
+  ): Promise<SupportTicket> {
     try {
       const now = new Date().toISOString();
       const row = await databases.createDocument<SupportTicket>(
@@ -510,12 +595,9 @@ export const supportService = {
       const response = await databases.listDocuments<SupportTicket>(
         DATABASE_ID,
         TABLES.TICKETS,
-        [
-          Query.equal("userId", userId),
-          Query.orderDesc("$createdAt"),
-        ]
+        [Query.equal("userId", userId), Query.orderDesc("$createdAt")]
       );
-      return response.documents.map(ticket => ({
+      return response.documents.map((ticket) => ({
         ...ticket,
         createdAt: ticket.$createdAt,
         updatedAt: ticket.$updatedAt,
@@ -553,7 +635,19 @@ export const travelerService = {
   /**
    * Add a saved traveler
    */
-  async createTraveler(travelerData: Omit<SavedTraveler, "$id" | "createdAt" | "$createdAt" | "$updatedAt" | "$collectionId" | "$databaseId" | "$permissions" | "$sequence">): Promise<SavedTraveler> {
+  async createTraveler(
+    travelerData: Omit<
+      SavedTraveler,
+      | "$id"
+      | "createdAt"
+      | "$createdAt"
+      | "$updatedAt"
+      | "$collectionId"
+      | "$databaseId"
+      | "$permissions"
+      | "$sequence"
+    >
+  ): Promise<SavedTraveler> {
     try {
       const now = new Date().toISOString();
       const row = await databases.createDocument<SavedTraveler>(
@@ -583,12 +677,9 @@ export const travelerService = {
       const response = await databases.listDocuments<SavedTraveler>(
         DATABASE_ID,
         TABLES.SAVED_TRAVELERS,
-        [
-          Query.equal("userId", userId),
-          Query.orderDesc("$createdAt"),
-        ]
+        [Query.equal("userId", userId), Query.orderDesc("$createdAt")]
       );
-      return response.documents.map(traveler => ({
+      return response.documents.map((traveler) => ({
         ...traveler,
         createdAt: traveler.$createdAt,
       })) as SavedTraveler[];
@@ -621,7 +712,19 @@ export const reviewService = {
   /**
    * Create a review
    */
-  async createReview(reviewData: Omit<Review, "$id" | "createdAt" | "$createdAt" | "$updatedAt" | "$collectionId" | "$databaseId" | "$permissions" | "$sequence">): Promise<Review> {
+  async createReview(
+    reviewData: Omit<
+      Review,
+      | "$id"
+      | "createdAt"
+      | "$createdAt"
+      | "$updatedAt"
+      | "$collectionId"
+      | "$databaseId"
+      | "$permissions"
+      | "$sequence"
+    >
+  ): Promise<Review> {
     try {
       const now = new Date().toISOString();
       const row = await databases.createDocument<Review>(
@@ -633,7 +736,7 @@ export const reviewService = {
           createdAt: now,
         }
       );
-      
+
       return {
         ...row,
         createdAt: row.$createdAt,
@@ -658,12 +761,174 @@ export const reviewService = {
           Query.limit(limit),
         ]
       );
-      return response.documents.map(review => ({
+      return response.documents.map((review) => ({
         ...review,
         createdAt: review.$createdAt,
       })) as Review[];
     } catch (error: any) {
       console.error("Get reviews error:", error);
+      return [];
+    }
+  },
+};
+
+export const paymentService = {
+  /**
+   * Create a new payment record
+   */
+  async createPayment(paymentData: {
+    bookingId: string;
+    userId: string;
+    amount: number;
+    currency: string;
+    gatewayProvider?: string;
+    gatewayOrderId?: string;
+  }): Promise<Payment> {
+    try {
+      const payment = await databases.createDocument(
+        DATABASE_ID,
+        TABLES.PAYMENTS,
+        ID.unique(),
+        {
+          ...paymentData,
+          status: "pending",
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        }
+      );
+      return payment as unknown as Payment;
+    } catch (error: any) {
+      console.error("Create payment error:", error);
+      throw new Error(error.message || "Failed to create payment");
+    }
+  },
+
+  /**
+   * Get payment by booking ID
+   */
+  async getPaymentByBookingId(bookingId: string): Promise<Payment | null> {
+    try {
+      const response = await databases.listDocuments(
+        DATABASE_ID,
+        TABLES.PAYMENTS,
+        [Query.equal("bookingId", bookingId), Query.limit(1)]
+      );
+      if (response.documents.length > 0) {
+        return response.documents[0] as unknown as Payment;
+      }
+      return null;
+    } catch (error: any) {
+      console.error("Get payment error:", error);
+      return null;
+    }
+  },
+
+  /**
+   * Get payment by ID
+   */
+  async getPaymentById(paymentId: string): Promise<Payment | null> {
+    try {
+      const payment = await databases.getDocument(
+        DATABASE_ID,
+        TABLES.PAYMENTS,
+        paymentId
+      );
+      return payment as unknown as Payment;
+    } catch (error: any) {
+      console.error("Get payment error:", error);
+      return null;
+    }
+  },
+
+  /**
+   * Get all payments for a user
+   */
+  async getUserPayments(userId: string): Promise<Payment[]> {
+    try {
+      const response = await databases.listDocuments(
+        DATABASE_ID,
+        TABLES.PAYMENTS,
+        [Query.equal("userId", userId), Query.orderDesc("$createdAt")]
+      );
+      return response.documents as unknown as Payment[];
+    } catch (error: any) {
+      console.error("Get user payments error:", error);
+      return [];
+    }
+  },
+
+  /**
+   * Update payment after gateway callback
+   */
+  async updatePaymentFromGateway(
+    paymentId: string,
+    gatewayData: {
+      gatewayPaymentId: string;
+      gatewaySignature?: string;
+      status: "completed" | "failed";
+      method?: string;
+      metadata?: string;
+    }
+  ): Promise<Payment> {
+    try {
+      const payment = await databases.updateDocument(
+        DATABASE_ID,
+        TABLES.PAYMENTS,
+        paymentId,
+        {
+          ...gatewayData,
+          updatedAt: new Date().toISOString(),
+        }
+      );
+      return payment as unknown as Payment;
+    } catch (error: any) {
+      console.error("Update payment error:", error);
+      throw new Error(error.message || "Failed to update payment");
+    }
+  },
+
+  /**
+   * Process refund
+   */
+  async processRefund(
+    paymentId: string,
+    refundData: {
+      refundId: string;
+      refundAmount: number;
+      refundReason?: string;
+    }
+  ): Promise<Payment> {
+    try {
+      const payment = await databases.updateDocument(
+        DATABASE_ID,
+        TABLES.PAYMENTS,
+        paymentId,
+        {
+          status: "refunded",
+          ...refundData,
+          updatedAt: new Date().toISOString(),
+        }
+      );
+      return payment as unknown as Payment;
+    } catch (error: any) {
+      console.error("Process refund error:", error);
+      throw new Error(error.message || "Failed to process refund");
+    }
+  },
+
+  /**
+   * Get all payments (admin)
+   */
+  async getAllPayments(limit = 50): Promise<Payment[]> {
+    try {
+      const response = await databases.listDocuments(
+        DATABASE_ID,
+        TABLES.PAYMENTS,
+        [Query.orderDesc("$createdAt"), Query.limit(limit)]
+      );
+      return response.documents as unknown as Payment[];
+    } catch (error: any) {
+      console.error("Get all payments error:", error);
       return [];
     }
   },
@@ -676,4 +941,5 @@ export default {
   support: supportService,
   travelers: travelerService,
   reviews: reviewService,
+  payments: paymentService,
 };

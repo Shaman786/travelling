@@ -1,0 +1,28 @@
+import { SidebarProvider } from "@/context/SidebarContext";
+import { ThemeProvider } from "@/context/ThemeContext";
+import "flatpickr/dist/flatpickr.css";
+import { Outfit } from "next/font/google";
+import "./globals.css";
+
+const outfit = Outfit({
+  subsets: ["latin"],
+});
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  return (
+    <html lang="en" suppressHydrationWarning={true}>
+      <body
+        className={`${outfit.className} dark:bg-gray-900`}
+        suppressHydrationWarning={true}
+      >
+        <ThemeProvider>
+          <SidebarProvider>{children}</SidebarProvider>
+        </ThemeProvider>
+      </body>
+    </html>
+  );
+}

@@ -1,14 +1,9 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { FlashList } from "@shopify/flash-list";
 import { format } from "date-fns";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
-import {
-  Alert,
-  FlatList,
-  StyleSheet,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { Alert, StyleSheet, TouchableOpacity, View } from "react-native";
 import {
   Button,
   Card,
@@ -205,7 +200,7 @@ export default function MyTripsScreen() {
         </Text>
       </View>
 
-      <FlatList
+      <FlashList
         data={[...bookedTrips].reverse()}
         keyExtractor={(item) => item.id}
         renderItem={renderTripItem}
@@ -214,6 +209,7 @@ export default function MyTripsScreen() {
         }
         ListEmptyComponent={renderEmptyState}
         showsVerticalScrollIndicator={false}
+        estimatedItemSize={250}
       />
 
       {selectedTripForReview && (

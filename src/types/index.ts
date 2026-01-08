@@ -77,7 +77,7 @@ export interface SavedTraveler extends Models.Document {
 }
 
 // ============ Booking Types ============
-export type BookingStatus = 
+export type BookingStatus =
   | "pending_payment"
   | "processing"
   | "documents_verified"
@@ -159,7 +159,6 @@ export interface SupportTicket extends Models.Document {
   updatedAt: string;
 }
 
-// ============ Review Types ============
 export interface Review extends Models.Document {
   userId: string;
   userName: string;
@@ -169,6 +168,28 @@ export interface Review extends Models.Document {
   rating: number;
   comment: string;
   createdAt: string;
+}
+
+// ============ Payment Types ============
+export type GatewayProvider = "razorpay" | "stripe" | "paypal" | "manual";
+
+export interface Payment extends Models.Document {
+  bookingId: string;
+  userId: string;
+  amount: number;
+  currency: string;
+  gatewayProvider?: GatewayProvider;
+  gatewayOrderId?: string;
+  gatewayPaymentId?: string;
+  gatewaySignature?: string;
+  status: "pending" | "processing" | "completed" | "failed" | "refunded";
+  method?: string; // upi/card/netbanking/wallet
+  refundId?: string;
+  refundAmount?: number;
+  refundReason?: string;
+  metadata?: string; // JSON string for additional gateway data
+  createdAt: string;
+  updatedAt: string;
 }
 
 // ============ API Response Types ============
