@@ -55,12 +55,20 @@ export default function FilterSheet({
   const [maxPrice, setMaxPrice] = useState<number | undefined>(
     currentFilters.maxPrice
   );
+  const [duration, setDuration] = useState<string | undefined>(
+    currentFilters.duration
+  );
+  const [rating, setRating] = useState<number | undefined>(
+    currentFilters.rating
+  );
   const [sortBy, setSortBy] = useState<any>(currentFilters.sortBy || "rating");
 
   const handleApply = () => {
     onApply({
       category: category?.toLowerCase(),
       maxPrice,
+      duration,
+      rating,
       sortBy,
     });
     onDismiss();
@@ -69,6 +77,8 @@ export default function FilterSheet({
   const handleReset = () => {
     setCategory(undefined);
     setMaxPrice(undefined);
+    setDuration(undefined);
+    setRating(undefined);
     setSortBy("rating");
   };
 
@@ -133,6 +143,45 @@ export default function FilterSheet({
                 showSelectedOverlay
               >
                 ${price}
+              </Chip>
+            ))}
+          </View>
+
+          {/* Duration */}
+          <Text variant="titleSmall" style={styles.sectionTitle}>
+            Duration
+          </Text>
+          <View style={styles.chipRow}>
+            {["Short (<3 Days)", "Medium (3-7 Days)", "Long (>7 Days)"].map(
+              (d) => (
+                <Chip
+                  key={d}
+                  selected={duration === d}
+                  onPress={() => setDuration(duration === d ? undefined : d)}
+                  style={styles.chip}
+                  showSelectedOverlay
+                >
+                  {d}
+                </Chip>
+              )
+            )}
+          </View>
+
+          {/* Rating */}
+          <Text variant="titleSmall" style={styles.sectionTitle}>
+            Minimum Rating
+          </Text>
+          <View style={styles.chipRow}>
+            {[4.5, 4.0, 3.5, 3.0].map((r) => (
+              <Chip
+                key={r}
+                selected={rating === r}
+                onPress={() => setRating(rating === r ? undefined : r)}
+                style={styles.chip}
+                showSelectedOverlay
+                icon="star"
+              >
+                {r}+ Stars
               </Chip>
             ))}
           </View>

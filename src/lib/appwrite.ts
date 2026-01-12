@@ -2,6 +2,7 @@ import {
   Account,
   Client,
   Databases,
+  Functions,
   ID,
   Query,
   Storage,
@@ -39,6 +40,11 @@ export const BUCKETS = {
   AVATARS: "avatars",
 };
 
+// Function IDs
+export const FUNCTIONS = {
+  CREATE_PAYMENT_INTENT: "6960a21200372d52c8f5",
+};
+
 // Initialize Client
 const client = new Client();
 
@@ -51,10 +57,11 @@ if (endpoint && projectId) {
   }
 }
 
-// Initialize Account service (for auth)
+// Initialize services
 export const account = new Account(client);
 export const storage = new Storage(client);
 export const databases = new Databases(client);
+export const functions = new Functions(client);
 
 // Check if Appwrite is configured
 export const isAppwriteConfigured = (): boolean => {

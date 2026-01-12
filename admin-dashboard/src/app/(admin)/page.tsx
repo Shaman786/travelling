@@ -67,41 +67,123 @@ export default function Home() {
   useEffect(() => {
     async function fetchStats() {
       try {
-        // 1. Packages Count
+        const now = new Date();
+        const thirtyDaysAgo = new Date(
+          now.getTime() - 30 * 24 * 60 * 60 * 1000,
+        );
+        const sixtyDaysAgo = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000);
+
+        // Queries
+        // 1. Packages
         const packages = await databases.listDocuments(
           DATABASE_ID,
           TABLES.PACKAGES,
           [Query.limit(1), Query.equal("isActive", true)],
         );
 
-        // 2. Users Count
-        const users = await databases.listDocuments(DATABASE_ID, TABLES.USERS, [
-          Query.limit(1),
-        ]);
+        // 2. Users (Last 60 Days for trend)
+        const usersRes = await databases.listDocuments(
+          DATABASE_ID,
+          TABLES.USERS,
+          [
+            Query.greaterThanEqual("$createdAt", sixtyDaysAgo.toISOString()),
+            Query.limit(100), // Adjust based on expected volume or just use total for main stat and sample for trend
+          ],
+        );
+        // For total count we need a separate query if we want *all* time, but listDocuments returns 'total'.
+        // To save read quotas, we usually do one query. But standard list returns total.
+        // We need total count AND trend. valid strategy:
+        // A. Get Total (limit 0) -> Stats.totalUsers
+        // B. Get Recent (limit 100, > 60d) -> Compute Trend.
+        // Let's do B for trend, and A for total.
+        const usersTotalRes = await databases.listDocuments(
+          DATABASE_ID,
+          TABLES.USERS,
+          [Query.limit(0)],
+        );
 
-        // 3. Bookings Count & Revenue (Fetching confirmed for revenue)
-        const allBookings = await databases.listDocuments(
+        // 3. Bookings (Last 60 Days for Revenue & Trend)
+        const bookingsRes = await databases.listDocuments(
           DATABASE_ID,
           TABLES.BOOKINGS,
-          [Query.limit(100), Query.orderDesc("$createdAt")], // Get latest 100 for stats
+          [
+            Query.greaterThanEqual("$createdAt", sixtyDaysAgo.toISOString()),
+            Query.limit(500),
+            Query.orderDesc("$createdAt"),
+          ],
+        );
+        // Total bookings count
+        const bookingsTotalRes = await databases.listDocuments(
+          DATABASE_ID,
+          TABLES.BOOKINGS,
+          [Query.limit(0)],
         );
 
-        const confirmedBookings = allBookings.documents.filter(
-          (b: any) => b.status === "confirmed",
+        // --- Calculate Trends ---
+
+        const calculateTrend = (
+          items: any[],
+          valueCallback: (item: any) => number = () => 1,
+        ) => {
+          const currentPeriod = items.filter(
+            (i) => new Date(i.$createdAt) >= thirtyDaysAgo,
+          );
+          const prevPeriod = items.filter(
+            (i) =>
+              new Date(i.$createdAt) < thirtyDaysAgo &&
+              new Date(i.$createdAt) >= sixtyDaysAgo,
+          );
+
+          const currentTotal = currentPeriod.reduce(
+            (acc, item) => acc + valueCallback(item),
+            0,
+          );
+          const prevTotal = prevPeriod.reduce(
+            (acc, item) => acc + valueCallback(item),
+            0,
+          );
+
+          if (prevTotal === 0)
+            return { value: currentTotal > 0 ? 100 : 0, isUp: true };
+
+          const change = ((currentTotal - prevTotal) / prevTotal) * 100;
+          return { value: Math.round(Math.abs(change)), isUp: change >= 0 };
+        };
+
+        // Revenue Trend (Only confirmed bookings)
+        const confirmedBookings = bookingsRes.documents.filter(
+          (b: any) => b.status === "confirmed" || b.status === "completed",
         );
-        const revenue = confirmedBookings.reduce(
-          (acc: number, curr: any) => acc + (curr.totalPrice || 0),
+        const revenueTrend = calculateTrend(
+          confirmedBookings,
+          (b) => b.totalPrice || 0,
+        );
+        const totalRevenue = confirmedBookings.reduce(
+          (acc: number, b: any) => acc + (b.totalPrice || 0),
           0,
-        );
+        ); // Note: This is 60-day revenue. For TOTAL Lifetime revenue we need aggregation or separate query. Assuming "Total Revenue" on dashboard usually implies Lifetime. Implementation trade-off: calculating lifetime client-side is expensive. Let's use 60-day for now or rough estimate.
+        // BETTER: Fetch all confirmed bookings with limit(5000) for revenue if possible, or just accept this is "Recent Revenue".
+        // Let's stick to 60-day revenue for "Active" feel or if we can fetch total, we need a function.
+        // Workaround: We will use the fetched 60-day confirmed bookings for trend, but for the "Total Revenue" card verify if we can get a sum. Appwrite has no Sum API yet.
+        // We will display 60-Day Revenue for now as "Recent Revenue" or just Revenue.
+
+        // Bookings Trend
+        const bookingsTrend = calculateTrend(bookingsRes.documents);
+
+        // Users Trend
+        const usersTrend = calculateTrend(usersRes.documents);
 
         setStats({
-          totalRevenue: revenue,
-          totalBookings: allBookings.total,
-          totalUsers: users.total,
+          totalRevenue: totalRevenue, // Displaying 60-day revenue to match trend context
+          totalBookings: bookingsTotalRes.total,
+          totalUsers: usersTotalRes.total,
           activePackages: packages.total,
-        });
+          revenueTrend,
+          bookingsTrend,
+          usersTrend,
+        } as any);
 
-        setRecentBookings(allBookings.documents.slice(0, 5));
+        setRecentBookings(bookingsRes.documents.slice(0, 5));
       } catch (error) {
         console.error("Error loading dashboard stats:", error);
       } finally {
@@ -126,25 +208,25 @@ export default function Home() {
       {/* Stats Grid */}
       <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatsCard
-          title="Total Revenue"
+          title="Revenue (Last 60d)"
           value={`$${stats.totalRevenue.toLocaleString()}`}
           icon={<span className="text-xl font-bold">$</span>}
           gradient="bg-gradient-to-br from-emerald-500 to-teal-600"
-          trend={{ value: 12, isUp: true }}
+          trend={(stats as any).revenueTrend}
         />
         <StatsCard
           title="Total Bookings"
           value={stats.totalBookings}
           icon={<BookingIcon className="h-6 w-6" />}
           gradient="bg-gradient-to-br from-blue-500 to-indigo-600"
-          trend={{ value: 8, isUp: true }}
+          trend={(stats as any).bookingsTrend}
         />
         <StatsCard
           title="Total Users"
           value={stats.totalUsers}
           icon={<UserIcon className="h-6 w-6" />}
           gradient="bg-gradient-to-br from-violet-500 to-purple-600"
-          trend={{ value: 5, isUp: true }}
+          trend={(stats as any).usersTrend}
         />
         <StatsCard
           title="Active Packages"
@@ -228,14 +310,14 @@ export default function Home() {
           <div className="space-y-3">
             <Link
               href="/packages/create"
-              className="group flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 px-4 py-3.5 text-sm font-semibold text-white shadow-lg shadow-blue-500/25 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-blue-500/30"
+              className="group flex w-full items-center justify-center gap-2 rounded-xl bg-linear-to-r from-blue-500 to-indigo-600 px-4 py-3.5 text-sm font-semibold text-white shadow-lg shadow-blue-500/25 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-blue-500/30"
             >
               <span className="text-lg">✨</span>
               Create New Package
             </Link>
             <Link
               href="/bookings"
-              className="group flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 px-4 py-3.5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/25 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-emerald-500/30"
+              className="group flex w-full items-center justify-center gap-2 rounded-xl bg-linear-to-r from-emerald-500 to-teal-600 px-4 py-3.5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/25 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-emerald-500/30"
             >
               <span className="text-lg">📦</span>
               View Bookings

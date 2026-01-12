@@ -23,8 +23,7 @@ export default function SignupScreen() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [otp, setOtp] = useState("");
-  const [userId, setUserId] = useState("");
+  // OTP verification removed - using email link verification
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -51,27 +50,6 @@ export default function SignupScreen() {
       }
     } catch (err: any) {
       setError(err.message || "Failed to create account");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleVerifyOtp = async () => {
-    if (!otp || otp.length < 6) {
-      setError("Please enter the verification code from your email");
-      return;
-    }
-
-    setLoading(true);
-    setError("");
-
-    try {
-      // For email link verification, redirect to home
-      // The user will click the link in their email
-      // For now, just proceed to home
-      router.replace("/(tabs)");
-    } catch (err: any) {
-      setError(err.message || "Verification failed");
     } finally {
       setLoading(false);
     }

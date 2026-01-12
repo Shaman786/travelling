@@ -1,7 +1,7 @@
 /**
  * Booking Step 4: Review & Pay
  *
- * Final review of booking details and payment initiation.
+ * Final review of booking details and payment initiation via Airwallex.
  */
 
 import { MaterialCommunityIcons } from "@expo/vector-icons";
@@ -22,6 +22,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Toast } from "toastify-react-native";
 
 import { usePackage } from "../../../src/hooks/usePackages";
+import { usePayment } from "../../../src/hooks/usePayment";
 import { bookingService } from "../../../src/lib/databaseService";
 import { useStore } from "../../../src/store/useStore";
 import type { Booking } from "../../../src/types";
@@ -32,6 +33,8 @@ export default function ReviewScreen() {
   const { packageId } = useLocalSearchParams<{ packageId: string }>();
 
   const { package: pkg } = usePackage(packageId);
+  const { initiatePayment, isProcessing: isPaymentProcessing } = usePayment();
+
   const user = useStore((state) => state.user);
   const bookingDraft = useStore((state) => state.bookingDraft);
   const addBookedTrip = useStore((state) => state.addBookedTrip);
@@ -57,7 +60,7 @@ export default function ReviewScreen() {
   const serviceFee = subtotal * 0.05; // 5% service fee
   const totalPrice = subtotal + serviceFee;
 
-  // Submit booking
+  // Submit booking and initiate payment
   const handleSubmitBooking = useCallback(async () => {
     if (!acceptedTerms) {
       Toast.error("Please accept the terms and conditions");
@@ -73,6 +76,7 @@ export default function ReviewScreen() {
     setIsSubmitting(true);
 
     try {
+      // Step 1: Create booking with pending payment status
       const bookingData: Omit<
         Booking,
         | "$id"
@@ -101,70 +105,37 @@ export default function ReviewScreen() {
           {
             status: "pending_payment",
             date: new Date().toISOString(),
-            note: "Booking created",
+            note: "Booking created - awaiting payment",
           },
         ],
         paymentStatus: "pending",
         specialRequests: specialRequests || undefined,
       };
 
-      // Create in Appwrite
+      // Create booking in Appwrite
       const booking = await bookingService.createBooking(bookingData);
       addBookedTrip(booking);
 
-      // ================================================================
-      // PAYMENT GATEWAY INTEGRATION PLACEHOLDER
-      // ================================================================
-      //
-      // To integrate a payment gateway (Razorpay, Stripe, etc.):
-      // 1. Install the gateway SDK
-      // 2. Create an order with the gateway
-      // 3. Open the payment sheet/checkout
-      // 4. On success callback, update payment record
-      //
-      // Example flow:
-      // const payment = await paymentService.createPayment({
-      //   bookingId: booking.$id,
-      //   userId: user.$id,
-      //   amount: totalPrice,
-      //   currency: "INR",
-      //   gatewayProvider: "razorpay",
-      // });
-      //
-      // const options = {
-      //   key: RAZORPAY_KEY,
-      //   amount: totalPrice * 100,
-      //   order_id: gatewayOrderId,
-      //   handler: async (response) => {
-      //     await paymentService.updatePaymentFromGateway(payment.$id, {
-      //       gatewayPaymentId: response.razorpay_payment_id,
-      //       gatewaySignature: response.razorpay_signature,
-      //       status: "completed",
-      //     });
-      //   }
-      // };
-      // RazorpayCheckout.open(options);
-      // ================================================================
-
-      // TEMPORARY: Simulate payment success until gateway is configured
-      // This marks the booking as paid immediately (remove when gateway is integrated)
-      await bookingService.updatePaymentStatus(
+      // Step 2: Initiate Airwallex payment
+      const paymentResult = await initiatePayment(
         booking.$id,
-        "paid",
-        `SIMULATED_${Date.now()}`
-      );
-      await bookingService.updateBookingStatus(
-        booking.$id,
-        "processing",
-        "Payment simulated - Replace with actual gateway"
+        Math.round(totalPrice * 100), // Convert to cents
+        "USD"
       );
 
-      // Clear draft and navigate
-      resetBookingDraft();
-      Toast.success("Booking confirmed! 🎉");
-
-      // Navigate to My Trips
-      router.replace("/(tabs)/mytrips" as any);
+      // Step 3: Handle payment result
+      if (paymentResult.status === "success") {
+        resetBookingDraft();
+        Toast.success("Payment successful! 🎉");
+        router.replace("/(tabs)/mytrips" as any);
+      } else if (paymentResult.status === "cancelled") {
+        Toast.warn("Payment cancelled. You can retry from My Trips.");
+        router.replace("/(tabs)/mytrips" as any);
+      } else {
+        // Payment in progress (redirect flow)
+        Toast.info("Payment is being processed...");
+        router.replace("/(tabs)/mytrips" as any);
+      }
     } catch (error: any) {
       Toast.error(error.message || "Booking failed. Please try again.");
     } finally {
@@ -181,7 +152,10 @@ export default function ReviewScreen() {
     addBookedTrip,
     resetBookingDraft,
     router,
+    initiatePayment,
   ]);
+
+  const isLoading = isSubmitting || isPaymentProcessing;
 
   return (
     <SafeAreaView
@@ -415,12 +389,12 @@ export default function ReviewScreen() {
         <Button
           mode="contained"
           onPress={handleSubmitBooking}
-          disabled={isSubmitting || !acceptedTerms}
-          loading={isSubmitting}
+          disabled={isLoading || !acceptedTerms}
+          loading={isLoading}
           contentStyle={styles.payButtonContent}
           style={styles.payButton}
         >
-          {isSubmitting ? "Processing..." : "Pay Now"}
+          {isLoading ? "Processing Payment..." : "Pay Now"}
         </Button>
       </Surface>
     </SafeAreaView>

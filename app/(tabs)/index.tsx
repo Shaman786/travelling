@@ -161,7 +161,6 @@ export default function CatalogScreen() {
           horizontal
           data={["all", ...DESTINATION_CATEGORIES.map((cat) => cat.id)]}
           showsHorizontalScrollIndicator={false}
-          estimatedItemSize={80}
           contentContainerStyle={styles.categoryScroll}
           renderItem={({ item }) => {
             const isAll = item === "all";
@@ -245,7 +244,6 @@ export default function CatalogScreen() {
       <FlashList
         data={packages}
         renderItem={renderItem}
-        estimatedItemSize={280}
         keyExtractor={(item) => item.$id}
         ListHeaderComponent={ListHeader}
         ListEmptyComponent={ListEmptyComponent}

@@ -171,7 +171,12 @@ export interface Review extends Models.Document {
 }
 
 // ============ Payment Types ============
-export type GatewayProvider = "razorpay" | "stripe" | "paypal" | "manual";
+export type GatewayProvider =
+  | "razorpay"
+  | "stripe"
+  | "paypal"
+  | "airwallex"
+  | "manual";
 
 export interface Payment extends Models.Document {
   bookingId: string;
@@ -210,6 +215,7 @@ export interface PackageFilters {
   minPrice?: number;
   maxPrice?: number;
   duration?: string;
+  rating?: number;
   search?: string;
   ids?: string[];
   sortBy?: "price_asc" | "price_desc" | "rating" | "newest";

@@ -8,6 +8,7 @@
  * - Password reset
  */
 
+import * as Linking from "expo-linking";
 import type { AuthUser, User } from "../types";
 import { account, DATABASE_ID, databases, ID, TABLES } from "./appwrite";
 
@@ -284,6 +285,81 @@ export const authService = {
     } catch (error: any) {
       console.error("Verification error:", error);
       throw new Error(error.message || "Failed to verify email");
+    }
+  },
+
+  // ============ Phone Authentication (Plug-and-Play) ============
+
+  /**
+   * Initiate Phone Login (Sends OTP)
+   * @param phone Phone number in E.164 format (e.g., +1234567890)
+   */
+  async initiatePhoneLogin(phone: string): Promise<string> {
+    try {
+      // Create a phone session token
+      // This sends the SMS via the provider configured in Appwrite Console
+      const token = await account.createPhoneToken(ID.unique(), phone);
+      return token.userId;
+    } catch (error: any) {
+      console.error("Phone login init error:", error);
+      throw new Error(error.message || "Failed to send OTP");
+    }
+  },
+
+  /**
+   * Complete Phone Login (Verifies OTP)
+   * @param userId User ID returned from initiatePhoneLogin
+   * @param secret OTP code entered by user
+   */
+  async completePhoneLogin(userId: string, secret: string): Promise<AuthUser> {
+    try {
+      // Create the session with the secret (OTP)
+      await account.createSession(userId, secret);
+      const user = await account.get();
+      return user as unknown as AuthUser;
+    } catch (error: any) {
+      console.error("Phone login complete error:", error);
+      throw new Error(error.message || "Invalid OTP");
+    }
+  },
+
+  // ============ Magic URL Authentication (Passwordless) ============
+
+  /**
+   * Initiate Magic Link Login
+   * @param email User's email
+   */
+  async initiateMagicLinkLogin(email: string): Promise<string> {
+    try {
+      const redirectUrl = Linking.createURL("login-callback");
+      const token = await account.createMagicURLToken(
+        ID.unique(),
+        email,
+        redirectUrl
+      );
+      return token.$id;
+    } catch (error: any) {
+      console.error("Magic link init error:", error);
+      throw new Error(error.message || "Failed to send Magic Link");
+    }
+  },
+
+  /**
+   * Complete Magic Link Login
+   * @param userId User ID from link
+   * @param secret Secret from link
+   */
+  async completeMagicLinkLogin(
+    userId: string,
+    secret: string
+  ): Promise<AuthUser> {
+    try {
+      await account.createSession(userId, secret);
+      const user = await account.get();
+      return user as unknown as AuthUser;
+    } catch (error: any) {
+      console.error("Magic link complete error:", error);
+      throw new Error(error.message || "Invalid Magic Link");
     }
   },
 };

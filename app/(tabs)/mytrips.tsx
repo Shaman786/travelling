@@ -209,7 +209,6 @@ export default function MyTripsScreen() {
         }
         ListEmptyComponent={renderEmptyState}
         showsVerticalScrollIndicator={false}
-        estimatedItemSize={250}
       />
 
       {selectedTripForReview && (

@@ -2,8 +2,8 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import * as SecureStore from "expo-secure-store";
-import React, { useCallback, useEffect, useState } from "react";
-import { StyleSheet, TouchableOpacity, View } from "react-native";
+import React, { useEffect, useState } from "react";
+import { StyleSheet, View } from "react-native";
 import {
   Button,
   HelperText,
@@ -12,63 +12,35 @@ import {
   useTheme,
 } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useAuth } from "../../src/hooks/useAuth";
-import { useBiometrics } from "../../src/hooks/useBiometrics";
+import { authService } from "../../src/lib/authService";
 
 export default function LoginScreen() {
   const theme = useTheme();
   const router = useRouter();
-  const { login: authLogin, error: authError, isLoading } = useAuth();
-  const { isCompatible, isEnrolled, authenticate, biometricType } =
-    useBiometrics();
-
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [canBiometric, setCanBiometric] = useState(false);
-
-  const checkStoredCredentials = useCallback(async () => {
-    try {
-      if (isCompatible && isEnrolled) {
-        const storedEmail = await SecureStore.getItemAsync("user_email");
-        const storedPassword = await SecureStore.getItemAsync("user_password");
-        if (storedEmail && storedPassword) {
-          setCanBiometric(true);
-        }
-      }
-    } catch {}
-  }, [isCompatible, isEnrolled]);
+  const [isEmailSent, setIsEmailSent] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [authError, setAuthError] = useState("");
 
   useEffect(() => {
-    checkStoredCredentials();
-  }, [checkStoredCredentials]);
+    // Optional: Check pre-filled email from secure store
+    SecureStore.getItemAsync("user_email").then((stored) => {
+      if (stored) setEmail(stored);
+    });
+  }, []);
 
-  const handleLogin = async () => {
-    if (!email || !password) return;
-
-    const success = await authLogin(email, password);
-    if (success) {
-      // Save credentials for biometric next time
+  const handleMagicLogin = async () => {
+    if (!email) return;
+    setIsLoading(true);
+    setAuthError("");
+    try {
+      await authService.initiateMagicLinkLogin(email);
       await SecureStore.setItemAsync("user_email", email);
-      await SecureStore.setItemAsync("user_password", password);
-      router.replace("/(tabs)");
-    }
-  };
-
-  const handleBiometricLogin = async () => {
-    const authorized = await authenticate();
-    if (authorized) {
-      const storedEmail = await SecureStore.getItemAsync("user_email");
-      const storedPassword = await SecureStore.getItemAsync("user_password");
-      if (storedEmail && storedPassword) {
-        // Pre-fill fields for visual feedback
-        setEmail(storedEmail);
-        setPassword(storedPassword);
-        // Login
-        const success = await authLogin(storedEmail, storedPassword);
-        if (success) {
-          router.replace("/(tabs)");
-        }
-      }
+      setIsEmailSent(true);
+    } catch (error: any) {
+      setAuthError(error.message || "Failed to send magic link");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -93,65 +65,70 @@ export default function LoginScreen() {
       </View>
 
       <View style={styles.form}>
-        <TextInput
-          label="Email"
-          value={email}
-          onChangeText={setEmail}
-          mode="outlined"
-          style={styles.input}
-          autoCapitalize="none"
-          keyboardType="email-address"
-        />
-        <TextInput
-          label="Password"
-          value={password}
-          onChangeText={setPassword}
-          mode="outlined"
-          secureTextEntry
-          style={styles.input}
-        />
+        {!isEmailSent ? (
+          <>
+            <TextInput
+              label="Email"
+              value={email}
+              onChangeText={setEmail}
+              mode="outlined"
+              style={styles.input}
+              autoCapitalize="none"
+              keyboardType="email-address"
+            />
 
-        {authError ? (
-          <HelperText type="error" visible={!!authError}>
-            {authError}
-          </HelperText>
-        ) : null}
+            {authError ? (
+              <HelperText type="error" visible={!!authError}>
+                {authError}
+              </HelperText>
+            ) : null}
 
-        <Button
-          mode="contained"
-          onPress={handleLogin}
-          loading={isLoading}
-          disabled={isLoading}
-          style={styles.button}
-          contentStyle={{ height: 50 }}
-        >
-          Sign In
-        </Button>
+            <Button
+              mode="contained"
+              onPress={handleMagicLogin}
+              loading={isLoading}
+              disabled={isLoading || !email}
+              style={styles.button}
+              contentStyle={{ height: 50 }}
+            >
+              Send Magic Link
+            </Button>
 
-        {canBiometric && (
-          <TouchableOpacity
-            style={styles.biometricBtn}
-            onPress={handleBiometricLogin}
-            disabled={isLoading}
-          >
+            <View style={styles.divider}>
+              <Text>OR</Text>
+            </View>
+
+            <Button
+              mode="outlined"
+              onPress={() => router.push("/(auth)/login-phone" as any)}
+              style={styles.button}
+              icon="cellphone"
+            >
+              Continue with Phone
+            </Button>
+          </>
+        ) : (
+          <View style={styles.successContainer}>
             <MaterialCommunityIcons
-              name={biometricType === 2 ? "face-recognition" : "fingerprint"}
-              size={32}
+              name="email-check"
+              size={64}
               color={theme.colors.primary}
             />
-            <Text style={{ color: theme.colors.primary, marginTop: 4 }}>
-              Login with {biometricType === 2 ? "Face ID" : "Biometrics"}
+            <Text variant="headlineSmall" style={styles.successTitle}>
+              Check your inbox!
             </Text>
-          </TouchableOpacity>
+            <Text style={styles.successText}>
+              We sent a magic link to {email}. Click the link to log in.
+            </Text>
+            <Button
+              mode="text"
+              onPress={() => setIsEmailSent(false)}
+              style={styles.textButton}
+            >
+              Try different email
+            </Button>
+          </View>
         )}
-
-        <Button
-          mode="text"
-          onPress={() => router.push("/(auth)/signup")}
-          style={styles.textButton}
-        >
-          Create an Account
-        </Button>
       </View>
     </SafeAreaView>
   );
@@ -192,5 +169,23 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: 16,
     padding: 8,
+  },
+  divider: {
+    alignItems: "center",
+    marginVertical: 16,
+  },
+  successContainer: {
+    alignItems: "center",
+    padding: 16,
+  },
+  successTitle: {
+    fontWeight: "bold",
+    marginTop: 16,
+    textAlign: "center",
+  },
+  successText: {
+    textAlign: "center",
+    marginTop: 8,
+    opacity: 0.7,
   },
 });

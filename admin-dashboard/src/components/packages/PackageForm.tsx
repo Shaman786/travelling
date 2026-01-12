@@ -2,6 +2,7 @@
 import Input from "@/components/form/input/InputField";
 import Label from "@/components/form/Label";
 import Button from "@/components/ui/button/Button";
+import Image from "next/image";
 import React, { useState } from "react";
 import ItineraryBuilder from "./ItineraryBuilder";
 
@@ -245,10 +246,12 @@ export default function PackageForm({
                 <Label>Package Image</Label>
                 {previewUrl && (
                   <div className="relative mb-3 aspect-video w-full overflow-hidden rounded-lg">
-                    <img
+                    <Image
                       src={previewUrl}
                       alt="Preview"
-                      className="h-full w-full object-cover"
+                      fill
+                      unoptimized
+                      className="object-cover"
                     />
                   </div>
                 )}

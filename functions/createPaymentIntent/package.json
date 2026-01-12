@@ -1,0 +1,7 @@
+{
+  "name": "create-payment-intent",
+  "version": "1.0.0",
+  "description": "Appwrite function to create Airwallex PaymentIntent",
+  "main": "src/main.js",
+  "type": "commonjs"
+}

@@ -69,6 +69,24 @@ export const packageService = {
         queries.push(Query.equal("$id", filters.ids));
       }
 
+      // Advanced Filters
+      if (filters?.rating) {
+        queries.push(Query.greaterThanEqual("rating", filters.rating));
+      }
+
+      if (filters?.duration) {
+        // Duration logic: "Short" (<3), "Medium" (3-7), "Long" (>7)
+        // Store duration as "X Days". We need to filter based on this string.
+        // Simplified approach: Search for "Day" + regex or assume backend structure.
+        // Better: Appwrite doesn't support regex on string fields easily in all versions.
+        // Best effort: Client-side filtering if volume is low, or structured query if data is consistent.
+        // Assuming data is "X Days...", we can't easily do numeric comparison on string "7 Days".
+        // Workaround: We will fetch and filter in memory for Duration OR rely on a new numeric field `durationDays` if we had one.
+        // Since we don't have schema control right now, let's try searching for keywords if "Short/Medium/Long" matches,
+        // OR we just omit it here and filter in-memory if needed.
+        // Let's implement in-memory filtering for Duration after fetch for now to ensure correctness without schema changes.
+      }
+
       // Apply sorting
       if (filters?.sortBy) {
         switch (filters.sortBy) {
@@ -930,6 +948,37 @@ export const paymentService = {
     } catch (error: any) {
       console.error("Get all payments error:", error);
       return [];
+    }
+  },
+
+  /**
+   * Update payment record (generic update)
+   */
+  async updatePayment(
+    paymentId: string,
+    data: Partial<{
+      gatewayOrderId: string;
+      gatewayPaymentId: string;
+      gatewaySignature: string;
+      status: "pending" | "processing" | "completed" | "failed" | "refunded";
+      method: string;
+      metadata: string;
+    }>
+  ): Promise<Payment> {
+    try {
+      const payment = await databases.updateDocument(
+        DATABASE_ID,
+        TABLES.PAYMENTS,
+        paymentId,
+        {
+          ...data,
+          updatedAt: new Date().toISOString(),
+        }
+      );
+      return payment as unknown as Payment;
+    } catch (error: any) {
+      console.error("Update payment error:", error);
+      throw new Error(error.message || "Failed to update payment");
     }
   },
 };

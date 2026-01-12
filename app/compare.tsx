@@ -27,11 +27,7 @@ export default function CompareScreen() {
   const [packages, setPackages] = useState<TravelPackage[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    loadPackages();
-  }, [comparisonList]);
-
-  const loadPackages = async () => {
+  const loadPackages = React.useCallback(async () => {
     if (comparisonList.length === 0) {
       setPackages([]);
       setIsLoading(false);
@@ -51,7 +47,11 @@ export default function CompareScreen() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [comparisonList]);
+
+  useEffect(() => {
+    loadPackages();
+  }, [loadPackages]);
 
   if (isLoading) {
     return (
