@@ -330,9 +330,9 @@ export const authService = {
    */
   async initiateMagicLinkLogin(email: string): Promise<string> {
     try {
-      // Use Appwrite server's IP as hostname to pass platform validation
-      // You MUST register '192.142.24.54' as a Web Platform in Appwrite Console
-      const redirectUrl = "travelling://192.142.24.54/login-callback";
+      // Appwrite may only accept http/https schemes for URL validation
+      // The 192.142.24.54 must be registered as a Web Platform
+      const redirectUrl = "http://192.142.24.54/login-callback";
       console.log("➡️ Using Redirect URL:", redirectUrl);
 
       const token = await account.createMagicURLToken(

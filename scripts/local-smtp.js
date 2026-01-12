@@ -37,9 +37,8 @@ const server = new SMTPServer({
       console.log("Subject: ", parsed.subject);
       console.log("--------------------------------------------------");
       
-      // Try to find the Magic Link in text or html
+      // Try to find the Magic Link in text
       const textContent = parsed.text || "";
-      const htmlContent = parsed.html || "";
       
       // Regex to find the magic link (assuming it starts with the app scheme or http)
       // The user's magic link looks like: travelling://login-callback?userId=...&secret=...
