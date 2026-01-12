@@ -1,158 +1,89 @@
-/**
- * usePayment Hook
- *
- * React hook for managing Airwallex payment flow.
- * Handles payment initialization, processing, and status updates.
- *
- * @module hooks/usePayment
- */
-
-import { useCallback, useState } from "react";
 import {
-  airwallexService,
-  type AirwallexPaymentResult,
-} from "../lib/airwallex";
-import { bookingService, paymentService } from "../lib/databaseService";
-import { ERROR_CODES, handleError } from "../lib/errors";
-import { useStore } from "../store/useStore";
+  initialize,
+  PaymentSession,
+  presentEntirePaymentFlow,
+} from "airwallex-payment-react-native";
+import { useState } from "react";
+import { Alert } from "react-native";
+import { paymentService } from "../services/PaymentService";
 
-interface UsePaymentReturn {
-  isProcessing: boolean;
-  error: string | null;
-  initiatePayment: (
+// Initialize Airwallex SDK
+initialize({
+  environment: "demo",
+  // returnUrl: "travelling://payment-result"
+} as any);
+
+export const usePayment = () => {
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  const startPayment = async (
     bookingId: string,
     amount: number,
-    currency?: string
-  ) => Promise<AirwallexPaymentResult>;
-}
-
-/**
- * Hook to manage Airwallex payment flow
- *
- * @example
- * ```tsx
- * const { initiatePayment, isProcessing, error } = usePayment();
- *
- * const handlePay = async () => {
- *   const result = await initiatePayment(booking.$id, 1500, 'USD');
- *   if (result.status === 'success') {
- *     // Navigate to success screen
- *   }
- * };
- * ```
- */
-export function usePayment(): UsePaymentReturn {
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const user = useStore((state) => state.user);
-  const updateBookedTrip = useStore((state) => state.updateBookedTrip);
-
-  const initiatePayment = useCallback(
-    async (
-      bookingId: string,
-      amount: number,
-      currency: string = "USD"
-    ): Promise<AirwallexPaymentResult> => {
-      if (!user?.$id) {
-        return {
-          status: "cancelled",
-          error: ERROR_CODES.AUTH_NOT_LOGGED_IN.message,
-        };
-      }
-
-      setIsProcessing(true);
-      setError(null);
-
-      try {
-        // Step 1: Create a payment record with pending status
-        const payment = await paymentService.createPayment({
-          bookingId,
-          userId: user.$id,
+    currency: string = "USD",
+    customerId?: string
+  ): Promise<{
+    success: boolean;
+    status?: string;
+    paymentIntentId?: string;
+    error?: string;
+  }> => {
+    setIsProcessing(true);
+    try {
+      // 1. Create Payment Intent via Backend
+      const { clientSecret, intentId } =
+        await paymentService.createPaymentIntent({
           amount,
           currency,
-          gatewayProvider: "airwallex",
+          orderId: bookingId,
+          customerId,
         });
 
-        // Step 2: Create PaymentIntent via Appwrite Function
-        // This securely creates the PaymentIntent using the server-side function
-        const { paymentIntentId, clientSecret } =
-          await airwallexService.createPaymentIntent(
-            amount,
-            currency,
-            bookingId,
-            user.$id
-          );
-
-        // Update payment with intent ID
-        await paymentService.updatePayment(payment.$id, {
-          gatewayOrderId: paymentIntentId,
-          status: "processing",
-        });
-
-        // Step 3: Present Airwallex payment UI
-        const result = await airwallexService.presentPaymentFlow({
-          paymentIntentId,
-          clientSecret,
-          amount,
-          currency,
-          customerId: user.$id,
-        });
-
-        // Step 4: Handle result
-        if (result.status === "success") {
-          // Update payment status
-          await paymentService.updatePayment(payment.$id, {
-            gatewayPaymentId: result.paymentIntentId,
-            status: "completed",
-          });
-
-          // Update booking status
-          const updatedBooking = await bookingService.updateBookingStatus(
-            bookingId,
-            "processing",
-            "Payment completed via Airwallex"
-          );
-          await bookingService.updatePaymentStatus(
-            bookingId,
-            "paid",
-            result.paymentIntentId
-          );
-
-          updateBookedTrip(bookingId, updatedBooking);
-
-          return { status: "success", paymentIntentId: result.paymentIntentId };
-        } else if (result.status === "cancelled") {
-          // User cancelled payment
-          await paymentService.updatePayment(payment.$id, {
-            status: "failed",
-            metadata: JSON.stringify({ reason: "User cancelled" }),
-          });
-
-          return { status: "cancelled" };
-        } else {
-          // Payment in progress (redirect flow)
-          return { status: "inProgress", paymentIntentId };
-        }
-      } catch (err: unknown) {
-        const errorMessage = handleError(err);
-        setError(errorMessage);
-        return {
-          status: "cancelled",
-          error: ERROR_CODES.PAYMENT_FAILED.message,
-        };
-      } finally {
-        setIsProcessing(false);
+      if (!clientSecret || !intentId) {
+        throw new Error("Failed to initialize payment session");
       }
-    },
-    [user?.$id, updateBookedTrip]
-  );
+
+      // 2. Prepare Session
+      const session: PaymentSession = {
+        type: "OneOff",
+        paymentIntentId: intentId,
+        clientSecret: clientSecret,
+        currency: currency,
+        countryCode: "US", // Or dynamic based on user
+        amount: amount,
+        returnUrl: "travelling://payment-result",
+        isBillingRequired: true,
+      };
+
+      // 3. Launch Native UI
+      const result = await presentEntirePaymentFlow(session);
+
+      console.log("Payment Result:", result);
+
+      if (result.status === "success") {
+        return {
+          success: true,
+          status: "succeeded",
+          paymentIntentId: intentId,
+        };
+      } else if (result.status === "cancelled") {
+        return { success: false, status: "cancelled" };
+      } else {
+        // Safe access to error with fallback
+        const errMsg =
+          (result as any).error?.message || "Unknown payment error";
+        return { success: false, status: "failed", error: errMsg };
+      }
+    } catch (error: any) {
+      console.error("Payment Flow Error:", error);
+      Alert.alert("Error", error.message || "Payment initialization failed");
+      return { success: false, status: "failed", error: error.message };
+    } finally {
+      setIsProcessing(false);
+    }
+  };
 
   return {
+    startPayment,
     isProcessing,
-    error,
-    initiatePayment,
   };
-}
-
-export default usePayment;
+};

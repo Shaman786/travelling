@@ -34,25 +34,59 @@ export default function CreatePackagePage() {
     setLoading(true);
     try {
       let imageUrl = "";
+      const galleryUrls: string[] = [];
+      const itineraryWithImages = [...data.rawItinerary];
 
-      // 1. Upload Image if exists
+      // 1. Main Image Upload
       if (data.imageFile) {
         const file = await storage.createFile(
           BUCKETS.PACKAGE_IMAGES,
           ID.unique(),
           data.imageFile,
         );
-        // Construct View URL provided by Appwrite client
-        // Note: SDK doesn't always return full URL in createFile response, we generate it or use getFileView
-        // We can store the file ID and construct URL on frontend, OR generate a view URL here.
-        // For simplicity and to match the 'imageUrl' string schema, let's try to generate the view URL.
-        const fileId = file.$id;
-        // In client SDK, generating URL is a sync method on 'storage'
-        const result = storage.getFileView(BUCKETS.PACKAGE_IMAGES, fileId);
-        imageUrl = result; // result is the URL string
+        imageUrl = storage.getFileView(BUCKETS.PACKAGE_IMAGES, file.$id);
       }
 
-      // 2. Transform data
+      // 2. Gallery Images Upload
+      if (data.galleryFiles && data.galleryFiles.length > 0) {
+        for (const file of data.galleryFiles) {
+          const uploaded = await storage.createFile(
+            BUCKETS.PACKAGE_IMAGES,
+            ID.unique(),
+            file,
+          );
+          const url = storage.getFileView(BUCKETS.PACKAGE_IMAGES, uploaded.$id);
+          galleryUrls.push(url);
+        }
+      }
+
+      // 3. Itinerary Images Upload
+      for (let i = 0; i < itineraryWithImages.length; i++) {
+        const day = itineraryWithImages[i];
+        if (day.imageFile) {
+          const uploaded = await storage.createFile(
+            BUCKETS.PACKAGE_IMAGES,
+            ID.unique(),
+            day.imageFile,
+          );
+          const url = storage.getFileView(BUCKETS.PACKAGE_IMAGES, uploaded.$id);
+          itineraryWithImages[i] = {
+            ...day,
+            image: url, // Save URL
+            imageFile: undefined, // Remove file object
+            previewUrl: undefined,
+          };
+        } else {
+          // Clean up if no new file (keep existing URL if any, though create page starts empty)
+          itineraryWithImages[i] = {
+            ...day,
+            imageFile: undefined,
+            previewUrl: undefined,
+          };
+        }
+      }
+
+      // 4. Transform data
       const payload = {
         title: data.title,
         destination: data.destination,
@@ -66,12 +100,13 @@ export default function CreatePackagePage() {
         highlights: data.highlights,
         inclusions: data.inclusions,
         exclusions: data.exclusions,
-        itinerary: data.itinerary,
+        itinerary: JSON.stringify(itineraryWithImages), // Use updated itinerary
         isActive: data.isActive,
         imageUrl: imageUrl,
+        images: galleryUrls, // Add gallery URLs
       };
 
-      // 3. Create Document
+      // 5. Create Document
       await databases.createDocument(
         DATABASE_ID,
         TABLES.PACKAGES,
@@ -79,7 +114,7 @@ export default function CreatePackagePage() {
         payload,
       );
 
-      // 4. Redirect
+      // 6. Redirect
       router.push("/packages");
     } catch (error: any) {
       console.error("Error creating package:", error);

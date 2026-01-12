@@ -33,12 +33,17 @@ export default function LoginCallbackScreen() {
   const verify = React.useCallback(async () => {
     try {
       await authService.completeMagicLinkLogin(userId, secret);
+      const profile = await authService.getUserProfile(userId);
       await refreshUser();
       setStatus("success");
 
-      // Auto redirect after short delay
+      // Auto redirect based on onboarding status
       setTimeout(() => {
-        router.replace("/(auth)/post-login-options" as any);
+        if (profile?.onboardingComplete) {
+          router.replace("/(tabs)");
+        } else {
+          router.replace("/(auth)/onboarding" as any);
+        }
       }, 1500);
     } catch (err: any) {
       setStatus("error");

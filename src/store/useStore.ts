@@ -1,6 +1,6 @@
 /**
  * Zustand Store for Travelling App
- * 
+ *
  * Manages:
  * - Authentication state (user, isLoggedIn)
  * - Booking draft (wizard flow persistence)
@@ -11,7 +11,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
-import type { Booking, BookingDraft } from "../types";
+import type { Booking, BookingDraft, BookingStatus } from "../types";
 
 // Types
 export interface User {
@@ -22,6 +22,11 @@ export interface User {
   phone?: string;
   avatar?: string;
   createdAt?: string;
+  // Onboarding fields
+  onboardingComplete?: boolean;
+  travelStyle?: string;
+  budgetRange?: string;
+  preferredDestinations?: string[];
 }
 
 export interface Traveler {
@@ -51,12 +56,13 @@ export interface BookedTrip {
   id: string;
   packageId: string;
   packageTitle: string;
+  packageImageUrl?: string; // Added field
   destination: string;
   departureDate: Date;
   returnDate: Date;
   travelers: Traveler[];
   totalPrice: number;
-  status: "processing" | "documents_verified" | "visa_submitted" | "visa_approved" | "ready_to_fly" | "completed";
+  status: BookingStatus;
   statusHistory: {
     status: string;
     date: Date;
@@ -120,11 +126,17 @@ interface AppState {
   resetBookingDraft: () => void;
 
   // Actions - Booked Trips
-  bookTrip: (trip: Omit<BookedTrip, "id" | "status" | "statusHistory" | "bookingDate">) => void;
+  bookTrip: (
+    trip: Omit<BookedTrip, "id" | "status" | "statusHistory" | "bookingDate">
+  ) => void;
   setBookedTrips: (trips: Booking[]) => void;
   addBookedTrip: (trip: BookedTrip | Booking) => void;
   updateBookedTrip: (tripId: string, updates: Partial<Booking>) => void;
-  updateTripStatus: (tripId: string, status: BookedTrip["status"], note?: string) => void;
+  updateTripStatus: (
+    tripId: string,
+    status: BookedTrip["status"],
+    note?: string
+  ) => void;
   removeBookedTrip: (tripId: string) => void;
 
   // Actions - Favorites
@@ -209,7 +221,9 @@ export const useStore = create<AppState>()(
         set((state) => ({
           tripDraft: {
             ...state.tripDraft,
-            travelers: state.tripDraft.travelers.filter((t) => t.id !== travelerId),
+            travelers: state.tripDraft.travelers.filter(
+              (t) => t.id !== travelerId
+            ),
           },
         })),
 
@@ -251,19 +265,28 @@ export const useStore = create<AppState>()(
             id: (trip as Booking).$id || (trip as BookedTrip).id,
             packageId: trip.packageId,
             packageTitle: trip.packageTitle,
+            packageImageUrl:
+              (trip as Booking).packageImageUrl ||
+              (trip as BookedTrip).packageImageUrl, // Sync image
             destination: trip.destination,
-            departureDate: typeof trip.departureDate === 'string' ? new Date(trip.departureDate) : trip.departureDate,
-            returnDate: typeof trip.returnDate === 'string' ? new Date(trip.returnDate) : trip.returnDate,
+            departureDate:
+              typeof trip.departureDate === "string"
+                ? new Date(trip.departureDate)
+                : trip.departureDate,
+            returnDate:
+              typeof trip.returnDate === "string"
+                ? new Date(trip.returnDate)
+                : trip.returnDate,
             travelers: trip.travelers,
             totalPrice: trip.totalPrice,
-            status: trip.status as BookedTrip['status'],
+            status: trip.status as BookingStatus,
             statusHistory: trip.statusHistory.map((h) => ({
               status: h.status,
-              date: typeof h.date === 'string' ? new Date(h.date) : h.date,
+              date: typeof h.date === "string" ? new Date(h.date) : h.date,
               note: h.note,
             })),
-            bookingDate: (trip as Booking).createdAt 
-              ? new Date((trip as Booking).createdAt) 
+            bookingDate: (trip as Booking).createdAt
+              ? new Date((trip as Booking).createdAt)
               : (trip as BookedTrip).bookingDate || new Date(),
           };
           return {
@@ -282,7 +305,7 @@ export const useStore = create<AppState>()(
             returnDate: new Date(trip.returnDate),
             travelers: trip.travelers,
             totalPrice: trip.totalPrice,
-            status: trip.status as BookedTrip['status'],
+            status: trip.status as BookedTrip["status"],
             statusHistory: trip.statusHistory.map((h) => ({
               status: h.status,
               date: new Date(h.date),
@@ -298,7 +321,9 @@ export const useStore = create<AppState>()(
             trip.id === tripId
               ? {
                   ...trip,
-                  ...(updates.status && { status: updates.status as BookedTrip['status'] }),
+                  ...(updates.status && {
+                    status: updates.status as BookedTrip["status"],
+                  }),
                   ...(updates.totalPrice && { totalPrice: updates.totalPrice }),
                 }
               : trip
@@ -336,7 +361,9 @@ export const useStore = create<AppState>()(
 
       removeFavorite: (packageId) =>
         set((state) => ({
-          favoritePackages: state.favoritePackages.filter((id) => id !== packageId),
+          favoritePackages: state.favoritePackages.filter(
+            (id) => id !== packageId
+          ),
         })),
 
       toggleFavorite: (packageId) =>
@@ -351,9 +378,9 @@ export const useStore = create<AppState>()(
         set((state) => {
           if (state.comparisonList.includes(packageId)) return state;
           if (state.comparisonList.length >= 2) {
-             // If full (2 items), replace the first one (FIFO)
-             const [, second] = state.comparisonList;
-             return { comparisonList: [second, packageId] };
+            // If full (2 items), replace the first one (FIFO)
+            const [, second] = state.comparisonList;
+            return { comparisonList: [second, packageId] };
           }
           return { comparisonList: [...state.comparisonList, packageId] };
         }),
@@ -383,5 +410,5 @@ export const selectUser = (state: AppState) => state.user;
 export const selectIsLoggedIn = (state: AppState) => state.isLoggedIn;
 export const selectTripDraft = (state: AppState) => state.tripDraft;
 export const selectBookedTrips = (state: AppState) => state.bookedTrips;
-export const selectFavoritePackages = (state: AppState) => state.favoritePackages;
-
+export const selectFavoritePackages = (state: AppState) =>
+  state.favoritePackages;

@@ -86,6 +86,19 @@ export default function BookingDetailsScreen() {
     );
   }, [booking, fetchBooking]);
 
+  const { startPayment, isProcessing: isPaymentProcessing } = usePayment();
+
+  const handlePayNow = async () => {
+    if (!booking) return;
+
+    // Optimistic / simple payment flow trigger
+    const success = await startPayment(booking.$id, booking.totalPrice);
+    if (success) {
+      Toast.success("Payment Successful!");
+      fetchBooking(); // Refresh to update status
+    }
+  };
+
   const handleContactSupport = () => {
     const supportPhone = process.env.EXPO_PUBLIC_SUPPORT_PHONE || "";
     if (!supportPhone) {
@@ -271,6 +284,20 @@ export default function BookingDetailsScreen() {
 
         {/* Actions */}
         <View style={styles.actions}>
+          {booking.status === "pending_payment" && (
+            <Button
+              mode="contained"
+              icon="credit-card"
+              buttonColor={theme.colors.primary}
+              onPress={handlePayNow}
+              loading={isPaymentProcessing}
+              disabled={isPaymentProcessing}
+              style={styles.actionButton}
+            >
+              Pay Now
+            </Button>
+          )}
+
           <Button
             mode="contained"
             icon="whatsapp"

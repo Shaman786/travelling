@@ -131,6 +131,14 @@ export const authService = {
     }
   },
 
+  // Alias for updateProfile to match usage in components
+  async updateUserProfile(
+    userId: string,
+    updates: Partial<User>
+  ): Promise<User> {
+    return this.updateProfile(userId, updates);
+  },
+
   /**
    * Logout current user
    */

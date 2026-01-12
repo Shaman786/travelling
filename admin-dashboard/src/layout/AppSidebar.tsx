@@ -56,6 +56,11 @@ const navItems: NavItem[] = [
     name: "Payments",
     path: "/payments",
   },
+  {
+    icon: <GridIcon />, // Placeholder icon, ideally use SettingsIcon
+    name: "Settings",
+    path: "/settings",
+  },
 ];
 
 const othersItems: NavItem[] = [];

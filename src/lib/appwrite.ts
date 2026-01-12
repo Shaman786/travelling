@@ -42,7 +42,7 @@ export const BUCKETS = {
 
 // Function IDs
 export const FUNCTIONS = {
-  CREATE_PAYMENT_INTENT: "6960a21200372d52c8f5",
+  CREATE_PAYMENT_INTENT: "6964eec866aae01bd582",
 };
 
 // Initialize Client

@@ -16,7 +16,8 @@ import {
 } from "react-native-paper";
 import { Toast } from "toastify-react-native";
 import { usePackage } from "../../src/hooks/usePackages";
-import { reviewService } from "../../src/lib/databaseService";
+import { usePayment } from "../../src/hooks/usePayment"; // Added usePayment hook
+import { bookingService, reviewService } from "../../src/lib/databaseService"; // Added bookingService
 import { useStore } from "../../src/store/useStore";
 import { Review } from "../../src/types";
 
@@ -24,8 +25,12 @@ export default function PackageDetailsScreen() {
   const { id } = useLocalSearchParams();
   const theme = useTheme();
   const router = useRouter();
-  const bookTrip = useStore((state) => state.bookTrip);
+  // const bookTrip = useStore((state) => state.bookTrip); // Removed unused local updater
+  const addBookedTrip = useStore((state) => state.addBookedTrip); // Use this to sync local store
   const user = useStore((state) => state.user);
+
+  const { startPayment, isProcessing: isPaymentLoading } = usePayment();
+  const [isBooking, setIsBooking] = useState(false); // Local loading state for booking creation state
 
   const [reviews, setReviews] = useState<Review[]>([]);
 
@@ -64,26 +69,96 @@ export default function PackageDetailsScreen() {
     );
   }
 
-  const handleBookTrip = () => {
+  const handleBookTrip = async () => {
     if (!user) {
       router.push("/(auth)/login");
       return;
     }
 
-    bookTrip({
-      packageId: pkg.$id,
-      packageTitle: pkg.title,
-      destination: pkg.country || pkg.destination,
-      departureDate: new Date(),
-      returnDate: new Date(
-        Date.now() + (parseInt(pkg.duration) || 7) * 86400000
-      ),
-      travelers: [],
-      totalPrice: pkg.price,
-    });
+    if (isBooking || isPaymentLoading) return;
 
-    Toast.success("Trip booked successfully!");
-    router.replace("/(tabs)/mytrips" as any);
+    setIsBooking(true);
+    try {
+      // 1. Create a server-side booking in pending_payment state
+      const newBooking = await bookingService.createBooking({
+        userId: user.$id,
+        packageId: pkg.$id,
+        packageTitle: pkg.title,
+        packageImageUrl: pkg.imageUrl, // Save image URL
+        destination: pkg.country || pkg.destination,
+        departureDate: new Date().toISOString(),
+        returnDate: new Date(
+          Date.now() + (parseInt(pkg.duration) || 7) * 86400000
+        ).toISOString(),
+        travelers: [], // Empty initally, or add current user as traveler
+        adultsCount: 1,
+        childrenCount: 0,
+        infantsCount: 0,
+        totalPrice: pkg.price,
+        status: "pending_payment", // Initial status
+        statusHistory: [
+          {
+            status: "pending_payment",
+            date: new Date().toISOString(),
+            note: "Booking initiated",
+          },
+        ],
+        paymentStatus: "pending",
+        specialRequests: "",
+      });
+
+      console.log("Booking created:", newBooking.$id);
+
+      // 2. Trigger Payment Flow
+      try {
+        const result = await startPayment(
+          newBooking.$id,
+          pkg.price,
+          "USD",
+          user.$id
+        );
+
+        if (result.success && result.paymentIntentId) {
+          // 3a. Payment Success
+          await bookingService.updateBookingStatus(
+            newBooking.$id,
+            "processing",
+            "Payment Successful"
+          );
+          await bookingService.updatePaymentStatus(
+            newBooking.$id,
+            "paid",
+            result.paymentIntentId
+          );
+
+          // Update local store
+          addBookedTrip({
+            ...newBooking,
+            status: "processing", // Local view
+            paymentStatus: "paid",
+          });
+
+          Toast.success("Payment Successful! Trip Booked.");
+          router.replace("/(tabs)/mytrips" as any);
+        } else {
+          // Cancelled or other status?
+          Toast.warn("Payment not completed. You can pay later in My Trips.");
+          addBookedTrip(newBooking); // Sync pending booking
+          router.replace("/(tabs)/mytrips" as any);
+        }
+      } catch (paymentError) {
+        console.log("Payment flow exited or failed", paymentError);
+        // If payment was cancelled or failed, the booking still exists as pending
+        addBookedTrip(newBooking); // Sync the pending booking so user sees it
+        Toast.info("Trip reserved. Please complete payment in My Trips.");
+        router.replace("/(tabs)/mytrips" as any);
+      }
+    } catch (err: any) {
+      console.error("Booking Creation Failed", err);
+      Toast.error("Failed to start booking: " + err.message);
+    } finally {
+      setIsBooking(false);
+    }
   };
 
   const generatePDF = async () => {
@@ -249,6 +324,31 @@ export default function PackageDetailsScreen() {
             ))}
           </View>
 
+          {/* Gallery Section */}
+          {pkg.images && pkg.images.length > 0 && (
+            <>
+              <Text variant="titleLarge" style={styles.sectionTitle}>
+                Gallery
+              </Text>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.galleryContainer}
+              >
+                {pkg.images.map((img, index) => (
+                  <View key={index} style={styles.galleryItem}>
+                    <Image
+                      source={{ uri: img }}
+                      style={styles.galleryImage}
+                      contentFit="cover"
+                    />
+                  </View>
+                ))}
+              </ScrollView>
+              <Divider style={styles.divider} />
+            </>
+          )}
+
           {/* Itinerary Timeline */}
           <Text variant="titleLarge" style={styles.sectionTitle}>
             Itinerary
@@ -271,6 +371,15 @@ export default function PackageDetailsScreen() {
                   />
                 </View>
                 <Surface style={styles.timelineCard} elevation={1}>
+                  {day.image && (
+                    <View style={styles.dayImageContainer}>
+                      <Image
+                        source={{ uri: day.image }}
+                        style={styles.dayImage}
+                        contentFit="cover"
+                      />
+                    </View>
+                  )}
                   <Text variant="titleMedium" style={styles.dayTitle}>
                     {day.title}
                   </Text>
@@ -367,11 +476,17 @@ export default function PackageDetailsScreen() {
         <Button
           mode="contained"
           onPress={handleBookTrip}
-          icon="check-circle"
+          icon={isBooking || isPaymentLoading ? undefined : "check-circle"}
+          loading={isBooking || isPaymentLoading}
+          disabled={isBooking || isPaymentLoading}
           style={styles.bookButton}
           contentStyle={{ height: 50 }}
         >
-          Plan My Trip
+          {isBooking
+            ? "Booking..."
+            : isPaymentLoading
+              ? "Payment..."
+              : "Plan My Trip"}
         </Button>
       </Surface>
     </View>
@@ -528,5 +643,31 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 12,
     backgroundColor: "#fff",
+  },
+  galleryContainer: {
+    gap: 12,
+    paddingRight: 24,
+    marginBottom: 24,
+  },
+  galleryItem: {
+    width: 200,
+    height: 140,
+    borderRadius: 12,
+    overflow: "hidden",
+  },
+  galleryImage: {
+    width: "100%",
+    height: "100%",
+  },
+  dayImageContainer: {
+    width: "100%",
+    height: 120,
+    marginBottom: 12,
+    borderRadius: 8,
+    overflow: "hidden",
+  },
+  dayImage: {
+    width: "100%",
+    height: "100%",
   },
 });

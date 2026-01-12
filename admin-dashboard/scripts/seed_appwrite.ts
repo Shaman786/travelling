@@ -63,6 +63,30 @@ const COLLECTIONS: any = {
       { key: "phone", type: "string", size: 20, required: false },
       { key: "avatar", type: "string", size: 500, required: false },
       { key: "pushToken", type: "string", size: 255, required: false },
+      // Onboarding fields
+      {
+        key: "onboardingComplete",
+        type: "boolean",
+        required: false,
+        default: false,
+      },
+      { key: "travelStyle", type: "string", size: 64, required: false }, // adventure, relaxation, cultural, family
+      { key: "budgetRange", type: "string", size: 32, required: false }, // budget, midrange, luxury
+      {
+        key: "preferredDestinations",
+        type: "string",
+        size: 255,
+        required: false,
+        array: true,
+      },
+      // Role for Admin Dashboard access
+      {
+        key: "role",
+        type: "string",
+        size: 32,
+        required: false,
+        default: "user",
+      },
     ],
   },
   packages: {
@@ -70,9 +94,9 @@ const COLLECTIONS: any = {
     documentSecurity: false, // Public data
     permissions: [
       Permission.read(Role.any()),
-      Permission.create(Role.users()),
-      Permission.update(Role.users()),
-      Permission.delete(Role.users()),
+      Permission.create(Role.team("695f5c530000d10e3388")),
+      Permission.update(Role.team("695f5c530000d10e3388")),
+      Permission.delete(Role.team("695f5c530000d10e3388")),
     ],
     attributes: [
       { key: "title", type: "string", size: 128, required: true },
@@ -119,7 +143,7 @@ const COLLECTIONS: any = {
       },
 
       // Complex Data
-      { key: "itinerary", type: "string", size: 4000, required: false }, // JSON String
+      { key: "itinerary", type: "string", size: 10000, required: false }, // JSON String with images
 
       // Status
       { key: "isActive", type: "boolean", required: false, default: true },
@@ -165,8 +189,8 @@ const COLLECTIONS: any = {
     permissions: [
       Permission.read(Role.any()), // Public can read approved reviews (filtered by query)
       Permission.create(Role.users()), // Users can write
-      Permission.update(Role.team("admin")), // Only admin can update status
-      Permission.delete(Role.team("admin")),
+      Permission.update(Role.team("695f5c530000d10e3388")), // Only admin can update status
+      Permission.delete(Role.team("695f5c530000d10e3388")),
     ],
     attributes: [
       { key: "userId", type: "string", size: 36, required: true },
@@ -197,8 +221,9 @@ const BUCKETS = [
     permissions: [
       Permission.read(Role.any()),
       Permission.create(Role.users()),
-      Permission.update(Role.users()),
-      Permission.delete(Role.users()),
+      Permission.create(Role.team("695f5c530000d10e3388")), // Admin team
+      Permission.update(Role.team("695f5c530000d10e3388")),
+      Permission.delete(Role.team("695f5c530000d10e3388")),
     ],
   },
   {
@@ -347,6 +372,39 @@ async function setupAdmin() {
         console.error("Error adding to team:", err.message);
       }
     }
+
+    // 4. Create/Update Admin User Document in Database
+    try {
+      // Check if document exists
+      try {
+        const userDoc = await databases.getDocument(
+          DATABASE_ID,
+          "users",
+          userId,
+        );
+        console.log(`✅ Admin User Document exists. Updating role...`);
+        await databases.updateDocument(DATABASE_ID, "users", userId, {
+          role: "admin",
+          name: ADMIN_NAME,
+          email: ADMIN_EMAIL,
+        });
+      } catch (e: any) {
+        if (e.code === 404) {
+          console.log(`Creating Admin User Document...`);
+          await databases.createDocument(DATABASE_ID, "users", userId, {
+            name: ADMIN_NAME,
+            email: ADMIN_EMAIL,
+            role: "admin",
+            createdAt: new Date().toISOString(),
+          });
+          console.log(`✅ Admin User Document created.`);
+        } else {
+          throw e; // Other error
+        }
+      }
+    } catch (err: any) {
+      console.error("Error managing Admin User Document:", err.message);
+    }
   }
 }
 
@@ -454,7 +512,15 @@ async function init() {
   for (const bucket of BUCKETS) {
     try {
       await storage.getBucket(bucket.id);
-      console.log(`   ✅ Bucket '${bucket.id}' exists.`);
+      console.log(
+        `   ✅ Bucket '${bucket.id}' exists. Updating permissions...`,
+      );
+      await storage.updateBucket(
+        bucket.id,
+        bucket.name,
+        bucket.permissions,
+        bucket.fileSecurity,
+      );
     } catch (err: any) {
       if (err.code === 404) {
         console.log(`   Creating bucket '${bucket.id}'...`);
@@ -466,6 +532,42 @@ async function init() {
         );
       }
     }
+  }
+
+  // 4. Ensure Admin Document Exists (After Schema Sync)
+  console.log("Ensuring Admin Document in 'Users' collection...");
+  try {
+    // We need the admin user ID. We can fetch it again or assume we know it.
+    // Ideally setupAdmin returns it, but let's just fetch by email quickly.
+    const userList = await users.list([
+      // Query not easily available in node-appwrite without Query object import?
+      // Actually list() returns recent users.
+    ]);
+    const adminUser = userList.users.find((u) => u.email === ADMIN_EMAIL);
+    if (adminUser) {
+      try {
+        await databases.updateDocument(DATABASE_ID, "users", adminUser.$id, {
+          role: "admin",
+          name: ADMIN_NAME,
+          email: ADMIN_EMAIL,
+        });
+        console.log("✅ Admin Document Updated with Role.");
+      } catch (e: any) {
+        if (e.code === 404) {
+          await databases.createDocument(DATABASE_ID, "users", adminUser.$id, {
+            role: "admin",
+            name: ADMIN_NAME,
+            email: ADMIN_EMAIL,
+            createdAt: new Date().toISOString(),
+          });
+          console.log("✅ Admin Document Created.");
+        } else {
+          console.log("Error updating admin doc:", e.message);
+        }
+      }
+    }
+  } catch (err: any) {
+    console.error("Error finalizing admin doc:", err.message);
   }
 
   console.log("\n🎉 Recovery Complete!");

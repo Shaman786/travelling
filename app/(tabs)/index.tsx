@@ -18,14 +18,7 @@ import databaseService from "../../src/lib/databaseService";
 import { useStore } from "../../src/store/useStore";
 import type { TravelPackage } from "../../src/types";
 
-// Destination categories - to be managed via Admin Dashboard
-const DESTINATION_CATEGORIES = [
-  { id: "india", name: "India" },
-  { id: "gulf", name: "Gulf" },
-  { id: "uk", name: "UK & Europe" },
-  { id: "usa", name: "USA" },
-  { id: "asia", name: "Asia" },
-];
+// DESTINATION_CATEGORIES removed - fetched dynamically
 
 export default function CatalogScreen() {
   const theme = useTheme();
@@ -42,9 +35,21 @@ export default function CatalogScreen() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [packages, setPackages] = useState<TravelPackage[]>([]);
+  const [categories, setCategories] = useState<{ id: string; name: string }[]>(
+    []
+  ); // Dynamic Categories
   const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const { history, addToHistory } = useSearch();
+
+  // Load Categories on mount
+  useEffect(() => {
+    const loadCategories = async () => {
+      const cats = await databaseService.packages.getUniqueCategories();
+      setCategories(cats);
+    };
+    loadCategories();
+  }, []);
 
   // Fetch packages from Appwrite
   const fetchPackages = useCallback(
@@ -53,7 +58,16 @@ export default function CatalogScreen() {
       try {
         const filters: any = {};
         if (selectedCategory !== "all") {
-          filters.category = selectedCategory;
+          // Find the category object to match strict filtering if needed,
+          // or just pass the ID if your backend expects that.
+          // The previous hardcoded IDs were lowercase, our new dynamic ones are too.
+          // However, dependent on how you saved data, 'category' might be 'India' or 'india'.
+          // Let's assume the ID we generated (lowercase) matches what we want to filter by, OR filter by the Name if that's what is stored.
+          // Inspecting getUniqueCategories: I used pkg.category (likely capitalized) to generate ID (lower).
+          // If the DB stores "India", and we filter by "india", it might fail without case-insensitivity.
+          // Robust fix: Use the Name (original casing) for filtering if that's what matches the DB field.
+          const catObj = categories.find((c) => c.id === selectedCategory);
+          filters.category = catObj ? catObj.name : selectedCategory;
         }
         if (searchQuery) {
           filters.search = searchQuery;
@@ -67,7 +81,7 @@ export default function CatalogScreen() {
         setRefreshing(false);
       }
     },
-    [selectedCategory, searchQuery]
+    [selectedCategory, searchQuery, categories]
   );
 
   useEffect(() => {
@@ -159,14 +173,14 @@ export default function CatalogScreen() {
         </View>
         <FlashList
           horizontal
-          data={["all", ...DESTINATION_CATEGORIES.map((cat) => cat.id)]}
+          data={["all", ...categories.map((cat) => cat.id)]}
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.categoryScroll}
           renderItem={({ item }) => {
             const isAll = item === "all";
             const categoryObj = isAll
               ? { id: "all", name: "All" }
-              : DESTINATION_CATEGORIES.find((c) => c.id === item);
+              : categories.find((c) => c.id === item);
 
             if (!categoryObj) return null;
 

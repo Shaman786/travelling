@@ -26,6 +26,7 @@ export default function PackageForm({
     duration: initialData?.duration || "",
     description: initialData?.description || "",
     imageUrl: initialData?.imageUrl || "",
+    images: initialData?.images || [], // Gallery array
     highlights: initialData?.highlights?.join(", ") || "",
     inclusions: initialData?.inclusions?.join(", ") || "",
     exclusions: initialData?.exclusions?.join(", ") || "",
@@ -45,6 +46,25 @@ export default function PackageForm({
   const [previewUrl, setPreviewUrl] = useState<string | null>(
     initialData?.imageUrl || null,
   );
+
+  // Gallery state
+  const [galleryFiles, setGalleryFiles] = useState<File[]>([]);
+  const [galleryPreviews, setGalleryPreviews] = useState<string[]>([]);
+
+  const handleGalleryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const newFiles = Array.from(e.target.files);
+      setGalleryFiles((prev) => [...prev, ...newFiles]);
+
+      const newPreviews = newFiles.map((file) => URL.createObjectURL(file));
+      setGalleryPreviews((prev) => [...prev, ...newPreviews]);
+    }
+  };
+
+  const removeGalleryImage = (index: number) => {
+    setGalleryFiles((prev) => prev.filter((_, i) => i !== index));
+    setGalleryPreviews((prev) => prev.filter((_, i) => i !== index));
+  };
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -87,7 +107,17 @@ export default function PackageForm({
         .map((s: string) => s.trim())
         .filter(Boolean),
       imageFile,
-      itinerary: JSON.stringify(itinerary),
+      galleryFiles, // Pass gallery files
+      itinerary: JSON.stringify(
+        itinerary // Itinerary now contains imageFile properties which will be stripped by JSON.stringify but are available in state
+          .map((day) => ({
+            // Clean up for DB string, but we need the files elsewhere...
+            ...day,
+            imageFile: undefined, // Don't stringify file object
+            previewUrl: undefined,
+          })),
+      ),
+      rawItinerary: itinerary, // Pass raw itinerary with files for upload handler
     };
     await onSubmit(submissionData);
   };
@@ -241,11 +271,11 @@ export default function PackageForm({
                 </div>
               </div>
 
-              {/* Image Upload */}
+              {/* Main Image Upload */}
               <div>
-                <Label>Package Image</Label>
+                <Label>Main Package Image</Label>
                 {previewUrl && (
-                  <div className="relative mb-3 aspect-video w-full overflow-hidden rounded-lg">
+                  <div className="relative mb-3 aspect-video w-full overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700">
                     <Image
                       src={previewUrl}
                       alt="Preview"
@@ -261,6 +291,101 @@ export default function PackageForm({
                   onChange={handleFileChange}
                   className="file:bg-brand-50 file:text-brand-700 hover:file:bg-brand-100 dark:file:bg-brand-900/20 dark:file:text-brand-400 block w-full text-sm text-gray-500 file:mr-4 file:rounded-full file:border-0 file:px-4 file:py-2 file:text-sm file:font-semibold"
                 />
+              </div>
+
+              {/* Gallery Images Upload */}
+              <div>
+                <Label>Gallery Images (Optional)</Label>
+                <div className="mb-3 grid grid-cols-3 gap-2">
+                  {/* Existing Gallery Images */}
+                  {formData.images?.map((imgUrl: string, index: number) => (
+                    <div
+                      key={`existing-${index}`}
+                      className="relative aspect-square w-full overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700"
+                    >
+                      <Image
+                        src={imgUrl}
+                        alt={`Gallery ${index}`}
+                        fill
+                        unoptimized
+                        className="object-cover"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const newImages = formData.images?.filter(
+                            (_, i) => i !== index,
+                          );
+                          setFormData((prev) => ({
+                            ...prev,
+                            images: newImages,
+                          }));
+                        }}
+                        className="absolute top-1 right-1 rounded-full bg-red-500 p-1 text-white shadow-sm hover:bg-red-600"
+                      >
+                        <svg
+                          className="h-3 w-3"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M6 18L18 6M6 6l12 12"
+                          />
+                        </svg>
+                      </button>
+                    </div>
+                  ))}
+
+                  {/* New Previews */}
+                  {galleryPreviews.map((url, index) => (
+                    <div
+                      key={`new-${index}`}
+                      className="relative aspect-square w-full overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700"
+                    >
+                      <Image
+                        src={url}
+                        alt={`New ${index}`}
+                        fill
+                        unoptimized
+                        className="object-cover"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeGalleryImage(index)}
+                        className="absolute top-1 right-1 rounded-full bg-red-500 p-1 text-white shadow-sm hover:bg-red-600"
+                      >
+                        <svg
+                          className="h-3 w-3"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M6 18L18 6M6 6l12 12"
+                          />
+                        </svg>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handleGalleryChange}
+                  className="file:bg-brand-50 file:text-brand-700 hover:file:bg-brand-100 dark:file:bg-brand-900/20 dark:file:text-brand-400 block w-full text-sm text-gray-500 file:mr-4 file:rounded-full file:border-0 file:px-4 file:py-2 file:text-sm file:font-semibold"
+                />
+                <p className="mt-1 text-xs text-gray-500">
+                  Select multiple images to add to the gallery.
+                </p>
               </div>
 
               <div>

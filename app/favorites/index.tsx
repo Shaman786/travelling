@@ -20,13 +20,13 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import PackageCard from "../../src/components/PackageCard";
 import databaseService from "../../src/lib/databaseService";
 import { useStore } from "../../src/store/useStore";
+import { TravelPackage } from "../../src/types"; // Added import
 
 export default function FavoritesScreen() {
   const theme = useTheme();
   const router = useRouter();
   const favoriteIds = useStore((state) => state.favoritePackages);
-  // Using any[] to handle both Appwrite and mockData TravelPackage formats
-  const [packages, setPackages] = useState<any[]>([]);
+  const [packages, setPackages] = useState<TravelPackage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   const loadFavorites = useCallback(async () => {
@@ -67,7 +67,7 @@ export default function FavoritesScreen() {
       ) : (
         <FlatList
           data={packages}
-          keyExtractor={(item) => item.$id || item.id}
+          keyExtractor={(item) => item.$id}
           renderItem={({ item }) => (
             <View style={{ marginBottom: 16 }}>
               <PackageCard item={item} />

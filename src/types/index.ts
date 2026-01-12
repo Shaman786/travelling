@@ -14,6 +14,11 @@ export interface User {
   avatar?: string;
   createdAt: string;
   pushToken?: string;
+  // Onboarding fields
+  onboardingComplete?: boolean;
+  travelStyle?: string;
+  budgetRange?: string;
+  preferredDestinations?: string[];
 }
 
 export interface AuthUser {
@@ -31,6 +36,7 @@ export interface PackageItineraryDay {
   title: string;
   description: string;
   activities: string[];
+  image?: string; // Image URL for the day
 }
 
 export interface TravelPackage extends Models.Document {
@@ -99,6 +105,7 @@ export interface Booking extends Models.Document {
   userId: string;
   packageId: string;
   packageTitle: string;
+  packageImageUrl?: string; // Added for UI display
   destination: string;
   departureDate: string;
   returnDate: string;

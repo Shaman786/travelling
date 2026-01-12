@@ -41,6 +41,7 @@ export default function EditPackagePage() {
           duration: response.duration,
           description: response.description,
           imageUrl: response.imageUrl,
+          images: response.images || [], // Load existing gallery images
           highlights: response.highlights,
           inclusions: response.inclusions,
           exclusions: response.exclusions,
@@ -63,8 +64,10 @@ export default function EditPackagePage() {
     setLoading(true);
     try {
       let imageUrl = initialData?.imageUrl || "";
+      let galleryUrls = [...(data.images || [])]; // Start with existing images
+      const itineraryWithImages = [...data.rawItinerary];
 
-      // 1. Upload new image if selected
+      // 1. Upload new main image if selected
       if (data.imageFile) {
         const file = await storage.createFile(
           BUCKETS.PACKAGE_IMAGES,
@@ -72,6 +75,45 @@ export default function EditPackagePage() {
           data.imageFile,
         );
         imageUrl = storage.getFileView(BUCKETS.PACKAGE_IMAGES, file.$id);
+      }
+
+      // 2. Upload new gallery images
+      if (data.galleryFiles && data.galleryFiles.length > 0) {
+        for (const file of data.galleryFiles) {
+          const uploaded = await storage.createFile(
+            BUCKETS.PACKAGE_IMAGES,
+            ID.unique(),
+            file,
+          );
+          const url = storage.getFileView(BUCKETS.PACKAGE_IMAGES, uploaded.$id);
+          galleryUrls.push(url);
+        }
+      }
+
+      // 3. Upload itinerary images
+      for (let i = 0; i < itineraryWithImages.length; i++) {
+        const day = itineraryWithImages[i];
+        if (day.imageFile) {
+          const uploaded = await storage.createFile(
+            BUCKETS.PACKAGE_IMAGES,
+            ID.unique(),
+            day.imageFile,
+          );
+          const url = storage.getFileView(BUCKETS.PACKAGE_IMAGES, uploaded.$id);
+          itineraryWithImages[i] = {
+            ...day,
+            image: url, // Update with new URL
+            imageFile: undefined,
+            previewUrl: undefined,
+          };
+        } else {
+          // Keep existing image URL if present, clean up transient fields
+          itineraryWithImages[i] = {
+            ...day,
+            imageFile: undefined,
+            previewUrl: undefined,
+          };
+        }
       }
 
       const payload = {
@@ -85,9 +127,10 @@ export default function EditPackagePage() {
         highlights: data.highlights,
         inclusions: data.inclusions,
         exclusions: data.exclusions,
-        itinerary: data.itinerary,
+        itinerary: JSON.stringify(itineraryWithImages), // Use updated itinerary
         isActive: data.isActive,
         imageUrl: imageUrl, // Update image URL
+        images: galleryUrls, // Update gallery URLs
       };
 
       await databases.updateDocument(DATABASE_ID, TABLES.PACKAGES, id, payload);

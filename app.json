@@ -50,7 +50,8 @@
           }
         }
       ],
-      "expo-localization"
+      "expo-localization",
+      "./plugins/withAirwallex"
     ],
     "experiments": {
       "typedRoutes": true,

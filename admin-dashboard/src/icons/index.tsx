@@ -44,6 +44,7 @@ import PieChartIcon from "./pie-chart.svg";
 import PlugInIcon from "./plug-in.svg";
 import PlusIcon from "./plus.svg";
 import ShootingStarIcon from "./shooting-star.svg";
+import SearchIcon from "./search.svg";
 import TableIcon from "./table.svg";
 import TaskIcon from "./task-icon.svg";
 import TimeIcon from "./time.svg";
@@ -100,6 +101,7 @@ export {
   PlugInIcon,
   PlusIcon,
   ShootingStarIcon,
+  SearchIcon,
   TableIcon,
   TaskIcon,
   TimeIcon,

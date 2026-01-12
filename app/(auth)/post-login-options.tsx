@@ -42,7 +42,7 @@ export default function PostLoginOptionsScreen() {
           {/* Option 1: Start Booking Wizard */}
           <Card
             style={styles.card}
-            onPress={() => router.replace("/(tabs)/")} // TODO: Link to actual Wizard whenever implemented. For now Home -> "Plan Trip" btn
+            onPress={() => router.replace("/(auth)/onboarding")}
             mode="elevated"
           >
             <Card.Content style={styles.cardContent}>
@@ -118,7 +118,7 @@ export default function PostLoginOptionsScreen() {
           {/* Option 3: Explore */}
           <Button
             mode="text"
-            onPress={() => router.replace("/(tabs)/")}
+            onPress={() => router.replace("/(tabs)")}
             style={{ marginTop: 24 }}
             contentStyle={{ paddingVertical: 8 }}
           >

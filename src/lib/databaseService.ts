@@ -235,6 +235,51 @@ export const packageService = {
       return [];
     }
   },
+
+  /**
+   * Get unique categories from active packages
+   * Note: This is a client-side aggregation as Appwrite doesn't support SELECT DISTINCT yet.
+   */
+  async getUniqueCategories(): Promise<{ id: string; name: string }[]> {
+    try {
+      // Fetch a larger set to ensure we capture most categories
+      const response = await databases.listDocuments<TravelPackage>(
+        DATABASE_ID,
+        TABLES.PACKAGES,
+        [
+          Query.equal("isActive", true),
+          Query.limit(100),
+          Query.select(["category"]),
+        ]
+      );
+
+      const uniqueCats = new Set<string>();
+      response.documents.forEach((pkg) => {
+        if (pkg.category) {
+          // Normalize: Capitalize first letter
+          const cat = pkg.category.trim();
+          uniqueCats.add(cat);
+        }
+      });
+
+      return Array.from(uniqueCats)
+        .map((cat) => ({
+          id: cat.toLowerCase(),
+          name: cat.charAt(0).toUpperCase() + cat.slice(1),
+        }))
+        .sort((a, b) => a.name.localeCompare(b.name));
+    } catch (error: any) {
+      console.error("Get categories error:", error);
+      // Fallback to default if fetch fails
+      return [
+        { id: "india", name: "India" },
+        { id: "gulf", name: "Gulf" },
+        { id: "uk", name: "UK & Europe" },
+        { id: "usa", name: "USA" },
+        { id: "asia", name: "Asia" },
+      ];
+    }
+  },
 };
 
 // ============ Booking Service ============

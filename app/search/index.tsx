@@ -21,15 +21,14 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import FilterSheet from "../../src/components/FilterSheet";
 import PackageCard from "../../src/components/PackageCard";
 import databaseService from "../../src/lib/databaseService";
-import type { PackageFilters, TravelPackage } from "../../src/types";
+import { PackageFilters, TravelPackage } from "../../src/types"; // Added TravelPackage import
 
 export default function SearchScreen() {
   const theme = useTheme();
   const router = useRouter();
 
   const [query, setQuery] = useState("");
-  // Using any[] to handle both Appwrite and mockData TravelPackage formats
-  const [results, setResults] = useState<any[]>([]);
+  const [results, setResults] = useState<TravelPackage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   // Filters
@@ -112,7 +111,7 @@ export default function SearchScreen() {
       ) : (
         <FlatList
           data={results}
-          keyExtractor={(item) => item.$id || item.id}
+          keyExtractor={(item) => item.$id}
           renderItem={({ item }) => (
             <View style={{ marginBottom: 16 }}>
               <PackageCard item={item} />

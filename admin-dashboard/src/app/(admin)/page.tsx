@@ -99,7 +99,7 @@ export default function Home() {
         const usersTotalRes = await databases.listDocuments(
           DATABASE_ID,
           TABLES.USERS,
-          [Query.limit(0)],
+          [Query.limit(1)], // limit(0) is invalid, use 1 and rely on .total
         );
 
         // 3. Bookings (Last 60 Days for Revenue & Trend)
@@ -116,7 +116,7 @@ export default function Home() {
         const bookingsTotalRes = await databases.listDocuments(
           DATABASE_ID,
           TABLES.BOOKINGS,
-          [Query.limit(0)],
+          [Query.limit(1)], // limit(0) is invalid, use 1 and rely on .total
         );
 
         // --- Calculate Trends ---

@@ -1,6 +1,7 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { FlashList } from "@shopify/flash-list";
 import { format } from "date-fns";
+import { Image } from "expo-image"; // Added Image import
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import { Alert, StyleSheet, TouchableOpacity, View } from "react-native";
@@ -16,6 +17,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Toast } from "toastify-react-native";
 import ReviewModal from "../../src/components/ReviewModal";
 import StepTracker from "../../src/components/StepTracker";
+import { usePayment } from "../../src/hooks/usePayment"; // Added usePayment import
 import { BookedTrip, useStore } from "../../src/store/useStore";
 
 export default function MyTripsScreen() {
@@ -28,9 +30,23 @@ export default function MyTripsScreen() {
   const [selectedTripForReview, setSelectedTripForReview] =
     useState<BookedTrip | null>(null);
 
+  const { startPayment, isProcessing } = usePayment();
+  const [payingTripId, setPayingTripId] = useState<string | null>(null);
+
   const handleOpenReview = (trip: BookedTrip) => {
     setSelectedTripForReview(trip);
     setIsReviewModalVisible(true);
+  };
+
+  const handlePayNow = async (trip: BookedTrip) => {
+    setPayingTripId(trip.id);
+    const success = await startPayment(trip.id, trip.totalPrice);
+    if (success) {
+      // Optimistically update status or reload
+      // removeBookedTrip(trip.id); // Or update status
+      Toast.success("Payment Successful! Processing booking...");
+    }
+    setPayingTripId(null);
   };
 
   const handleCancelTrip = (tripId: string, tripTitle: string) => {
@@ -108,20 +124,37 @@ export default function MyTripsScreen() {
         onPress={() => handleViewDetails(trip.id)}
       >
         <Card style={styles.card} mode="elevated">
-          {/* Header with Image if available - keeping simple text header for now based on mock data */}
-          <View
-            style={[
-              styles.cardHeader,
-              {
-                borderBottomColor: theme.colors.outlineVariant,
-                borderBottomWidth: 0.5,
-              },
-            ]}
-          >
-            <View style={{ flex: 1 }}>
-              <Text variant="titleMedium" style={{ fontWeight: "bold" }}>
-                {trip.packageTitle}
-              </Text>
+          <View style={styles.cardHeader}>
+            {/* Image Section */}
+            {trip.packageImageUrl && (
+              <Image
+                source={{ uri: trip.packageImageUrl }}
+                style={styles.cardImage}
+                contentFit="cover"
+              />
+            )}
+            <View style={styles.cardHeaderTextContainer}>
+              <View style={styles.cardTitleRow}>
+                <Text
+                  variant="titleMedium"
+                  style={styles.cardTitle}
+                  numberOfLines={1}
+                >
+                  {trip.packageTitle}
+                </Text>
+                <Chip
+                  icon="information"
+                  style={{ backgroundColor: statusColor + "20", height: 28 }}
+                  textStyle={{
+                    color: statusColor,
+                    fontSize: 10,
+                    lineHeight: 10,
+                  }}
+                  compact
+                >
+                  {statusText}
+                </Chip>
+              </View>
               <Text variant="bodySmall" style={{ color: theme.colors.outline }}>
                 {format(
                   new Date(trip.departureDate || Date.now()),
@@ -130,13 +163,6 @@ export default function MyTripsScreen() {
                 • {trip.destination}
               </Text>
             </View>
-            <Chip
-              icon="information"
-              style={{ backgroundColor: statusColor + "20" }}
-              textStyle={{ color: statusColor, fontSize: 12 }}
-            >
-              {statusText}
-            </Chip>
           </View>
 
           <Card.Content style={{ paddingTop: 16 }}>
@@ -161,8 +187,31 @@ export default function MyTripsScreen() {
                 </Text>
               </View>
 
-              {/* Show Review button if completed/ready_to_fly, else Cancel */}
-              {trip.status === "completed" || trip.status === "ready_to_fly" ? (
+              {/* Actions based on status */}
+              {trip.status === "pending_payment" ? (
+                <View style={{ flexDirection: "row", gap: 8 }}>
+                  <Button
+                    mode="outlined"
+                    compact
+                    textColor={theme.colors.error}
+                    style={{ borderColor: theme.colors.errorContainer }}
+                    onPress={() => handleCancelTrip(trip.id, trip.packageTitle)}
+                    disabled={isProcessing}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    mode="contained"
+                    compact
+                    loading={isProcessing && payingTripId === trip.id}
+                    disabled={isProcessing}
+                    onPress={() => handlePayNow(trip)}
+                  >
+                    Pay Now
+                  </Button>
+                </View>
+              ) : trip.status === "completed" ||
+                trip.status === "ready_to_fly" ? (
                 <Button
                   mode="contained"
                   compact
@@ -262,10 +311,31 @@ const styles = StyleSheet.create({
   },
   cardHeader: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
+    alignItems: "center",
     padding: 16,
     backgroundColor: "#fafafa",
+    gap: 12, // Added gap
+  },
+  cardImage: {
+    width: 60,
+    height: 60,
+    borderRadius: 8,
+    backgroundColor: "#eee",
+  },
+  cardHeaderTextContainer: {
+    flex: 1,
+    justifyContent: "center",
+  },
+  cardTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 4,
+    gap: 8,
+  },
+  cardTitle: {
+    fontWeight: "bold",
+    flex: 1,
   },
   actions: {
     flexDirection: "row",

@@ -4,6 +4,7 @@ import { Query } from "appwrite";
 import { format } from "date-fns";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
+import ExportButton from "@/components/common/ExportButton";
 
 interface Payment {
   $id: string;
@@ -82,6 +83,7 @@ export default function PaymentsPage() {
             Manage payment transactions and refunds
           </p>
         </div>
+        <ExportButton data={payments} filename="payments" />
       </div>
 
       {/* Stats Cards */}

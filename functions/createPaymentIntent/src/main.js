@@ -1,17 +1,8 @@
 const https = require('https');
 
 /**
- * Create PaymentIntent with Airwallex
- * 
- * This function securely creates a PaymentIntent using Airwallex API.
- * It should be called from the mobile app before presenting the payment UI.
- * 
- * Required Environment Variables:
- * - AIRWALLEX_API_KEY
- * - AIRWALLEX_CLIENT_ID
- * - AIRWALLEX_ENVIRONMENT (demo | production)
+ * Helper to make HTTPS requests
  */
-
 function makeRequest(hostname, path, options, body) {
   return new Promise((resolve, reject) => {
     const req = https.request(
@@ -21,82 +12,116 @@ function makeRequest(hostname, path, options, body) {
         res.on('data', (chunk) => (data += chunk));
         res.on('end', () => {
           try {
-            resolve(JSON.parse(data));
-          } catch {
-            resolve(data);
+            const parsed = JSON.parse(data);
+            if (res.statusCode >= 400) {
+              reject(new Error(parsed.message || JSON.stringify(parsed)));
+            } else {
+              resolve(parsed);
+            }
+          } catch (e) {
+            console.error('JSON Parse Error Response:', data);
+            if (res.statusCode >= 400) {
+              reject(new Error(data || 'Unknown error'));
+            } else {
+              resolve(data);
+            }
           }
         });
       }
     );
-    req.on('error', reject);
+    req.on('error', (e) => reject(e));
     if (body) req.write(body);
     req.end();
   });
 }
 
 module.exports = async function (context) {
+  // Appwrite 1.4+ Context Destructuring
   const { req, res, log, error } = context;
 
-  // Parse request body
-  let body;
-  try {
-    body = JSON.parse(req.body || '{}');
-  } catch {
-    return res.json({ error: 'Invalid JSON body' }, 400);
-  }
-
-  const { amount, currency, bookingId, userId } = body;
-
-  if (!amount || !currency) {
-    return res.json({ error: 'Missing required fields: amount, currency' }, 400);
-  }
-
+  log('--------------------------------------------------');
+  log('🚀 Function Started: createPaymentIntent');
+  
+  // 1. Env Check
   const API_KEY = process.env.AIRWALLEX_API_KEY;
   const CLIENT_ID = process.env.AIRWALLEX_CLIENT_ID;
   const ENV = process.env.AIRWALLEX_ENVIRONMENT || 'demo';
-  const BASE_HOST = ENV === 'production' 
-    ? 'api.airwallex.com' 
-    : 'api-demo.airwallex.com';
-
+  
+  log(`Environment: ${ENV}`);
   if (!API_KEY || !CLIENT_ID) {
-    error('Missing Airwallex credentials');
-    return res.json({ error: 'Server configuration error' }, 500);
+    error('❌ MISSING CREDENTIALS: AIRWALLEX_API_KEY or AIRWALLEX_CLIENT_ID not found.');
+    // Check if they are global but not redeployed?
+    return res.json({ 
+      error: 'Server Misconfiguration: Missing Airwallex Credentials',
+      tip: 'Ensure variables are set in Function Settings and REDEPLOY.'
+    }, 500);
+  } else {
+    log('✅ Credentials found.');
   }
 
+  // 2. Body Parsing
+  let payload = {};
   try {
-    // Step 1: Authenticate with Airwallex
-    log('Authenticating with Airwallex...');
+    if (typeof req.body === 'string') {
+        payload = JSON.parse(req.body);
+    } else {
+        payload = req.body || {};
+    }
+  } catch (e) {
+    error('❌ Invalid JSON Body');
+    return res.json({ error: 'Invalid JSON request body' }, 400);
+  }
+
+  log('Payload:', JSON.stringify(payload));
+  const { amount, currency, bookingId, userId } = payload;
+
+  if (!amount || !currency) {
+    error('❌ Missing fields: amount or currency');
+    return res.json({ error: 'Missing required fields: amount (cents), currency' }, 400);
+  }
+
+  const BASE_HOST = ENV === 'production' ? 'api.airwallex.com' : 'api-demo.airwallex.com';
+
+  try {
+    // 3. Authenticate
+    log('🔐 Authenticating with Airwallex...');
     const authData = await makeRequest(
       BASE_HOST,
       '/api/v1/authentication/login',
       {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'x-client-id': CLIENT_ID,
-          'x-api-key': API_KEY,
-        },
+            'Content-Type': 'application/json',
+            'x-client-id': CLIENT_ID,
+            'x-api-key': API_KEY
+        }
       }
     );
+    
+    log('✅ Authenticated. Getting Token...');
+    const token = authData.token;
 
-    if (!authData.token) {
-      error('Auth failed: ' + JSON.stringify(authData));
-      return res.json({ error: 'Authentication failed' }, 500);
-    }
-
-    // Step 2: Create PaymentIntent
-    log('Creating PaymentIntent...');
+    // 4. Create Intent
+    log(`💰 Creating Intent for Amount: ${amount} ${currency.toUpperCase()}`);
+    
+    // Amount should be passed in CENTS (or minor units) logic depends on PaymentService
+    // PaymentService sends CENTS (e.g. 1000 for $10.00).
+    // Airwallex "amount" field expects DECIMAL (e.g. 10.00).
+    // So we must DIVIDE by 100 here.
+    const decimalAmount = (parseFloat(amount) / 100).toFixed(2);
+    
     const intentPayload = JSON.stringify({
-      amount: amount / 100, // Convert cents to dollars
+      amount: parseFloat(decimalAmount),
       currency: currency.toUpperCase(),
       merchant_order_id: bookingId || `order_${Date.now()}`,
-      request_id: `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      request_id: `req_${Date.now()}_${Math.random().toString(36).substring(7)}`,
+      return_url: "travelling://payment-result",
       metadata: {
-        userId: userId || 'anonymous',
-        bookingId: bookingId || '',
-        source: 'travelling-app',
-      },
+         userId: userId || 'anonymous'
+      }
     });
+
+    log(`Intent Payload: ${intentPayload}`);
 
     const intentData = await makeRequest(
       BASE_HOST,
@@ -105,25 +130,26 @@ module.exports = async function (context) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${authData.token}`,
-        },
+          'Authorization': `Bearer ${token}`
+        }
       },
       intentPayload
     );
 
-    if (!intentData.id || !intentData.client_secret) {
-      error('PaymentIntent creation failed: ' + JSON.stringify(intentData));
-      return res.json({ error: 'Failed to create payment intent' }, 500);
-    }
-
-    log(`PaymentIntent created: ${intentData.id}`);
+    log(`✅ SUCCESS! Intent ID: ${intentData.id}`);
 
     return res.json({
       paymentIntentId: intentData.id,
       clientSecret: intentData.client_secret,
+      currency: intentData.currency,
+      amount: intentData.amount
     });
+
   } catch (err) {
-    error(`Exception: ${err.message}`);
-    return res.json({ error: 'Internal server error' }, 500);
+    error(`❌ ERROR: ${err.message}`);
+    return res.json({ 
+        error: 'Payment Provider Error', 
+        details: err.message 
+    }, 502);
   }
 };

@@ -1,5 +1,6 @@
 "use client";
 import BookingTable from "@/components/bookings/BookingTable";
+import ExportButton from "@/components/common/ExportButton";
 import { DATABASE_ID, databases, TABLES } from "@/lib/appwrite";
 import { Query } from "appwrite";
 import { useEffect, useState } from "react";
@@ -38,6 +39,7 @@ export default function BookingsPage() {
             Manage incoming travel bookings.
           </p>
         </div>
+        <ExportButton data={bookings} filename="bookings" />
       </div>
 
       {loading ? (
