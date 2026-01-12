@@ -8,6 +8,7 @@
  * - Password reset
  */
 
+import * as Linking from "expo-linking";
 import type { AuthUser, User } from "../types";
 import { account, DATABASE_ID, databases, ID, TABLES } from "./appwrite";
 
@@ -330,9 +331,9 @@ export const authService = {
    */
   async initiateMagicLinkLogin(email: string): Promise<string> {
     try {
-      // Appwrite may only accept http/https schemes for URL validation
-      // The 192.142.24.54 must be registered as a Web Platform
-      const redirectUrl = "http://192.142.24.54/login-callback";
+      // Android platform (com.travels.travelling) allows custom schemes
+      // Linking.createURL generates 'travelling://...' in APK, 'exp://...' in Expo Go
+      const redirectUrl = Linking.createURL("/login-callback");
       console.log("➡️ Using Redirect URL:", redirectUrl);
 
       const token = await account.createMagicURLToken(
