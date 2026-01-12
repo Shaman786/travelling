@@ -330,10 +330,10 @@ export const authService = {
    */
   async initiateMagicLinkLogin(email: string): Promise<string> {
     try {
-      // Use hardcoded scheme to ensure it matches the registered Appwrite Platform (Localhost)
-      // This allows the email to be sent. The link will open correctly in the APK.
-      const redirectUrl = "travelling://localhost/login-callback";
-      console.log("➡️ Using Fixed Redirect URL:", redirectUrl);
+      // Use Appwrite server's IP as hostname to pass platform validation
+      // You MUST register '192.142.24.54' as a Web Platform in Appwrite Console
+      const redirectUrl = "travelling://192.142.24.54/login-callback";
+      console.log("➡️ Using Redirect URL:", redirectUrl);
 
       const token = await account.createMagicURLToken(
         ID.unique(),
