@@ -20,6 +20,7 @@ export const TABLES = {
   SAVED_TRAVELERS: "saved_travelers",
   REVIEWS: "reviews",
   PAYMENTS: "payments",
+  SYSTEM_CONFIG: "system_config",
 };
 
 export const BUCKETS = {

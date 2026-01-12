@@ -1,4 +1,5 @@
 "use client";
+import { account } from "@/lib/appwrite";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -68,6 +69,34 @@ const othersItems: NavItem[] = [];
 const AppSidebar: React.FC = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
   const pathname = usePathname();
+
+  useEffect(() => {
+    const checkPersistence = async () => {
+      try {
+        // Check for persistence marker
+        const sessionMarker =
+          localStorage.getItem("auth_persistence") ||
+          sessionStorage.getItem("auth_persistence");
+
+        // Try to get current account (if session exists)
+        try {
+          await account.get(); // Will throw 401 if no session
+
+          // We are logged in. If no marker exists, it means session should have been temporary.
+          if (!sessionMarker) {
+            await account.deleteSession("current");
+            window.location.href = "/signin";
+          }
+        } catch {
+          // Not logged in, nothing to do
+        }
+      } catch (e) {
+        console.error("Session check failed", e);
+      }
+    };
+
+    checkPersistence();
+  }, []);
 
   const renderMenuItems = (
     navItems: NavItem[],

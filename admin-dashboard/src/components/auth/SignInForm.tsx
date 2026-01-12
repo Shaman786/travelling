@@ -24,7 +24,24 @@ export default function SignInForm() {
     setLoading(true);
 
     try {
+      // Clean up any stale session first to avoid "creation prohibited" error
+      try {
+        await account.deleteSession("current");
+      } catch (e) {
+        // Ignore if no session exists or network error on delete
+      }
+
       await account.createEmailPasswordSession(email, password);
+
+      // Handle "Keep me logged in" persistence
+      if (isChecked) {
+        localStorage.setItem("auth_persistence", "true");
+        sessionStorage.removeItem("auth_persistence");
+      } else {
+        sessionStorage.setItem("auth_persistence", "true");
+        localStorage.removeItem("auth_persistence");
+      }
+
       router.push("/"); // Redirect to dashboard home
     } catch (err: any) {
       console.error("Login failed", err);

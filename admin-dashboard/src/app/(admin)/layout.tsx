@@ -37,10 +37,35 @@ export default function AdminLayout({
             return;
           }
           setIsAuthenticated(true);
-        } catch (dbError) {
-          console.error("Error fetching user role:", dbError);
-          // If user doc missing, assume not admin
-          router.replace("/signin");
+        } catch (dbError: any) {
+          if (dbError.code === 404) {
+            // User document missing, try to create it (First-time admin login)
+            try {
+              await databases.createDocument(
+                DATABASE_ID,
+                TABLES.USERS,
+                user.$id,
+                {
+                  name: user.name,
+                  email: user.email,
+                  role: "admin",
+                },
+              );
+              setIsAuthenticated(true);
+              return;
+            } catch (createError: any) {
+              if (createError.code === 409) {
+                // Document already exists (race condition or previous partial success), so we are good.
+                setIsAuthenticated(true);
+              } else {
+                console.error("Failed to create admin user doc:", createError);
+                router.replace("/signin");
+              }
+            }
+          } else {
+            console.error("Error fetching user role:", dbError);
+            router.replace("/signin");
+          }
         }
       } catch (error) {
         console.log("Not authenticated, redirecting to signin");

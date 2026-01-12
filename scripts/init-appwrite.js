@@ -209,6 +209,22 @@ const COLLECTIONS = {
       { key: "user_index", type: "key", attributes: ["userId"] },
       { key: "status_index", type: "key", attributes: ["status"] },
     ]
+  },
+  system_config: {
+    name: "System Config",
+    documentSecurity: false, // Publicly readable (non-sensitive system state), write restricted
+    permissions: [
+      Permission.read(Role.any()), // Frontend needs to know maintenance mode / currency
+      Permission.create(Role.team("admin")),
+      Permission.update(Role.team("admin")),
+      Permission.delete(Role.team("admin")),
+    ],
+    attributes: [
+      { key: "bookingFee", type: "float", required: false, default: 0.0 }, // Changed to float for percentages
+      { key: "currency", type: "string", size: 3, required: false, default: "USD" },
+      { key: "supportEmail", type: "string", size: 128, required: false },
+      { key: "maintenanceMode", type: "boolean", required: false, default: false },
+    ]
   }
 };
 
