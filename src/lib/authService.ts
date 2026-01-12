@@ -8,7 +8,6 @@
  * - Password reset
  */
 
-import * as Linking from "expo-linking";
 import type { AuthUser, User } from "../types";
 import { account, DATABASE_ID, databases, ID, TABLES } from "./appwrite";
 
@@ -331,9 +330,10 @@ export const authService = {
    */
   async initiateMagicLinkLogin(email: string): Promise<string> {
     try {
-      // Appwrite requires scheme: appwrite-callback-PROJECT_ID for React Native
-      // Linking.createURL generates the correct URL based on app.json scheme
-      const redirectUrl = Linking.createURL("/login-callback");
+      // Magic Links require the redirect URL hostname to be a registered Web Platform
+      // Using HTTP URL with server IP - the server will redirect to the app's deep link
+      // Server redirect page: http://192.142.24.54/login-callback → travelling://login-callback
+      const redirectUrl = "http://192.142.24.54/login-callback";
       console.log("➡️ Using Redirect URL:", redirectUrl);
 
       const token = await account.createMagicURLToken(

@@ -5,7 +5,7 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "appwrite-callback-695e3c54001ec99b5ea3",
+    "scheme": "travelling",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {

@@ -1,144 +1,59 @@
-# Magic Link Production Deployment Guide
+# Magic Link Fix - Final Solution
 
-## Prerequisites Checklist
+## The Problem
 
-- [ ] Appwrite server running at `192.142.24.54`
-- [ ] Web Platform registered with hostname `192.142.24.54`
-- [ ] SMTP configured in Appwrite (Resend, SendGrid, or custom)
+Appwrite's `createMagicURLToken` validates the redirect URL's **hostname** against registered **Web Platforms** in your Appwrite Console.
 
----
+When using `Linking.createURL("/login-callback")`, it generates:
 
-## Step 1: Create Redirect Page on Server
+- Expo Go: `exp://xyz.ngrok.io/--/login-callback` → hostname = `xyz.ngrok.io`
+- APK: `travelling://login-callback` → hostname = `login-callback`
 
-The Magic Link email contains an HTTP URL. This page redirects users to your app.
+Appwrite rejects these because neither hostname is registered as a Web Platform.
 
-**SSH into your server:**
+## The Solution
 
-```bash
-ssh user@192.142.24.54
+**For Production APK**, you have two options:
+
+### Option A: HTTP Redirect (Recommended)
+
+Use an HTTP URL that redirects to your app:
+
+1. **Code** (already done):
+
+```typescript
+const redirectUrl = "http://192.142.24.54/login-callback";
 ```
 
-**Create the redirect page:**
+2. **Server**: Create a redirect page at `/login-callback` that redirects to `travelling://login-callback?userId=...&secret=...`
 
-```bash
-# Create directory (adjust path based on your web server)
-sudo mkdir -p /var/www/html
+3. **Appwrite Console**: Register `192.142.24.54` as Web Platform ✓
 
-# Create the redirect page
-sudo tee /var/www/html/login-callback.html > /dev/null << 'EOF'
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <title>Redirecting to App...</title>
-  <style>
-    body { font-family: sans-serif; text-align: center; padding: 50px; }
-    .spinner { display: inline-block; width: 40px; height: 40px; border: 3px solid #f3f3f3; border-top: 3px solid #007AFF; border-radius: 50%; animation: spin 1s linear infinite; }
-    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-  </style>
-</head>
-<body>
-  <div class="spinner"></div>
-  <h2>Opening App...</h2>
-  <p>If the app doesn't open, <a id="fallback" href="#">click here</a></p>
-  <script>
-    // Get query params from current URL
-    const params = window.location.search;
-    // Build deep link URL
-    const deepLink = "travelling://login-callback" + params;
-    // Update fallback link
-    document.getElementById('fallback').href = deepLink;
-    // Redirect to app
-    window.location.href = deepLink;
-  </script>
-</body>
-</html>
-EOF
+### Option B: Custom Scheme with Web Platform
+
+Register your custom scheme's "hostname" as a Web Platform:
+
+1. **Code**:
+
+```typescript
+const redirectUrl = "travelling://localhost/login-callback";
 ```
 
-**Configure Nginx to serve it:**
-
-```bash
-# If using Nginx, add this to your config
-sudo tee /etc/nginx/sites-available/redirect << 'EOF'
-server {
-    listen 80;
-    server_name 192.142.24.54;
-    root /var/www/html;
-
-    location /login-callback {
-        try_files /login-callback.html =404;
-    }
-}
-EOF
-
-# Enable the site
-sudo ln -sf /etc/nginx/sites-available/redirect /etc/nginx/sites-enabled/
-sudo nginx -t && sudo systemctl reload nginx
-```
+2. **Appwrite Console**: Register `localhost` as Web Platform
 
 ---
 
-## Step 2: Appwrite Platform Registration
+## Current Configuration
 
-1. Go to **Appwrite Console** → **Overview** → **Platforms**
-2. Ensure these platforms exist:
-   - **Android**: `com.travels.travelling`
-   - **iOS**: `com.travels.travelling`
-   - **Web**: `192.142.24.54`
+| Setting          | Value                                 |
+| ---------------- | ------------------------------------- |
+| app.json scheme  | `travelling`                          |
+| Android Platform | `com.travels.travelling` ✓            |
+| Web Platform     | `192.142.24.54` ✓                     |
+| Redirect URL     | `http://192.142.24.54/login-callback` |
 
----
+## Deploy Checklist
 
-## Step 3: Appwrite Email Template
-
-Go to **Appwrite Console** → **Auth** → **Templates** → **Magic URL** → **Message**
-
-Paste this HTML:
-
-```html
-<p>Hello,</p>
-<p>Click the button below to sign in to <b>travelling</b>:</p>
-<p style="text-align: center; margin: 32px 0;">
-  <a
-    href="{{redirect}}"
-    style="display: inline-block; padding: 12px 24px; color: #fff; background: #007AFF; border-radius: 4px; text-decoration: none; font-weight: bold;"
-  >
-    Sign In
-  </a>
-</p>
-<p>Or copy this link: {{redirect}}</p>
-<p>Thanks,<br />The travelling team</p>
-```
-
----
-
-## Step 4: Build APK
-
-```bash
-npx expo prebuild
-cd android
-./gradlew assembleRelease
-```
-
-APK will be at: `android/app/build/outputs/apk/release/app-release.apk`
-
----
-
-## Verification Checklist
-
-- [ ] Redirect page accessible at `http://192.142.24.54/login-callback`
-- [ ] Magic Link email sends successfully
-- [ ] Clicking email link opens browser → redirects to app
-- [ ] App receives `userId` and `secret` parameters
-- [ ] Session is created successfully
-
----
-
-## Troubleshooting
-
-| Error            | Solution                                             |
-| ---------------- | ---------------------------------------------------- |
-| "Invalid URI"    | Ensure `192.142.24.54` is registered as Web Platform |
-| Email not sent   | Check SMTP config in Appwrite `.env`                 |
-| App doesn't open | Check `scheme: "travelling"` in `app.json`           |
-| 404 on redirect  | Ensure Nginx is serving `/login-callback`            |
+- [ ] Create redirect page on server at `http://192.142.24.54/login-callback`
+- [ ] Redirect page forwards to `travelling://login-callback?userId=...&secret=...`
+- [ ] Test Magic Link in APK
