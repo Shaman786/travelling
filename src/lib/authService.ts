@@ -331,8 +331,8 @@ export const authService = {
    */
   async initiateMagicLinkLogin(email: string): Promise<string> {
     try {
-      // Android platform (com.travels.travelling) allows custom schemes
-      // Linking.createURL generates 'travelling://...' in APK, 'exp://...' in Expo Go
+      // Appwrite requires scheme: appwrite-callback-PROJECT_ID for React Native
+      // Linking.createURL generates the correct URL based on app.json scheme
       const redirectUrl = Linking.createURL("/login-callback");
       console.log("➡️ Using Redirect URL:", redirectUrl);
 
