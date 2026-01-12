@@ -8,7 +8,6 @@
  * - Password reset
  */
 
-import * as Linking from "expo-linking";
 import type { AuthUser, User } from "../types";
 import { account, DATABASE_ID, databases, ID, TABLES } from "./appwrite";
 
@@ -331,7 +330,11 @@ export const authService = {
    */
   async initiateMagicLinkLogin(email: string): Promise<string> {
     try {
-      const redirectUrl = Linking.createURL("login-callback");
+      // Use hardcoded scheme to ensure it matches the registered Appwrite Platform (Localhost)
+      // This allows the email to be sent. The link will open correctly in the APK.
+      const redirectUrl = "travelling://localhost/login-callback";
+      console.log("➡️ Using Fixed Redirect URL:", redirectUrl);
+
       const token = await account.createMagicURLToken(
         ID.unique(),
         email,
