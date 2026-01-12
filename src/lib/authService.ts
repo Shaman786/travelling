@@ -331,9 +331,9 @@ export const authService = {
   async initiateMagicLinkLogin(email: string): Promise<string> {
     try {
       // Magic Links require the redirect URL hostname to be a registered Web Platform
-      // Using HTTP URL with server IP - the server will redirect to the app's deep link
-      // Server redirect page: http://192.142.24.54/login-callback → travelling://login-callback
-      const redirectUrl = "http://192.142.24.54/login-callback";
+      // Using HTTP URL with server IP:8081 - the server will redirect to the app's deep link
+      // Server redirect page: http://192.142.24.54:8081/login-callback.html → travelling://login-callback
+      const redirectUrl = "http://192.142.24.54:8081/login-callback.html";
       console.log("➡️ Using Redirect URL:", redirectUrl);
 
       const token = await account.createMagicURLToken(
