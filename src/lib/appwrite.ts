@@ -44,7 +44,7 @@ export const BUCKETS = {
 export const FUNCTIONS = {
   CREATE_PAYMENT_INTENT:
     process.env.EXPO_PUBLIC_APPWRITE_FUNCTION_ID_PAYMENT ||
-    "6964eec866aae01bd582",
+    "6964e88fd3c103ddf216",
 };
 
 // Initialize Client
