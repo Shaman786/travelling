@@ -125,6 +125,10 @@ export default function ReviewScreen() {
 
       // Step 3: Handle payment result
       if (paymentResult.status === "success") {
+        await bookingService.confirmBookingPayment(
+          booking.$id,
+          paymentResult.paymentIntentId || "manual_confirmation"
+        );
         resetBookingDraft();
         Toast.success("Payment successful! 🎉");
         router.replace("/(tabs)/mytrips" as any);

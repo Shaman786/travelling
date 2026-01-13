@@ -404,6 +404,59 @@ export const bookingService = {
   },
 
   /**
+   * Confirm booking payment
+   * Updates status to processing and paymentStatus to paid
+   */
+  async confirmBookingPayment(
+    bookingId: string,
+    paymentIntentId: string
+  ): Promise<Booking> {
+    try {
+      // Get current booking to append to status history
+      const current = await this.getBookingById(bookingId);
+      if (!current) throw new Error("Booking not found");
+
+      const statusHistoryEntry = {
+        status: "processing" as BookingStatus,
+        date: new Date().toISOString(),
+        note: `Payment confirmed via Airwallex (ID: ${paymentIntentId})`,
+      };
+
+      const updatedHistory = [...current.statusHistory, statusHistoryEntry];
+
+      const row = await databases.updateDocument<Booking>(
+        DATABASE_ID,
+        TABLES.BOOKINGS,
+        bookingId,
+        {
+          status: "processing",
+          paymentStatus: "paid",
+          paymentId: paymentIntentId,
+          statusHistory: JSON.stringify(updatedHistory),
+          updatedAt: new Date().toISOString(),
+        } as any
+      );
+
+      return {
+        ...row,
+        travelers:
+          typeof row.travelers === "string"
+            ? JSON.parse(row.travelers)
+            : row.travelers,
+        statusHistory:
+          typeof row.statusHistory === "string"
+            ? JSON.parse(row.statusHistory)
+            : row.statusHistory,
+        createdAt: row.$createdAt,
+        updatedAt: row.$updatedAt,
+      } as Booking;
+    } catch (error) {
+      console.error("Error confirming payment:", error);
+      throw error;
+    }
+  },
+
+  /**
    * Update booking status
    */
   async updateBookingStatus(
