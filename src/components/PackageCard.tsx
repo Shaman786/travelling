@@ -57,9 +57,8 @@ const PackageCard = ({ item, style }: PackageCardProps) => {
           style={styles.image}
           contentFit="cover"
           transition={500}
-          placeholder={{
-            uri: "https://via.placeholder.com/600x400/cccccc/888888?text=Loading...",
-          }}
+          cachePolicy="memory-disk"
+          placeholder={require("../../assets/images/splash-icon.png")}
         />
         <LinearGradient
           colors={["transparent", "rgba(0,0,0,0.7)"]}
