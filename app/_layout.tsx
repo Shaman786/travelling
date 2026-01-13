@@ -84,6 +84,16 @@ export default function RootLayout() {
           <Stack.Screen name="(auth)" options={{ headerShown: false }} />
           <Stack.Screen name="index" options={{ headerShown: false }} />
           <Stack.Screen name="details/[id]" options={{ headerShown: false }} />
+          <Stack.Screen name="consult" options={{ headerShown: false }} />
+          <Stack.Screen name="profile" options={{ headerShown: false }} />
+          <Stack.Screen name="support" options={{ headerShown: false }} />
+          <Stack.Screen name="search/index" options={{ headerShown: false }} />
+          <Stack.Screen name="booking" options={{ headerShown: false }} />
+          <Stack.Screen name="bookings" options={{ headerShown: false }} />
+          <Stack.Screen
+            name="favorites/index"
+            options={{ headerShown: false }}
+          />
         </Stack>
         <ToastManager />
       </PaperProvider>

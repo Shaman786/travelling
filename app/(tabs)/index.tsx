@@ -118,7 +118,7 @@ export default function CatalogScreen() {
               {user?.name || "Traveller"} 👋
             </Text>
           </View>
-          <Pressable onPress={() => router.push("/profile" as any)}>
+          <Pressable onPress={() => router.push("/(tabs)/profile" as any)}>
             {user?.avatar ? (
               <Avatar.Image size={44} source={{ uri: user.avatar }} />
             ) : (
