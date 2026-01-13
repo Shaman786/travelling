@@ -111,16 +111,21 @@ export const usePayment = () => {
         }
 
         // Prepare Session
-        const session = {
+        const session: any = {
           type: "OneOff",
           paymentIntentId: intentId,
           clientSecret: clientSecret,
           currency: currency,
-          countryCode: "US",
+          countryCode: "US", // Defaulting to US for global demo
           amount: amount,
           returnUrl: "travelling://payment-result",
           isBillingRequired: true,
+          paymentMethods: ["card"], // Explicitly allow card
         };
+
+        if (customerId) {
+          session.customerId = customerId;
+        }
 
         // Launch Native Payment UI
         const result = await airwallexSDK.presentEntirePaymentFlow(session);

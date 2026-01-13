@@ -136,18 +136,21 @@ export default function CatalogScreen() {
           </Pressable>
         </View>
 
-        {/* Search Bar */}
-        <View style={styles.searchContainer}>
-          <Searchbar
-            placeholder="Search packages, experts..."
-            onChangeText={setSearchQuery}
-            value={searchQuery}
-            style={styles.searchbar}
-            elevation={1}
-            iconColor={theme.colors.primary}
-            onSubmitEditing={() => addToHistory(searchQuery)}
-          />
-        </View>
+        {/* Search Bar - Navigates to dedicated Search Screen */}
+        <Pressable
+          style={[styles.searchContainer, { marginBottom: 24 }]}
+          onPress={() => router.push("/search" as any)}
+        >
+          <View pointerEvents="none">
+            <Searchbar
+              placeholder="Search packages, experts..."
+              value=""
+              style={styles.searchbar}
+              elevation={1}
+              iconColor={theme.colors.primary}
+            />
+          </View>
+        </Pressable>
 
         {/* 1. Hero Carousel */}
         <HeroCarousel />

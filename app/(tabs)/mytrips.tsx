@@ -2,7 +2,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { FlashList } from "@shopify/flash-list";
 import { format } from "date-fns";
 import { Image } from "expo-image"; // Added Image import
-import { useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import React, { useState } from "react";
 import { Alert, Pressable, StyleSheet, View } from "react-native";
 import {
@@ -18,6 +18,7 @@ import { Toast } from "toastify-react-native";
 import ReviewModal from "../../src/components/ReviewModal";
 import StepTracker from "../../src/components/StepTracker";
 import { usePayment } from "../../src/hooks/usePayment"; // Added usePayment import
+import { bookingService } from "../../src/lib/databaseService";
 import { BookedTrip, useStore } from "../../src/store/useStore";
 
 export default function MyTripsScreen() {
@@ -25,6 +26,34 @@ export default function MyTripsScreen() {
   const router = useRouter();
   const bookedTrips = useStore((state) => state.bookedTrips);
   const removeBookedTrip = useStore((state) => state.removeBookedTrip);
+  const setBookedTrips = useStore((state) => state.setBookedTrips);
+  const user = useStore.getState().user; // Get user ID
+
+  // Auto-refresh to ensure payment status is up to date
+  useFocusEffect(
+    React.useCallback(() => {
+      let isActive = true;
+
+      const fetchLatestBookings = async () => {
+        if (!user?.$id) return;
+        try {
+          // Fetch latest from DB to ensure status is up to date
+          const bookings = await bookingService.getUserBookings(user.$id); // Use bookingService
+          if (isActive && bookings) {
+            setBookedTrips(bookings);
+          }
+        } catch (error) {
+          console.log("Failed to refresh bookings:", error);
+        }
+      };
+
+      fetchLatestBookings();
+
+      return () => {
+        isActive = false;
+      };
+    }, [user?.$id, setBookedTrips])
+  );
 
   const [isReviewModalVisible, setIsReviewModalVisible] = useState(false);
   const [selectedTripForReview, setSelectedTripForReview] =
@@ -40,13 +69,38 @@ export default function MyTripsScreen() {
 
   const handlePayNow = async (trip: BookedTrip) => {
     setPayingTripId(trip.id);
-    const success = await startPayment(trip.id, trip.totalPrice);
-    if (success) {
-      // Optimistically update status or reload
-      // removeBookedTrip(trip.id); // Or update status
-      Toast.success("Payment Successful! Processing booking...");
+    try {
+      // 1. Start UI Flow
+      const result = await startPayment(trip.id, trip.totalPrice);
+
+      // 2. Handle Result
+      if (result.success && result.paymentIntentId) {
+        Toast.success("Payment Authorized. Confirming...");
+
+        // 3. Record Transaction in DB (Atomic)
+        await bookingService.confirmBookingPayment(
+          trip.id,
+          result.paymentIntentId
+        );
+
+        Toast.success("Booking Confirmed! ✅");
+
+        // 4. Force Refresh to update UI immediately
+        if (user?.$id) {
+          const bookings = await bookingService.getUserBookings(user.$id);
+          setBookedTrips(bookings);
+        }
+      } else if (result.status === "cancelled") {
+        Toast.warn("Payment Cancelled");
+      } else {
+        Toast.error(result.error || "Payment Failed");
+      }
+    } catch (error: any) {
+      console.error("Payment Confirmation Error:", error);
+      Toast.error("Payment recorded failed: " + error.message);
+    } finally {
+      setPayingTripId(null);
     }
-    setPayingTripId(null);
   };
 
   const handleCancelTrip = (tripId: string, tripTitle: string) => {
@@ -349,5 +403,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    flexWrap: "wrap", // Allow wrapping if space is tight
+    gap: 12,
   },
 });

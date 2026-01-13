@@ -14,6 +14,7 @@ import { ErrorBoundary } from "../src/components/ErrorBoundary";
 import OfflineNotice from "../src/components/OfflineNotice";
 import { useAuth } from "../src/hooks/useAuth";
 import "../src/i18n"; // Init i18n
+import { registerForPushNotificationsAsync } from "../src/lib/notifications";
 import { theme } from "../src/theme";
 
 function AuthHandler() {
@@ -56,16 +57,22 @@ export default function RootLayout() {
   const responseListener = useRef<Notifications.Subscription | null>(null);
 
   useEffect(() => {
+    // Register for push notifications
+    registerForPushNotificationsAsync().then((token) => {
+      if (token) console.log("Push Token:", token);
+    });
+
     // This listener is fired whenever a notification is received while the app is foregrounded
     notificationListener.current =
-      Notifications.addNotificationReceivedListener(() => {
+      Notifications.addNotificationReceivedListener((notification) => {
         // Could show in-app notification banner here
+        console.log("Notification received:", notification);
       });
 
     // This listener is fired whenever a user taps on or interacts with a notification
     responseListener.current =
-      Notifications.addNotificationResponseReceivedListener(() => {
-        // Example: router.push(response.notification.request.content.data.url);
+      Notifications.addNotificationResponseReceivedListener((response) => {
+        console.log("Notification response:", response);
       });
 
     return () => {
@@ -97,7 +104,7 @@ export default function RootLayout() {
               options={{ headerShown: false }}
             />
             <Stack.Screen name="booking" options={{ headerShown: false }} />
-            <Stack.Screen name="bookings" options={{ headerShown: false }} />
+            <Stack.Screen />
             <Stack.Screen
               name="favorites/index"
               options={{ headerShown: false }}

@@ -14,6 +14,7 @@
     },
     "android": {
       "package": "com.travels.travelling",
+      "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -51,6 +52,14 @@
         }
       ],
       "expo-localization",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/icon.png",
+          "color": "#ffffff",
+          "defaultChannel": "default"
+        }
+      ],
       "./plugins/withAirwallex"
     ],
     "experiments": {

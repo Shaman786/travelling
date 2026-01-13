@@ -406,17 +406,11 @@ export default function PackageDetailsScreen() {
         <Button
           mode="contained"
           onPress={handleBookTrip}
-          icon={isBooking || isPaymentLoading ? undefined : "check-circle"}
-          loading={isBooking || isPaymentLoading}
-          disabled={isBooking || isPaymentLoading}
+          icon="check-circle"
           style={styles.bookButton}
           contentStyle={{ height: 50 }}
         >
-          {isBooking
-            ? "Booking..."
-            : isPaymentLoading
-              ? "Payment..."
-              : "Plan My Trip"}
+          Plan My Trip
         </Button>
       </Surface>
     </View>

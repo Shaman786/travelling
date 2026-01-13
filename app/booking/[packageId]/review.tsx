@@ -8,7 +8,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { differenceInDays, format } from "date-fns";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useCallback, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { Alert, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import {
   Button,
   Checkbox,
@@ -39,6 +39,7 @@ export default function ReviewScreen() {
   const user = useStore((state) => state.user);
   const bookingDraft = useStore((state) => state.bookingDraft);
   const addBookedTrip = useStore((state) => state.addBookedTrip);
+  const updateBookedTrip = useStore((state) => state.updateBookedTrip); // Added
   const resetBookingDraft = useStore((state) => state.resetBookingDraft);
 
   const [specialRequests, setSpecialRequests] = useState(
@@ -129,35 +130,45 @@ export default function ReviewScreen() {
         const paymentIntentId =
           paymentResult.paymentIntentId || "manual_confirmation";
 
-        // 1. Confirm Booking Status
-        await bookingService.confirmBookingPayment(
-          booking.$id,
-          paymentIntentId
-        );
+        console.log("Payment accepted. Updating database...");
 
-        // 2. Create Payment Record (for Admin Dashboard/Reports)
-        await bookingService.createPayment({
-          bookingId: booking.$id,
-          userId: user.$id,
-          amount: Math.round(totalPrice * 100), // Store in cents
-          currency: "USD",
-          gatewayProvider: "airwallex",
-          gatewayOrderId: paymentIntentId,
-          status: "completed",
-          method: "card",
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        });
+        // Show loading state/toast using 'warn' as a safe generic neutral style if 'info' is missing
+        Toast.warn("Finalizing booking...");
 
-        // 3. Send In-App Notification
-        await sendLocalNotification(
-          "Booking Confirmed! ✈️",
-          `Your trip to ${bookingDraft.destination || pkg?.destination || "your destination"} is confirmed! Have a safe journey.`
-        );
+        try {
+          // 1. Confirm Booking Status & Create Payment (Atomic Transaction)
+          await bookingService.confirmBookingPayment(
+            booking.$id,
+            paymentIntentId
+          );
 
-        resetBookingDraft();
-        Toast.success("Payment successful! 🎉");
-        router.replace("/(tabs)/mytrips" as any);
+          // 2. Send In-App Notification
+          await sendLocalNotification(
+            "Booking Confirmed! ✈️",
+            `Your trip to ${bookingDraft.destination || pkg?.destination || "your destination"} is confirmed! Have a safe journey.`
+          );
+
+          // 4. Update Local Store
+          updateBookedTrip(booking.$id, {
+            status: "processing",
+            paymentStatus: "paid",
+            paymentId: paymentIntentId,
+          });
+
+          Toast.success("Booking Confirmed!");
+          resetBookingDraft();
+          router.replace("/(tabs)/mytrips" as any);
+        } catch (error: any) {
+          console.error("Critical DB Error:", error);
+          Toast.hide(); // Hide loading
+          // Show persistent alert user cannot miss
+          Alert.alert(
+            "Payment Succeeded but Save Failed",
+            "We received your payment, but could not update the database.\n\nError: " +
+              error.message,
+            [{ text: "OK" }]
+          );
+        }
       } else if (paymentResult.status === "cancelled") {
         Toast.warn("Payment cancelled. You can retry from My Trips.");
         router.replace("/(tabs)/mytrips" as any);
@@ -167,6 +178,7 @@ export default function ReviewScreen() {
         router.replace("/(tabs)/mytrips" as any);
       }
     } catch (error: any) {
+      console.error("Booking caught error:", error);
       Toast.error(error.message || "Booking failed. Please try again.");
     } finally {
       setIsSubmitting(false);
@@ -180,6 +192,7 @@ export default function ReviewScreen() {
     specialRequests,
     totalPrice,
     addBookedTrip,
+    updateBookedTrip,
     resetBookingDraft,
     router,
     startPayment,

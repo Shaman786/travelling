@@ -7,6 +7,7 @@ import {
   Query,
   Storage,
 } from "react-native-appwrite";
+import { TablesDB } from "react-native-appwrite/src/services/tables-db";
 import "react-native-url-polyfill/auto";
 
 // Appwrite Configuration from environment variables
@@ -65,6 +66,7 @@ export const account = new Account(client);
 export const storage = new Storage(client);
 export const databases = new Databases(client);
 export const functions = new Functions(client);
+export const tables = new TablesDB(client); // Re-added
 
 // Check if Appwrite is configured
 export const isAppwriteConfigured = (): boolean => {

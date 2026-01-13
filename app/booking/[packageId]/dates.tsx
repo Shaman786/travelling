@@ -16,6 +16,7 @@ import {
   Text,
   useTheme,
 } from "react-native-paper";
+import { DatePickerModal } from "react-native-paper-dates";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Toast } from "toastify-react-native";
 
@@ -39,24 +40,27 @@ export default function SelectDatesScreen() {
     bookingDraft.returnDate || addDays(new Date(), 21)
   );
 
-  // Adjust dates
-  const adjustDate = (type: "departure" | "return", days: number) => {
-    if (type === "departure") {
-      const newDate = addDays(departureDate, days);
-      if (newDate > new Date()) {
-        setDepartureDate(newDate);
-        // Ensure return date is after departure
-        if (newDate >= returnDate) {
-          setReturnDate(addDays(newDate, 1));
-        }
-      }
-    } else {
-      const newDate = addDays(returnDate, days);
-      if (newDate > departureDate) {
-        setReturnDate(newDate);
-      }
-    }
-  };
+  // Modal State
+  const [open, setOpen] = useState(false);
+
+  const onDismiss = useCallback(() => {
+    setOpen(false);
+  }, [setOpen]);
+
+  const onConfirm = useCallback(
+    ({
+      startDate,
+      endDate,
+    }: {
+      startDate: Date | undefined;
+      endDate: Date | undefined;
+    }) => {
+      setOpen(false);
+      if (startDate) setDepartureDate(startDate);
+      if (endDate) setReturnDate(endDate);
+    },
+    [setOpen, setDepartureDate, setReturnDate]
+  );
 
   // Continue to next step
   const handleContinue = useCallback(() => {
@@ -106,45 +110,44 @@ export default function SelectDatesScreen() {
           </Text>
         </Surface>
 
-        {/* Departure Date */}
+        {/* Date Selection */}
         <View style={styles.dateSection}>
           <Text variant="labelLarge" style={styles.dateLabel}>
-            Departure Date
+            Trip Dates
           </Text>
-          <Surface style={styles.dateCard} elevation={2}>
-            <IconButton
-              icon="minus"
-              mode="outlined"
-              size={20}
-              onPress={() => adjustDate("departure", -1)}
-            />
+
+          <Surface
+            style={styles.dateCard}
+            elevation={2}
+            onTouchEnd={() => setOpen(true)}
+          >
             <View style={styles.dateDisplay}>
               <MaterialCommunityIcons
-                name="airplane-takeoff"
+                name="calendar-range"
                 size={24}
                 color={theme.colors.primary}
               />
-              <Text
-                variant="headlineSmall"
-                style={{ fontWeight: "bold", marginTop: 8 }}
-              >
-                {format(departureDate, "dd")}
-              </Text>
-              <Text variant="titleMedium">
-                {format(departureDate, "MMMM yyyy")}
-              </Text>
-              <Text
-                variant="bodyMedium"
-                style={{ color: theme.colors.outline }}
-              >
-                {format(departureDate, "EEEE")}
-              </Text>
+              <View style={{ marginLeft: 16 }}>
+                <Text
+                  variant="labelMedium"
+                  style={{ color: theme.colors.outline }}
+                >
+                  Departure - Return
+                </Text>
+                <Text
+                  variant="titleLarge"
+                  style={{ fontWeight: "bold", marginTop: 4 }}
+                >
+                  {format(departureDate, "MMM dd")} -{" "}
+                  {format(returnDate, "MMM dd, yyyy")}
+                </Text>
+              </View>
             </View>
             <IconButton
-              icon="plus"
-              mode="outlined"
+              icon="pencil"
+              mode="contained"
               size={20}
-              onPress={() => adjustDate("departure", 1)}
+              onPress={() => setOpen(true)}
             />
           </Surface>
         </View>
@@ -178,49 +181,6 @@ export default function SelectDatesScreen() {
           />
         </View>
 
-        {/* Return Date */}
-        <View style={styles.dateSection}>
-          <Text variant="labelLarge" style={styles.dateLabel}>
-            Return Date
-          </Text>
-          <Surface style={styles.dateCard} elevation={2}>
-            <IconButton
-              icon="minus"
-              mode="outlined"
-              size={20}
-              onPress={() => adjustDate("return", -1)}
-            />
-            <View style={styles.dateDisplay}>
-              <MaterialCommunityIcons
-                name="airplane-landing"
-                size={24}
-                color={theme.colors.secondary}
-              />
-              <Text
-                variant="headlineSmall"
-                style={{ fontWeight: "bold", marginTop: 8 }}
-              >
-                {format(returnDate, "dd")}
-              </Text>
-              <Text variant="titleMedium">
-                {format(returnDate, "MMMM yyyy")}
-              </Text>
-              <Text
-                variant="bodyMedium"
-                style={{ color: theme.colors.outline }}
-              >
-                {format(returnDate, "EEEE")}
-              </Text>
-            </View>
-            <IconButton
-              icon="plus"
-              mode="outlined"
-              size={20}
-              onPress={() => adjustDate("return", 1)}
-            />
-          </Surface>
-        </View>
-
         {/* Info */}
         <View style={styles.infoBox}>
           <MaterialCommunityIcons
@@ -236,11 +196,24 @@ export default function SelectDatesScreen() {
               color: theme.colors.onSurfaceVariant,
             }}
           >
-            Dates are flexible. Our travel experts will confirm availability and
-            suggest alternatives if needed.
+            Tap the edit button to open the calendar and select your customized
+            travel dates.
           </Text>
         </View>
       </ScrollView>
+
+      {/* Date Picker Modal */}
+      <DatePickerModal
+        locale="en"
+        mode="range"
+        visible={open}
+        onDismiss={onDismiss}
+        startDate={departureDate}
+        endDate={returnDate}
+        onConfirm={onConfirm}
+        saveLabel="Confirm Dates" // optional
+        label="Select Travel Dates" // optional
+      />
 
       {/* Bottom CTA */}
       <Surface style={styles.bottomBar} elevation={5}>
@@ -294,8 +267,8 @@ const styles = StyleSheet.create({
     borderRadius: 16,
   },
   dateDisplay: {
+    flexDirection: "row",
     alignItems: "center",
-    flex: 1,
   },
   durationIndicator: {
     flexDirection: "row",

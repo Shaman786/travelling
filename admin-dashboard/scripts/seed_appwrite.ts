@@ -6,6 +6,7 @@ import {
   Permission,
   Role,
   Storage,
+  TablesDB,
   Teams,
   Users,
 } from "node-appwrite";
@@ -36,6 +37,7 @@ const client = new Client()
   .setKey(API_KEY);
 
 const databases = new Databases(client);
+const tableService = new TablesDB(client); // Renamed to avoid reserved keyword conflict if any, but clear purpose
 const storage = new Storage(client);
 const users = new Users(client);
 const teams = new Teams(client);
@@ -180,6 +182,15 @@ const COLLECTIONS: any = {
         default: "pending",
       },
       { key: "travelers", type: "string", size: 5000, required: false }, // JSON string
+      {
+        key: "paymentStatus",
+        type: "string",
+        size: 32,
+        required: false,
+        default: "pending",
+      },
+      { key: "paymentId", type: "string", size: 128, required: false },
+      { key: "statusHistory", type: "string", size: 5000, required: false }, // JSON string
     ],
     indexes: [{ key: "user_index", type: "key", attributes: ["userId"] }],
   },
@@ -210,7 +221,31 @@ const COLLECTIONS: any = {
       { key: "status_index", type: "key", attributes: ["status"] },
     ],
   },
-  // Add other collections similarly if needed
+  payments: {
+    name: "Payments",
+    documentSecurity: true,
+    permissions: [
+      Permission.create(Role.users()),
+      Permission.read(Role.users()),
+      Permission.update(Role.team("695f5c530000d10e3388")),
+      Permission.delete(Role.team("695f5c530000d10e3388")),
+    ],
+    attributes: [
+      { key: "bookingId", type: "string", size: 36, required: true },
+      { key: "userId", type: "string", size: 36, required: true },
+      { key: "amount", type: "double", required: true },
+      { key: "currency", type: "string", size: 3, required: true },
+      { key: "status", type: "string", size: 32, required: true },
+      { key: "method", type: "string", size: 32, required: false },
+      { key: "gatewayProvider", type: "string", size: 32, required: false },
+      { key: "gatewayOrderId", type: "string", size: 128, required: false },
+      { key: "gatewayPaymentId", type: "string", size: 128, required: false },
+    ],
+    indexes: [
+      { key: "booking_index", type: "key", attributes: ["bookingId"] },
+      { key: "user_index", type: "key", attributes: ["userId"] },
+    ],
+  },
 };
 
 const BUCKETS = [
@@ -239,16 +274,12 @@ const BUCKETS = [
   },
 ];
 
-async function createAttributeWithRetry(
-  dbId: string,
-  colId: string,
-  attr: any,
-) {
+async function createColumnWithRetry(dbId: string, tableId: string, attr: any) {
   try {
     if (attr.type === "string") {
-      await databases.createStringAttribute(
+      await tableService.createStringColumn(
         dbId,
-        colId,
+        tableId,
         attr.key,
         attr.size,
         attr.required,
@@ -256,9 +287,9 @@ async function createAttributeWithRetry(
         attr.array,
       );
     } else if (attr.type === "integer") {
-      await databases.createIntegerAttribute(
+      await tableService.createIntegerColumn(
         dbId,
-        colId,
+        tableId,
         attr.key,
         attr.required,
         -2147483648,
@@ -267,9 +298,9 @@ async function createAttributeWithRetry(
         attr.array,
       );
     } else if (attr.type === "double" || attr.type === "float") {
-      await databases.createFloatAttribute(
+      await tableService.createFloatColumn(
         dbId,
-        colId,
+        tableId,
         attr.key,
         attr.required,
         0,
@@ -278,9 +309,9 @@ async function createAttributeWithRetry(
         attr.array,
       );
     } else if (attr.type === "boolean") {
-      await databases.createBooleanAttribute(
+      await tableService.createBooleanColumn(
         dbId,
-        colId,
+        tableId,
         attr.key,
         attr.required,
         attr.default,
@@ -373,37 +404,33 @@ async function setupAdmin() {
       }
     }
 
-    // 4. Create/Update Admin User Document in Database
+    // 4. Create/Update Admin User Row in Table
     try {
-      // Check if document exists
+      // Check if row exists
       try {
-        const userDoc = await databases.getDocument(
-          DATABASE_ID,
-          "users",
-          userId,
-        );
-        console.log(`✅ Admin User Document exists. Updating role...`);
-        await databases.updateDocument(DATABASE_ID, "users", userId, {
+        const userRow = await tableService.getRow(DATABASE_ID, "users", userId);
+        console.log(`✅ Admin User Row exists. Updating role...`);
+        await tableService.updateRow(DATABASE_ID, "users", userId, {
           role: "admin",
           name: ADMIN_NAME,
           email: ADMIN_EMAIL,
         });
       } catch (e: any) {
         if (e.code === 404) {
-          console.log(`Creating Admin User Document...`);
-          await databases.createDocument(DATABASE_ID, "users", userId, {
+          console.log(`Creating Admin User Row...`);
+          await tableService.createRow(DATABASE_ID, "users", userId, {
             name: ADMIN_NAME,
             email: ADMIN_EMAIL,
             role: "admin",
             createdAt: new Date().toISOString(),
           });
-          console.log(`✅ Admin User Document created.`);
+          console.log(`✅ Admin User Row created.`);
         } else {
           throw e; // Other error
         }
       }
     } catch (err: any) {
-      console.error("Error managing Admin User Document:", err.message);
+      console.error("Error managing Admin User Row:", err.message);
     }
   }
 }
@@ -426,16 +453,16 @@ async function init() {
     }
   }
 
-  // 2. Collections
+  // 2. Tables
   for (const [colId, colConfig] of Object.entries(COLLECTIONS) as [
     string,
     any,
   ][]) {
-    console.log(`Processing collection '${colId}'...`);
+    console.log(`Processing table '${colId}'...`);
     try {
-      await databases.getCollection(DATABASE_ID, colId);
+      await tableService.getTable(DATABASE_ID, colId);
       console.log(`   ✅ Exists. Updating permissions...`);
-      await databases.updateCollection(
+      await tableService.updateTable(
         DATABASE_ID,
         colId,
         colConfig.name,
@@ -443,28 +470,28 @@ async function init() {
         colConfig.documentSecurity,
       );
 
-      // Clean up legacy attributes if they exist
+      // Clean up legacy columns if they exist
       if (colId === "packages") {
         // Must delete index first
         try {
           console.log("   🧹 Checking for legacy 'search_name' index...");
-          await databases.deleteIndex(DATABASE_ID, colId, "search_name");
+          await tableService.deleteIndex(DATABASE_ID, colId, "search_name");
           console.log("   🗑️ Deleted legacy 'search_name' index.");
         } catch (e) {
           // Ignore
         }
 
         try {
-          console.log("   🧹 Checking for legacy 'name' attribute...");
-          await databases.deleteAttribute(DATABASE_ID, colId, "name");
-          console.log("   🗑️ Deleted legacy 'name' attribute.");
+          console.log("   🧹 Checking for legacy 'name' column...");
+          await tableService.deleteColumn(DATABASE_ID, colId, "name");
+          console.log("   🗑️ Deleted legacy 'name' column.");
         } catch (e) {
           // Ignore if not found
         }
         try {
-          console.log("   🧹 Checking for legacy 'location' attribute...");
-          await databases.deleteAttribute(DATABASE_ID, colId, "location");
-          console.log("   🗑️ Deleted legacy 'location' attribute.");
+          console.log("   🧹 Checking for legacy 'location' column...");
+          await tableService.deleteColumn(DATABASE_ID, colId, "location");
+          console.log("   🗑️ Deleted legacy 'location' column.");
         } catch (e) {
           // Ignore
         }
@@ -472,7 +499,7 @@ async function init() {
     } catch (err: any) {
       if (err.code === 404) {
         console.log(`   Creating...`);
-        await databases.createCollection(
+        await tableService.createTable(
           DATABASE_ID,
           colId,
           colConfig.name,
@@ -482,10 +509,10 @@ async function init() {
       }
     }
 
-    // Attributes
-    console.log(`   Syncing attributes...`);
+    // Columns
+    console.log(`   Syncing columns...`);
     for (const attr of colConfig.attributes) {
-      await createAttributeWithRetry(DATABASE_ID, colId, attr);
+      await createColumnWithRetry(DATABASE_ID, colId, attr);
     }
 
     // Indexes
@@ -493,7 +520,7 @@ async function init() {
       // Simple index creation loop, errors ignored if exists
       for (const idx of colConfig.indexes) {
         try {
-          await databases.createIndex(
+          await tableService.createIndex(
             DATABASE_ID,
             colId,
             idx.key,
@@ -546,21 +573,21 @@ async function init() {
     const adminUser = userList.users.find((u) => u.email === ADMIN_EMAIL);
     if (adminUser) {
       try {
-        await databases.updateDocument(DATABASE_ID, "users", adminUser.$id, {
+        await tableService.updateRow(DATABASE_ID, "users", adminUser.$id, {
           role: "admin",
           name: ADMIN_NAME,
           email: ADMIN_EMAIL,
         });
-        console.log("✅ Admin Document Updated with Role.");
+        console.log("✅ Admin Row Updated with Role.");
       } catch (e: any) {
         if (e.code === 404) {
-          await databases.createDocument(DATABASE_ID, "users", adminUser.$id, {
+          await tableService.createRow(DATABASE_ID, "users", adminUser.$id, {
             role: "admin",
             name: ADMIN_NAME,
             email: ADMIN_EMAIL,
             createdAt: new Date().toISOString(),
           });
-          console.log("✅ Admin Document Created.");
+          console.log("✅ Admin Row Created.");
         } else {
           console.log("Error updating admin doc:", e.message);
         }

@@ -14,6 +14,7 @@ const StepTracker = ({ currentStatus }: StepTrackerProps) => {
   const getStepIndex = (status: string) => {
     switch (status) {
       case "processing":
+      case "confirmed":
         return 0;
       case "visa_approved":
         return 1; // Assuming mapping
@@ -58,8 +59,8 @@ const StepTracker = ({ currentStatus }: StepTrackerProps) => {
     status: (index < activeIndex
       ? "completed"
       : index === activeIndex
-      ? "current"
-      : "upcoming") as "completed" | "current" | "upcoming",
+        ? "current"
+        : "upcoming") as "completed" | "current" | "upcoming",
     date: undefined,
   }));
 

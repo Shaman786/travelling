@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "302099030880",
+    "project_id": "travelling-e86a3",
+    "storage_bucket": "travelling-e86a3.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:302099030880:android:3ec664b4b942536a1c7405",
+        "android_client_info": {
+          "package_name": "com.travels.travelling"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBVxDN6LqGSyItyO_oOq8I9Di-1RMLeU00"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

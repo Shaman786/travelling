@@ -7,6 +7,7 @@ interface Booking {
   userId: string;
   totalPrice: number;
   status: string;
+  paymentStatus?: string; // Added paymentStatus
   $createdAt: string;
 }
 
@@ -35,6 +36,9 @@ export default function BookingTable({ bookings }: BookingTableProps) {
               </th>
               <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
                 Status
+              </th>
+              <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
+                Payment
               </th>
               <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
                 Actions
@@ -73,6 +77,20 @@ export default function BookingTable({ bookings }: BookingTableProps) {
                   >
                     {booking.status.charAt(0).toUpperCase() +
                       booking.status.slice(1)}
+                  </span>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <span
+                    className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ring-1 ring-inset ${
+                      booking.paymentStatus === "paid"
+                        ? "bg-green-50 text-green-700 ring-green-600/20 dark:bg-green-500/10 dark:text-green-400 dark:ring-green-500/20"
+                        : "bg-gray-50 text-gray-600 ring-gray-500/10 dark:bg-gray-500/10 dark:text-gray-400 dark:ring-gray-500/20"
+                    }`}
+                  >
+                    {booking.paymentStatus
+                      ? booking.paymentStatus.charAt(0).toUpperCase() +
+                        booking.paymentStatus.slice(1)
+                      : "Unpaid"}
                   </span>
                 </td>
                 <td className="px-6 py-4 text-right text-sm whitespace-nowrap">

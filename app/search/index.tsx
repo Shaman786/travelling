@@ -23,11 +23,27 @@ import PackageCard from "../../src/components/PackageCard";
 import databaseService from "../../src/lib/databaseService";
 import { PackageFilters, TravelPackage } from "../../src/types"; // Added TravelPackage import
 
+// Simple Debounce Hook
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+  return debouncedValue;
+}
+
 export default function SearchScreen() {
   const theme = useTheme();
   const router = useRouter();
 
   const [query, setQuery] = useState("");
+  const debouncedQuery = useDebounce(query, 500); // 500ms delay
+
   const [results, setResults] = useState<TravelPackage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -35,40 +51,52 @@ export default function SearchScreen() {
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState<PackageFilters>({});
 
-  // Debounce search could be better, but explicit search on enter/icon is fine for now
-
-  const handleSearch = useCallback(async () => {
+  const performSearch = useCallback(async () => {
     setIsLoading(true);
     try {
       let data: TravelPackage[] = [];
 
-      const activeFilters: PackageFilters = {
-        ...filters,
-        search: query || undefined,
-      };
+      // 1. If we have a query, use the robust Search (Title OR Dest)
+      if (debouncedQuery.trim().length > 0) {
+        data = await databaseService.packages.searchPackages(debouncedQuery);
 
-      // If query is present, use search, otherwise use list with filters
-      // databaseService.packages.getPackages handles filters including searchQuery if implemented there
-      // Let's check implementation: getPackages DOES support filters.search
+        // 2. Client-side filtering for search results (since searchPackages doesn't support complex filters yet)
+        if (filters.category && filters.category !== "all") {
+          data = data.filter(
+            (p) => p.category.toLowerCase() === filters.category!.toLowerCase()
+          );
+        }
+        if (filters.minPrice) {
+          data = data.filter((p) => p.price >= filters.minPrice!);
+        }
+        if (filters.maxPrice) {
+          data = data.filter((p) => p.price <= filters.maxPrice!);
+        }
+        if (filters.rating) {
+          data = data.filter((p) => (p.rating || 0) >= filters.rating!);
+        }
+      } else {
+        // 3. No query? Just use standard browse with filters
+        const response = await databaseService.packages.getPackages(
+          filters,
+          50
+        );
+        data = response.documents;
+      }
 
-      const response = await databaseService.packages.getPackages(
-        activeFilters,
-        50
-      );
-      data = response.documents;
-
-      setResults(data as any[]);
-    } catch {
-      // Quiet fail
+      setResults(data);
+    } catch (error) {
+      console.error("Search failed:", error);
+      // Optional: Toast.error("Search failed");
     } finally {
       setIsLoading(false);
     }
-  }, [query, filters]);
+  }, [debouncedQuery, filters]);
 
-  // Initial load (optional, maybe showing nothing is better, or showing all)
+  // Trigger search when Debounced Query or Filters change
   useEffect(() => {
-    handleSearch();
-  }, [filters, handleSearch]); // Auto-search when filters change
+    performSearch();
+  }, [performSearch]);
 
   const activeFilterCount = Object.keys(filters).filter(
     (k) => filters[k as keyof PackageFilters] !== undefined
@@ -85,10 +113,11 @@ export default function SearchScreen() {
           placeholder="Where to next?"
           onChangeText={setQuery}
           value={query}
-          onSubmitEditing={handleSearch}
+          // onSubmitEditing no longer needed as we debounce, but keeps keyboard nice
           style={styles.searchBar}
           elevation={0}
           autoFocus={true}
+          loading={isLoading}
         />
         <View>
           <IconButton
@@ -101,10 +130,8 @@ export default function SearchScreen() {
         </View>
       </View>
 
-      {/* Active Filters Row (Optional, maybe just rely on badge) */}
-
       {/* Results */}
-      {isLoading ? (
+      {isLoading && results.length === 0 ? (
         <View style={styles.centered}>
           <ActivityIndicator size="large" />
         </View>
@@ -133,13 +160,19 @@ export default function SearchScreen() {
                   >
                     No packages found for &quot;{query}&quot;
                   </Text>
+                  <Text
+                    variant="bodySmall"
+                    style={{ color: theme.colors.outline }}
+                  >
+                    Try simpler keywords or clear filters.
+                  </Text>
                 </>
               ) : (
                 <Text
                   variant="bodyMedium"
                   style={{ color: theme.colors.outline }}
                 >
-                  Search for destinations, activities, or countries.
+                  Type to search destinations...
                 </Text>
               )}
             </View>

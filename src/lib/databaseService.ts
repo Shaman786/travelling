@@ -30,6 +30,7 @@ import {
   ID,
   Query,
   storage,
+  tables,
   TABLES,
 } from "./appwrite";
 
@@ -253,33 +254,38 @@ export const packageService = {
   },
 
   /**
-   * Search packages by title or destination
+   * Search packages by title OR destination
+   * Performs two queries and merges results since OR queries are not native for search yet
    */
   async searchPackages(query: string, limit = 20): Promise<TravelPackage[]> {
     try {
-      const response = await databases.listDocuments<TravelPackage>(
-        DATABASE_ID,
-        TABLES.PACKAGES,
-        [
+      // Run queries in parallel
+      const [titleResults, destResults] = await Promise.all([
+        databases.listDocuments<TravelPackage>(DATABASE_ID, TABLES.PACKAGES, [
           Query.equal("isActive", true),
           Query.search("title", query),
           Query.limit(limit),
-          Query.select([
-            "$id",
-            "title",
-            "destination",
-            "price",
-            "imageUrl",
-            "rating",
-            "reviewCount",
-            "duration",
-            "category",
-            "isActive",
-            "itinerary",
-          ]),
-        ]
-      );
-      return response.documents.map((pkg) => ({
+        ]),
+        databases.listDocuments<TravelPackage>(DATABASE_ID, TABLES.PACKAGES, [
+          Query.equal("isActive", true),
+          Query.search("destination", query),
+          Query.limit(limit),
+        ]),
+      ]);
+
+      // Merge and Deduplicate
+      const allDocs = [...titleResults.documents, ...destResults.documents];
+      const seen = new Set<string>();
+      const uniqueDocs: TravelPackage[] = [];
+
+      for (const doc of allDocs) {
+        if (!seen.has(doc.$id)) {
+          seen.add(doc.$id);
+          uniqueDocs.push(doc);
+        }
+      }
+
+      return uniqueDocs.map((pkg) => ({
         ...pkg,
         itinerary:
           typeof pkg.itinerary === "string"
@@ -463,22 +469,19 @@ export const bookingService = {
    * Create a payment record
    */
   async createPayment(paymentData: any): Promise<any> {
-    try {
-      return await databases.createDocument(
-        DATABASE_ID,
-        TABLES.PAYMENTS,
-        ID.unique(),
-        {
-          ...paymentData,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        }
-      );
-    } catch (error) {
-      console.error("Error creating payment record:", error);
-      // We don't throw here to avoid failing the booking flow if just logging fails
-      return null;
-    }
+    // try/catch removed to allow errors to propagate to the caller (ReviewScreen)
+    // where they will be caught and displayed to the user.
+    const response = await databases.createDocument(
+      DATABASE_ID,
+      TABLES.PAYMENTS,
+      ID.unique(),
+      {
+        ...paymentData,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      }
+    );
+    return response;
   },
 
   /**
@@ -488,48 +491,94 @@ export const bookingService = {
   async confirmBookingPayment(
     bookingId: string,
     paymentIntentId: string
-  ): Promise<Booking> {
+  ): Promise<any> {
+    // Changing return type to any as transaction result differs
     try {
-      // Get current booking to append to status history
-      const current = await this.getBookingById(bookingId);
-      if (!current) throw new Error("Booking not found");
+      console.log("Initiating Atomic Payment Transaction (TablesDB)...");
+
+      // 1. Create Transaction
+      const transaction = await tables.createTransaction();
+      const transactionId = transaction.$id;
+      console.log(`Transaction Created: ${transactionId}`);
+
+      // 2. Prepare Operations
+      // Fetch booking using TablesDB (Correct Modern API)
+      const booking = (await tables.getRow(
+        DATABASE_ID,
+        TABLES.BOOKINGS,
+        bookingId
+      )) as unknown as Booking;
+
+      // Parse statusHistory if it's a string (backwards compatibility)
+      const currentHistory =
+        typeof booking.statusHistory === "string"
+          ? JSON.parse(booking.statusHistory)
+          : booking.statusHistory;
 
       const statusHistoryEntry = {
-        status: "processing" as BookingStatus,
+        status: "processing",
         date: new Date().toISOString(),
         note: `Payment confirmed via Airwallex (ID: ${paymentIntentId})`,
       };
 
-      const updatedHistory = [...current.statusHistory, statusHistoryEntry];
+      const updatedHistory = JSON.stringify([
+        ...currentHistory,
+        statusHistoryEntry,
+      ]);
+      const paymentId = ID.unique();
 
-      const row = await databases.updateDocument<Booking>(
-        DATABASE_ID,
-        TABLES.BOOKINGS,
-        bookingId,
+      // Define Operations
+      const operations = [
+        // Operation 1: Update Booking Status
         {
-          status: "processing",
-          paymentStatus: "paid",
-          paymentId: paymentIntentId,
-          statusHistory: JSON.stringify(updatedHistory),
-          updatedAt: new Date().toISOString(),
-        } as any
-      );
+          action: "update",
+          databaseId: DATABASE_ID,
+          tableId: TABLES.BOOKINGS,
+          rowId: bookingId,
+          data: {
+            status: "processing",
+            paymentStatus: "paid",
+            paymentId: paymentIntentId,
+            statusHistory: updatedHistory,
+          },
+        },
+        // Operation 2: Create Payment Record
+        {
+          action: "create",
+          databaseId: DATABASE_ID,
+          tableId: TABLES.PAYMENTS,
+          rowId: paymentId,
+          data: {
+            bookingId: bookingId,
+            userId: booking.userId,
+            amount: booking.totalPrice,
+            currency: "USD",
+            gatewayProvider: "airwallex",
+            gatewayOrderId: paymentIntentId,
+            gatewayPaymentId: paymentIntentId,
+            status: "completed",
+            method: "card",
+          },
+        },
+      ];
 
-      return {
-        ...row,
-        travelers:
-          typeof row.travelers === "string"
-            ? JSON.parse(row.travelers)
-            : row.travelers,
-        statusHistory:
-          typeof row.statusHistory === "string"
-            ? JSON.parse(row.statusHistory)
-            : row.statusHistory,
-        createdAt: row.$createdAt,
-        updatedAt: row.$updatedAt,
-      } as Booking;
-    } catch (error) {
-      console.error("Error confirming payment:", error);
+      // 3. Stage Operations
+      await tables.createOperations({
+        transactionId: transactionId,
+        operations: operations as any,
+      });
+
+      // 4. Commit Transaction
+      console.log("Committing Transaction...");
+      await tables.updateTransaction({
+        transactionId: transactionId,
+        commit: true,
+      });
+
+      console.log("Transaction Committed Successfully ✅");
+      return booking; // Return the booking object (state might be slightly stale but UI has optimistic update)
+    } catch (error: any) {
+      console.error("Transaction Failed ❌:", error);
       throw error;
     }
   },

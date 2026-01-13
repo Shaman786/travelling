@@ -63,6 +63,7 @@ export interface BookedTrip {
   travelers: Traveler[];
   totalPrice: number;
   status: BookingStatus;
+  paymentStatus?: "pending" | "paid" | "failed" | "refunded"; // Restoring for UI feedback
   statusHistory: {
     status: string;
     date: Date;
@@ -280,6 +281,7 @@ export const useStore = create<AppState>()(
             travelers: trip.travelers,
             totalPrice: trip.totalPrice,
             status: trip.status as BookingStatus,
+            paymentStatus: (trip as Booking).paymentStatus, // Restore
             statusHistory: trip.statusHistory.map((h) => ({
               status: h.status,
               date: typeof h.date === "string" ? new Date(h.date) : h.date,
@@ -306,6 +308,7 @@ export const useStore = create<AppState>()(
             travelers: trip.travelers,
             totalPrice: trip.totalPrice,
             status: trip.status as BookedTrip["status"],
+            paymentStatus: trip.paymentStatus, // Restore
             statusHistory: trip.statusHistory.map((h) => ({
               status: h.status,
               date: new Date(h.date),
@@ -323,6 +326,9 @@ export const useStore = create<AppState>()(
                   ...trip,
                   ...(updates.status && {
                     status: updates.status as BookedTrip["status"],
+                  }),
+                  ...(updates.paymentStatus && {
+                    paymentStatus: updates.paymentStatus as any, // Restore
                   }),
                   ...(updates.totalPrice && { totalPrice: updates.totalPrice }),
                 }

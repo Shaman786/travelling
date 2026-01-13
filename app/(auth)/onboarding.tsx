@@ -12,6 +12,7 @@ import {
   Platform,
   ScrollView,
   StyleSheet,
+  TouchableOpacity,
   View,
 } from "react-native";
 import {
@@ -23,10 +24,12 @@ import {
   useTheme,
 } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  CountryCodePicker,
+  type Country,
+} from "../../src/components/CountryCodePicker";
 import { authService } from "../../src/lib/authService";
 import { useStore } from "../../src/store/useStore";
-
-// const { width } = Dimensions.get("window");
 
 // Step components data
 const TRAVEL_STYLES = [
@@ -66,6 +69,9 @@ export default function OnboardingScreen() {
   // Form data
   const [name, setName] = useState(user?.name || "");
   const [phone, setPhone] = useState(user?.phone || "");
+  const [countryCode, setCountryCode] = useState("+91"); // Default
+  const [showCountryPicker, setShowCountryPicker] = useState(false);
+
   const [travelStyle, setTravelStyle] = useState<string>("");
   const [budgetRange, setBudgetRange] = useState<string>("");
   const [selectedDestinations, setSelectedDestinations] = useState<string[]>(
@@ -95,21 +101,25 @@ export default function OnboardingScreen() {
   const handleComplete = async () => {
     setIsLoading(true);
     try {
+      // Full phone number
+      const fullPhone = `${countryCode}${phone}`;
+
       // Update user profile in database
       if (user?.$id) {
         await authService.updateUserProfile(user.$id, {
           name,
-          phone,
+          phone: fullPhone,
           travelStyle,
           budgetRange,
           preferredDestinations: selectedDestinations,
           onboardingComplete: true,
         });
 
-        // Update local store
+        // Update local store - CRITICAL: Set onboardingComplete to true immediately
         updateUser({
           name,
-          phone,
+          phone: fullPhone,
+          onboardingComplete: true,
         });
       }
 
@@ -117,7 +127,8 @@ export default function OnboardingScreen() {
       router.replace("/(tabs)");
     } catch (error) {
       console.error("Onboarding error:", error);
-      // Still go to home on error - don't block user
+      // Fallback: update local state anyway to break loop
+      updateUser({ onboardingComplete: true });
       router.replace("/(tabs)");
     } finally {
       setIsLoading(false);
@@ -125,7 +136,13 @@ export default function OnboardingScreen() {
   };
 
   const handleSkip = () => {
+    // CRITICAL: Update store to prevent loop
+    updateUser({ onboardingComplete: true });
     router.replace("/(tabs)");
+  };
+
+  const onSelectCountry = (country: Country) => {
+    setCountryCode(country.dial_code);
   };
 
   // Step 0: Welcome
@@ -165,17 +182,36 @@ export default function OnboardingScreen() {
           style={styles.input}
           left={<TextInput.Icon icon="account" />}
         />
-        <TextInput
-          label="Phone Number"
-          value={phone}
-          onChangeText={setPhone}
-          mode="outlined"
-          keyboardType="phone-pad"
-          style={styles.input}
-          left={<TextInput.Icon icon="phone" />}
-          placeholder="+91 98765 43210"
-        />
+
+        <View style={styles.phoneRow}>
+          <TouchableOpacity
+            style={styles.countryButton}
+            onPress={() => setShowCountryPicker(true)}
+          >
+            <Text variant="bodyLarge">{countryCode}</Text>
+            <Text variant="bodySmall" style={{ fontSize: 10 }}>
+              ▼
+            </Text>
+          </TouchableOpacity>
+
+          <TextInput
+            label="Phone Number"
+            value={phone}
+            onChangeText={setPhone}
+            mode="outlined"
+            keyboardType="phone-pad"
+            style={[styles.input, { flex: 1 }]}
+            placeholder="98765 43210"
+          />
+        </View>
       </View>
+
+      <CountryCodePicker
+        visible={showCountryPicker}
+        onDismiss={() => setShowCountryPicker(false)}
+        onSelect={onSelectCountry}
+        value={countryCode}
+      />
     </View>
   );
 
@@ -439,7 +475,25 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   input: {
+    backgroundColor: "white",
+  },
+  phoneRow: {
+    flexDirection: "row",
+    gap: 8,
     width: "100%",
+  },
+  countryButton: {
+    height: 50, // Match typical input height
+    width: 80,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: "#79747E", // Default Outline color
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 6, // Align top with Input label offset
+    backgroundColor: "white",
+    flexDirection: "row",
+    gap: 4,
   },
   optionsGrid: {
     flexDirection: "row",

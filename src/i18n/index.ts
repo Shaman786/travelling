@@ -2,9 +2,21 @@ import { getLocales } from "expo-localization";
 import i18next from "i18next";
 import { initReactI18next } from "react-i18next";
 
+import {
+  ar as arDate,
+  en as enDate,
+  hi as hiDate,
+  registerTranslation,
+} from "react-native-paper-dates";
+
 import ar from "./ar.json";
 import en from "./en.json";
 import hi from "./hi.json";
+
+// Register paper-dates locales
+registerTranslation("en", enDate);
+registerTranslation("hi", hiDate);
+registerTranslation("ar", arDate);
 
 const resources = {
   en: { translation: en },
