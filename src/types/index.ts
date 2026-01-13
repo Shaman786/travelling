@@ -166,6 +166,15 @@ export interface SupportTicket extends Models.Document {
   updatedAt: string;
 }
 
+export interface TicketMessage extends Models.Document {
+  ticketId: string;
+  senderId: string; // User ID or 'admin' / 'support'
+  senderName: string;
+  message: string;
+  isAdmin: boolean;
+  createdAt: string;
+}
+
 export interface Review extends Models.Document {
   userId: string;
   userName: string;

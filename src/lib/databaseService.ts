@@ -17,6 +17,7 @@ import type {
   Review,
   SavedTraveler,
   SupportTicket,
+  TicketMessage,
   TravelDocument,
   TravelPackage,
 } from "../types";
@@ -105,6 +106,21 @@ export const packageService = {
         }
       }
 
+      queries.push(
+        Query.select([
+          "$id",
+          "title",
+          "destination",
+          "price",
+          "imageUrl",
+          "rating",
+          "reviewCount",
+          "duration",
+          "category",
+          "isActive",
+        ])
+      );
+
       const response = await databases.listDocuments<TravelPackage>(
         DATABASE_ID,
         TABLES.PACKAGES,
@@ -167,8 +183,22 @@ export const packageService = {
           Query.equal("isActive", true),
           Query.equal("category", category),
           Query.limit(limit),
+          Query.select([
+            "$id",
+            "title",
+            "destination",
+            "price",
+            "imageUrl",
+            "rating",
+            "reviewCount",
+            "duration",
+            "category",
+            "isActive",
+            "itinerary",
+          ]),
         ]
       );
+      // Itinerary might still be needed for parsing, even if empty/partial
       return response.documents.map((pkg) => ({
         ...pkg,
         itinerary:
@@ -194,6 +224,19 @@ export const packageService = {
           Query.equal("isActive", true),
           Query.orderDesc("rating"),
           Query.limit(limit),
+          Query.select([
+            "$id",
+            "title",
+            "destination",
+            "price",
+            "imageUrl",
+            "rating",
+            "reviewCount",
+            "duration",
+            "category",
+            "isActive",
+            "itinerary",
+          ]),
         ]
       );
       return response.documents.map((pkg) => ({
@@ -221,6 +264,19 @@ export const packageService = {
           Query.equal("isActive", true),
           Query.search("title", query),
           Query.limit(limit),
+          Query.select([
+            "$id",
+            "title",
+            "destination",
+            "price",
+            "imageUrl",
+            "rating",
+            "reviewCount",
+            "duration",
+            "category",
+            "isActive",
+            "itinerary",
+          ]),
         ]
       );
       return response.documents.map((pkg) => ({
@@ -770,6 +826,81 @@ export const supportService = {
       } as SupportTicket;
     } catch {
       return null;
+    }
+  },
+
+  /**
+   * Get messages for a ticket
+   */
+  async getTicketMessages(ticketId: string): Promise<TicketMessage[]> {
+    try {
+      const response = await databases.listDocuments<TicketMessage>(
+        DATABASE_ID,
+        TABLES.MESSAGES,
+        [Query.equal("ticketId", ticketId), Query.orderAsc("createdAt")]
+      );
+      return response.documents.map((msg) => ({
+        ...msg,
+        createdAt: msg.$createdAt,
+      })) as TicketMessage[];
+    } catch (error: any) {
+      console.error("Get messages error:", error);
+      return [];
+    }
+  },
+
+  /**
+   * Send a message on a ticket
+   */
+  async sendTicketMessage(
+    messageData: Omit<
+      TicketMessage,
+      | "$id"
+      | "createdAt"
+      | "$createdAt"
+      | "$updatedAt"
+      | "$collectionId"
+      | "$databaseId"
+      | "$permissions"
+      | "updatedAt"
+    >
+  ): Promise<TicketMessage> {
+    try {
+      const now = new Date().toISOString();
+      const row = await databases.createDocument<TicketMessage>(
+        DATABASE_ID,
+        TABLES.MESSAGES,
+        ID.unique(),
+        {
+          ...messageData,
+          createdAt: now,
+        }
+      );
+      return {
+        ...row,
+        createdAt: row.$createdAt,
+      } as TicketMessage;
+    } catch (error: any) {
+      console.error("Send message error:", error);
+      throw new Error(error.message || "Failed to send message");
+    }
+  },
+
+  /**
+   * Update ticket status
+   */
+  async updateTicketStatus(
+    ticketId: string,
+    status: SupportTicket["status"]
+  ): Promise<void> {
+    try {
+      await databases.updateDocument(DATABASE_ID, TABLES.TICKETS, ticketId, {
+        status,
+        updatedAt: new Date().toISOString(),
+      });
+    } catch (error: any) {
+      console.error("Update status error:", error);
+      throw new Error(error.message || "Failed to update ticket status");
     }
   },
 };

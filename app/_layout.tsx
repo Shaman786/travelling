@@ -20,24 +20,32 @@ function AuthHandler() {
   const router = useRouter();
   // Use useAuth instead of reading directly from store
   // This ensures checkSession() runs and verifies with backend
-  const { isLoggedIn, isLoading } = useAuth();
+  const { isLoggedIn, isLoading, user } = useAuth();
   const navigationState = useRootNavigationState();
 
   useEffect(() => {
     if (!navigationState?.key) return;
 
     // IMPORTANT: Wait until auth check is complete before redirecting
-    // This prevents redirecting based on stale persisted state
     if (isLoading) return;
 
     const inAuthGroup = segments[0] === "(auth)";
 
     if (!isLoggedIn && !inAuthGroup) {
       router.replace("/(auth)/login" as any);
-    } else if (isLoggedIn && inAuthGroup) {
-      router.replace("/(tabs)" as any);
+    } else if (isLoggedIn) {
+      if (!user?.onboardingComplete) {
+        // Redirect to onboarding if not complete and not already there
+        // Assuming onboarding is at /(auth)/onboarding
+        if (segments[1] !== "onboarding") {
+          router.replace("/(auth)/onboarding" as any);
+        }
+      } else if (inAuthGroup) {
+        // If logged in and onboarding complete, but in auth group, go to tabs
+        router.replace("/(tabs)" as any);
+      }
     }
-  }, [isLoggedIn, isLoading, segments, navigationState?.key, router]);
+  }, [isLoggedIn, isLoading, user, segments, navigationState?.key, router]);
 
   return null;
 }

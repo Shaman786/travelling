@@ -32,6 +32,7 @@ export const TABLES = {
   SAVED_TRAVELERS: "saved_travelers",
   REVIEWS: "reviews",
   PAYMENTS: "payments",
+  MESSAGES: "ticket_messages",
 };
 
 export const BUCKETS = {

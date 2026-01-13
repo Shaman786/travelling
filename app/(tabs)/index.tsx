@@ -2,17 +2,13 @@ import { FlashList } from "@shopify/flash-list";
 import { useRouter } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
-import {
-  Avatar,
-  Button,
-  Chip,
-  Searchbar,
-  Text,
-  useTheme,
-} from "react-native-paper";
+import { Avatar, Button, Searchbar, Text, useTheme } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 import PackageCard from "../../src/components/PackageCard";
 import { PackageCardSkeleton } from "../../src/components/Skeleton";
+import ConsultingGrid from "../../src/components/home/ConsultingGrid";
+import ExpertiseShowcase from "../../src/components/home/ExpertiseShowcase";
+import HeroCarousel from "../../src/components/home/HeroCarousel";
 import { useSearch } from "../../src/hooks/useSearch";
 import databaseService from "../../src/lib/databaseService";
 import { useStore } from "../../src/store/useStore";
@@ -33,14 +29,14 @@ export default function CatalogScreen() {
   const clearComparison = useStore((state) => state.clearComparison);
 
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [selectedCategory] = useState("all");
   const [packages, setPackages] = useState<TravelPackage[]>([]);
   const [categories, setCategories] = useState<{ id: string; name: string }[]>(
     []
   ); // Dynamic Categories
   const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const { history, addToHistory } = useSearch();
+  const { addToHistory } = useSearch();
 
   // Load Categories on mount
   useEffect(() => {
@@ -93,6 +89,10 @@ export default function CatalogScreen() {
     fetchPackages(true);
   }, [fetchPackages]);
 
+  /* New Components Import */
+  // It is assumed imports will be handled by auto-import or manual addition at top
+  // But since I am editing the file, I will add them in a separate step or try to add them here if possible.
+
   const renderItem = useCallback(
     ({ item }: { item: TravelPackage }) => (
       <View style={styles.packageCardWrapper}>
@@ -105,7 +105,7 @@ export default function CatalogScreen() {
   const ListHeader = useCallback(
     () => (
       <View>
-        {/* Header */}
+        {/* Header (UserInfo) */}
         <View style={styles.header}>
           <View>
             <Text
@@ -118,7 +118,7 @@ export default function CatalogScreen() {
               {user?.name || "Traveller"} 👋
             </Text>
           </View>
-          <Pressable onPress={() => router.push("/profile")}>
+          <Pressable onPress={() => router.push("/profile" as any)}>
             {user?.avatar ? (
               <Avatar.Image size={44} source={{ uri: user.avatar }} />
             ) : (
@@ -133,7 +133,7 @@ export default function CatalogScreen() {
         {/* Search Bar */}
         <View style={styles.searchContainer}>
           <Searchbar
-            placeholder="Where to next?"
+            placeholder="Search packages, experts..."
             onChangeText={setSearchQuery}
             value={searchQuery}
             style={styles.searchbar}
@@ -141,76 +141,25 @@ export default function CatalogScreen() {
             iconColor={theme.colors.primary}
             onSubmitEditing={() => addToHistory(searchQuery)}
           />
-          {searchQuery === "" && history.length > 0 && (
-            <View style={styles.historyContainer}>
-              <Text
-                variant="labelMedium"
-                style={{ marginBottom: 8, color: "#666" }}
-              >
-                Recent Searches
-              </Text>
-              <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-                {history.map((term, index) => (
-                  <Chip
-                    key={index}
-                    onPress={() => setSearchQuery(term)}
-                    icon="history"
-                    compact
-                  >
-                    {term}
-                  </Chip>
-                ))}
-              </View>
-            </View>
-          )}
         </View>
 
-        {/* Categories */}
-        <View style={styles.sectionHeader}>
-          <Text variant="titleLarge" style={styles.sectionTitle}>
-            Destinations
-          </Text>
-        </View>
-        <FlashList
-          horizontal
-          data={["all", ...categories.map((cat) => cat.id)]}
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.categoryScroll}
-          renderItem={({ item }) => {
-            const isAll = item === "all";
-            const categoryObj = isAll
-              ? { id: "all", name: "All" }
-              : categories.find((c) => c.id === item);
+        {/* 1. Hero Carousel */}
+        <HeroCarousel />
 
-            if (!categoryObj) return null;
+        {/* 2. Consulting Grid */}
+        <ConsultingGrid />
 
-            return (
-              <Chip
-                selected={selectedCategory === categoryObj.id}
-                onPress={() => setSelectedCategory(categoryObj.id)}
-                style={[
-                  styles.categoryChip,
-                  selectedCategory === categoryObj.id && {
-                    backgroundColor: theme.colors.primary,
-                  },
-                ]}
-                textStyle={
-                  selectedCategory === categoryObj.id ? { color: "#fff" } : {}
-                }
-                showSelectedOverlay
-              >
-                {categoryObj.name}
-              </Chip>
-            );
-          }}
-        />
+        {/* 3. Expertise Showcase */}
+        <ExpertiseShowcase />
 
         {/* Featured Packages Title */}
-        <View style={[styles.sectionHeader, { marginTop: 24 }]}>
+        <View style={[styles.sectionHeader, { marginTop: 10 }]}>
           <Text variant="titleLarge" style={styles.sectionTitle}>
-            Recommended for You
+            Curated Packages
           </Text>
-          <Pressable>
+          <Pressable
+            onPress={() => setIsLoading(true) /* Trigger refresh or nav */}
+          >
             <Text
               variant="labelLarge"
               style={{ color: theme.colors.primary, fontWeight: "bold" }}
@@ -221,16 +170,7 @@ export default function CatalogScreen() {
         </View>
       </View>
     ),
-    [
-      theme.colors,
-      user,
-      searchQuery,
-      history,
-      selectedCategory,
-      categories,
-      addToHistory,
-      router,
-    ]
+    [theme.colors, user, searchQuery, addToHistory, router]
   );
 
   const ListEmptyComponent = useCallback(() => {

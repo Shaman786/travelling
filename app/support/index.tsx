@@ -6,8 +6,8 @@
 
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { format } from "date-fns";
-import { Stack, useRouter } from "expo-router";
-import React, { useEffect } from "react";
+import { Stack, useFocusEffect, useRouter } from "expo-router";
+import React, { useCallback } from "react"; // Added useState just in case
 import { FlatList, StyleSheet, View } from "react-native";
 import {
   ActivityIndicator,
@@ -34,15 +34,21 @@ export default function SupportScreen() {
   const router = useRouter();
   const { tickets, isLoading, fetchTickets } = useSupport();
 
-  useEffect(() => {
-    fetchTickets();
-  }, [fetchTickets]);
+  useFocusEffect(
+    useCallback(() => {
+      fetchTickets();
+    }, [fetchTickets])
+  );
 
   const renderTicket = ({ item }: { item: SupportTicket }) => {
     const statusColor = STATUS_COLORS[item.status] || theme.colors.primary;
 
     return (
-      <Card style={styles.card} mode="elevated">
+      <Card
+        style={styles.card}
+        mode="elevated"
+        onPress={() => router.push(`/support/${item.$id}` as any)}
+      >
         <Card.Content>
           <View style={styles.cardHeader}>
             <View style={styles.headerLeft}>
