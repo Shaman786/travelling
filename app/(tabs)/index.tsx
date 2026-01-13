@@ -9,7 +9,7 @@ import { PackageCardSkeleton } from "../../src/components/Skeleton";
 import ConsultingGrid from "../../src/components/home/ConsultingGrid";
 import ExpertiseShowcase from "../../src/components/home/ExpertiseShowcase";
 import HeroCarousel from "../../src/components/home/HeroCarousel";
-import { useSearch } from "../../src/hooks/useSearch";
+
 import databaseService from "../../src/lib/databaseService";
 import { useStore } from "../../src/store/useStore";
 import type { TravelPackage } from "../../src/types";
@@ -28,7 +28,6 @@ export default function CatalogScreen() {
   const comparisonList = useStore((state) => state.comparisonList);
   const clearComparison = useStore((state) => state.clearComparison);
 
-  const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory] = useState("all");
   const [packages, setPackages] = useState<TravelPackage[]>([]);
   const [categories, setCategories] = useState<{ id: string; name: string }[]>(
@@ -36,7 +35,6 @@ export default function CatalogScreen() {
   ); // Dynamic Categories
   const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const { addToHistory } = useSearch();
 
   // Load Categories on mount
   useEffect(() => {
@@ -67,10 +65,6 @@ export default function CatalogScreen() {
           }
         }
 
-        if (searchQuery) {
-          filters.search = searchQuery;
-        }
-
         const response = await databaseService.packages.getPackages(filters);
         // Ensure response.documents exists
         setPackages(response?.documents || []);
@@ -83,7 +77,7 @@ export default function CatalogScreen() {
         setRefreshing(false);
       }
     },
-    [selectedCategory, searchQuery, categories]
+    [selectedCategory, categories]
   );
 
   useEffect(() => {
@@ -179,7 +173,7 @@ export default function CatalogScreen() {
         </View>
       </View>
     ),
-    [theme.colors, user, searchQuery, addToHistory, router]
+    [theme.colors, user, router]
   );
 
   const ListEmptyComponent = useCallback(() => {

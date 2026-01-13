@@ -2,6 +2,7 @@
  * Search Screen
  *
  * Full-text search and filtering for travel packages.
+ * Includes Search History.
  */
 
 import { MaterialCommunityIcons } from "@expo/vector-icons";
@@ -11,6 +12,8 @@ import { FlatList, StyleSheet, View } from "react-native";
 import {
   ActivityIndicator,
   Badge,
+  Button,
+  Chip,
   IconButton,
   Searchbar,
   Text,
@@ -20,8 +23,9 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import FilterSheet from "../../src/components/FilterSheet";
 import PackageCard from "../../src/components/PackageCard";
+import { useSearch } from "../../src/hooks/useSearch";
 import databaseService from "../../src/lib/databaseService";
-import { PackageFilters, TravelPackage } from "../../src/types"; // Added TravelPackage import
+import { PackageFilters, TravelPackage } from "../../src/types";
 
 // Simple Debounce Hook
 function useDebounce<T>(value: T, delay: number): T {
@@ -40,6 +44,7 @@ function useDebounce<T>(value: T, delay: number): T {
 export default function SearchScreen() {
   const theme = useTheme();
   const router = useRouter();
+  const { history, addToHistory, clearHistory } = useSearch();
 
   const [query, setQuery] = useState("");
   const debouncedQuery = useDebounce(query, 500); // 500ms delay
@@ -58,9 +63,12 @@ export default function SearchScreen() {
 
       // 1. If we have a query, use the robust Search (Title OR Dest)
       if (debouncedQuery.trim().length > 0) {
+        // Save to history
+        addToHistory(debouncedQuery);
+
         data = await databaseService.packages.searchPackages(debouncedQuery);
 
-        // 2. Client-side filtering for search results (since searchPackages doesn't support complex filters yet)
+        // 2. Client-side filtering for search results
         if (filters.category && filters.category !== "all") {
           data = data.filter(
             (p) => p.category.toLowerCase() === filters.category!.toLowerCase()
@@ -77,21 +85,31 @@ export default function SearchScreen() {
         }
       } else {
         // 3. No query? Just use standard browse with filters
-        const response = await databaseService.packages.getPackages(
-          filters,
-          50
+        // Note: We typically don't show "All Packages" in search unless filters are active
+        // If query is empty and filters are default, show History instead.
+        const hasFilters = Object.keys(filters).some(
+          (k) => filters[k as keyof PackageFilters] !== undefined
         );
-        data = response.documents;
+
+        if (hasFilters) {
+          const response = await databaseService.packages.getPackages(
+            filters,
+            50
+          );
+          data = response.documents;
+        } else {
+          // Empty query, no filters -> Empty results (Show History)
+          data = [];
+        }
       }
 
       setResults(data);
     } catch (error) {
       console.error("Search failed:", error);
-      // Optional: Toast.error("Search failed");
     } finally {
       setIsLoading(false);
     }
-  }, [debouncedQuery, filters]);
+  }, [debouncedQuery, filters, addToHistory]);
 
   // Trigger search when Debounced Query or Filters change
   useEffect(() => {
@@ -113,7 +131,6 @@ export default function SearchScreen() {
           placeholder="Where to next?"
           onChangeText={setQuery}
           value={query}
-          // onSubmitEditing no longer needed as we debounce, but keeps keyboard nice
           style={styles.searchBar}
           elevation={0}
           autoFocus={true}
@@ -147,8 +164,80 @@ export default function SearchScreen() {
           contentContainerStyle={styles.list}
           ListEmptyComponent={
             <View style={styles.empty}>
-              {query ? (
+              {!query ? (
+                // Show History if no query
                 <>
+                  {history.length > 0 ? (
+                    <View style={{ width: "100%", paddingHorizontal: 16 }}>
+                      <View
+                        style={{
+                          flexDirection: "row",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          marginBottom: 12,
+                        }}
+                      >
+                        <Text
+                          variant="titleSmall"
+                          style={{ fontWeight: "bold" }}
+                        >
+                          Recent Searches
+                        </Text>
+                        <Button
+                          compact
+                          onPress={clearHistory}
+                          textColor={theme.colors.error}
+                        >
+                          Clear
+                        </Button>
+                      </View>
+                      <View
+                        style={{
+                          flexDirection: "row",
+                          flexWrap: "wrap",
+                          gap: 8,
+                        }}
+                      >
+                        {history.map((term, index) => (
+                          <Chip
+                            key={index}
+                            onPress={() => setQuery(term)}
+                            mode="outlined"
+                            style={{ marginBottom: 8 }}
+                          >
+                            {term}
+                          </Chip>
+                        ))}
+                      </View>
+                    </View>
+                  ) : (
+                    // No history, prompt to search
+                    <View style={{ alignItems: "center", marginTop: 32 }}>
+                      <Text
+                        variant="bodyMedium"
+                        style={{ color: theme.colors.outline, marginBottom: 8 }}
+                      >
+                        Search for destinations, activities, or countries.
+                      </Text>
+                    </View>
+                  )}
+
+                  {history.length === 0 && (
+                    <MaterialCommunityIcons
+                      name="map-search-outline"
+                      size={64}
+                      color={theme.colors.outline}
+                      style={{
+                        marginTop: 32,
+                        alignSelf: "center",
+                        opacity: 0.5,
+                      }}
+                    />
+                  )}
+                </>
+              ) : (
+                // Query exists but no results
+                <View style={{ alignItems: "center", marginTop: 32 }}>
                   <MaterialCommunityIcons
                     name="map-search-outline"
                     size={64}
@@ -166,14 +255,7 @@ export default function SearchScreen() {
                   >
                     Try simpler keywords or clear filters.
                   </Text>
-                </>
-              ) : (
-                <Text
-                  variant="bodyMedium"
-                  style={{ color: theme.colors.outline }}
-                >
-                  Type to search destinations...
-                </Text>
+                </View>
               )}
             </View>
           }
@@ -222,7 +304,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   empty: {
-    alignItems: "center",
-    marginTop: 64,
+    // alignItems: "center", // Removed to allow left-aligned history logic
+    marginTop: 16,
   },
 });
