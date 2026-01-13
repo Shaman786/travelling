@@ -84,9 +84,7 @@ export async function registerForPushNotificationsAsync(): Promise<
   return token;
 }
 
-/**
- * Store the push token in the user's document
- */
+// ... (previous content)
 export async function savePushToken(
   token: string,
   userId: string
@@ -99,4 +97,24 @@ export async function savePushToken(
   } catch {
     // Failed to save push token
   }
+}
+
+/**
+ * Trigger a local notification immediately
+ */
+export async function sendLocalNotification(
+  title: string,
+  body: string,
+  data?: Record<string, unknown>
+) {
+  await Notifications.scheduleNotificationAsync({
+    content: {
+      title,
+      body,
+      data,
+      sound: true,
+      priority: Notifications.AndroidNotificationPriority.HIGH,
+    },
+    trigger: null, // null means show immediately
+  });
 }

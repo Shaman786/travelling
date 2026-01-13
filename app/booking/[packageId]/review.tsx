@@ -24,6 +24,7 @@ import { Toast } from "toastify-react-native";
 import { usePackage } from "../../../src/hooks/usePackages";
 import { usePayment } from "../../../src/hooks/usePayment";
 import { bookingService } from "../../../src/lib/databaseService";
+import { sendLocalNotification } from "../../../src/lib/notifications";
 import { useStore } from "../../../src/store/useStore";
 import type { Booking } from "../../../src/types";
 
@@ -125,10 +126,35 @@ export default function ReviewScreen() {
 
       // Step 3: Handle payment result
       if (paymentResult.status === "success") {
+        const paymentIntentId =
+          paymentResult.paymentIntentId || "manual_confirmation";
+
+        // 1. Confirm Booking Status
         await bookingService.confirmBookingPayment(
           booking.$id,
-          paymentResult.paymentIntentId || "manual_confirmation"
+          paymentIntentId
         );
+
+        // 2. Create Payment Record (for Admin Dashboard/Reports)
+        await bookingService.createPayment({
+          bookingId: booking.$id,
+          userId: user.$id,
+          amount: Math.round(totalPrice * 100), // Store in cents
+          currency: "USD",
+          gatewayProvider: "airwallex",
+          gatewayOrderId: paymentIntentId,
+          status: "completed",
+          method: "card",
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        });
+
+        // 3. Send In-App Notification
+        await sendLocalNotification(
+          "Booking Confirmed! ✈️",
+          `Your trip to ${bookingDraft.destination || pkg?.destination || "your destination"} is confirmed! Have a safe journey.`
+        );
+
         resetBookingDraft();
         Toast.success("Payment successful! 🎉");
         router.replace("/(tabs)/mytrips" as any);

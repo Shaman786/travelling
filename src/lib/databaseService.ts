@@ -404,6 +404,28 @@ export const bookingService = {
   },
 
   /**
+   * Create a payment record
+   */
+  async createPayment(paymentData: any): Promise<any> {
+    try {
+      return await databases.createDocument(
+        DATABASE_ID,
+        TABLES.PAYMENTS,
+        ID.unique(),
+        {
+          ...paymentData,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        }
+      );
+    } catch (error) {
+      console.error("Error creating payment record:", error);
+      // We don't throw here to avoid failing the booking flow if just logging fails
+      return null;
+    }
+  },
+
+  /**
    * Confirm booking payment
    * Updates status to processing and paymentStatus to paid
    */
