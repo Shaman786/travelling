@@ -8,7 +8,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { differenceInDays, format } from "date-fns";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useCallback, useState } from "react";
-import { ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import {
   Button,
   Checkbox,
@@ -342,9 +342,7 @@ export default function ReviewScreen() {
           />
           <Text variant="bodySmall" style={{ flex: 1 }}>
             I agree to the{" "}
-            <TouchableOpacity
-              onPress={() => router.push("/(legal)/terms" as any)}
-            >
+            <Pressable onPress={() => router.push("/(legal)/terms" as any)}>
               <Text
                 style={{
                   color: theme.colors.primary,
@@ -353,9 +351,9 @@ export default function ReviewScreen() {
               >
                 Terms and Conditions
               </Text>
-            </TouchableOpacity>{" "}
+            </Pressable>{" "}
             and{" "}
-            <TouchableOpacity
+            <Pressable
               onPress={() => router.push("/(legal)/cancellation-policy" as any)}
             >
               <Text
@@ -366,7 +364,7 @@ export default function ReviewScreen() {
               >
                 Cancellation Policy
               </Text>
-            </TouchableOpacity>
+            </Pressable>
           </Text>
         </View>
 

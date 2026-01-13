@@ -4,7 +4,7 @@ import { format } from "date-fns";
 import { Image } from "expo-image"; // Added Image import
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
-import { Alert, StyleSheet, TouchableOpacity, View } from "react-native";
+import { Alert, Pressable, StyleSheet, View } from "react-native";
 import {
   Button,
   Card,
@@ -119,9 +119,9 @@ export default function MyTripsScreen() {
       .join(" ");
 
     return (
-      <TouchableOpacity
-        activeOpacity={0.8}
+      <Pressable
         onPress={() => handleViewDetails(trip.id)}
+        style={({ pressed }) => [{ opacity: pressed ? 0.8 : 1 }]}
       >
         <Card style={styles.card} mode="elevated">
           <View style={styles.cardHeader}>
@@ -235,7 +235,7 @@ export default function MyTripsScreen() {
             </View>
           </Card.Content>
         </Card>
-      </TouchableOpacity>
+      </Pressable>
     );
   };
 

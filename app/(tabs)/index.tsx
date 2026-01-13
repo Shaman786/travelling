@@ -1,7 +1,7 @@
 import { FlashList } from "@shopify/flash-list";
 import { useRouter } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
-import { StyleSheet, TouchableOpacity, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 import {
   Avatar,
   Button,
@@ -118,7 +118,7 @@ export default function CatalogScreen() {
               {user?.name || "Traveller"} 👋
             </Text>
           </View>
-          <TouchableOpacity onPress={() => router.push("/profile")}>
+          <Pressable onPress={() => router.push("/profile")}>
             {user?.avatar ? (
               <Avatar.Image size={44} source={{ uri: user.avatar }} />
             ) : (
@@ -127,7 +127,7 @@ export default function CatalogScreen() {
                 label={user?.name?.substring(0, 2).toUpperCase() || "U"}
               />
             )}
-          </TouchableOpacity>
+          </Pressable>
         </View>
 
         {/* Search Bar */}
@@ -210,14 +210,14 @@ export default function CatalogScreen() {
           <Text variant="titleLarge" style={styles.sectionTitle}>
             Recommended for You
           </Text>
-          <TouchableOpacity>
+          <Pressable>
             <Text
               variant="labelLarge"
               style={{ color: theme.colors.primary, fontWeight: "bold" }}
             >
               See All
             </Text>
-          </TouchableOpacity>
+          </Pressable>
         </View>
       </View>
     ),
@@ -227,6 +227,7 @@ export default function CatalogScreen() {
       searchQuery,
       history,
       selectedCategory,
+      categories,
       addToHistory,
       router,
     ]

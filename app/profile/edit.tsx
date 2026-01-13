@@ -8,7 +8,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker"; // Keep star import for other methods if needed, or switch specific
 import { Stack, useRouter } from "expo-router";
 import React, { useState } from "react";
-import { ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { Avatar, Button, Text, TextInput, useTheme } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Toast } from "toastify-react-native";
@@ -89,10 +89,7 @@ export default function EditProfileScreen() {
       <ScrollView contentContainerStyle={styles.content}>
         {/* Avatar Section */}
         <View style={styles.avatarSection}>
-          <TouchableOpacity
-            onPress={handlePickImage}
-            style={styles.avatarWrapper}
-          >
+          <Pressable onPress={handlePickImage} style={styles.avatarWrapper}>
             <Avatar.Image
               size={120}
               source={{
@@ -107,7 +104,7 @@ export default function EditProfileScreen() {
             >
               <MaterialCommunityIcons name="camera" size={18} color="#fff" />
             </View>
-          </TouchableOpacity>
+          </Pressable>
           <Text
             variant="bodySmall"
             style={{ color: theme.colors.outline, marginTop: 8 }}

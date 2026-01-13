@@ -3,7 +3,7 @@ import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import React from "react";
-import { StyleSheet, TouchableOpacity, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 import { Card, Chip, Text, useTheme } from "react-native-paper";
 import { useStore } from "../store/useStore";
 import type { TravelPackage } from "../types";
@@ -61,28 +61,32 @@ const PackageCard = ({ item, style }: PackageCardProps) => {
 
         {/* Action Buttons */}
         <View style={styles.actionsContainer}>
-          <TouchableOpacity
-            style={styles.iconButton}
+          <Pressable
+            style={({ pressed }) => [
+              styles.iconButton,
+              { opacity: pressed ? 0.7 : 1 },
+            ]}
             onPress={toggleCompare}
-            activeOpacity={0.7}
           >
             <MaterialCommunityIcons
               name={activeComparison ? "scale-balance" : "scale-balance"}
               size={20}
               color={activeComparison ? theme.colors.primary : "#fff"}
             />
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.iconButton}
+          </Pressable>
+          <Pressable
+            style={({ pressed }) => [
+              styles.iconButton,
+              { opacity: pressed ? 0.7 : 1 },
+            ]}
             onPress={handleToggleFavorite}
-            activeOpacity={0.7}
           >
             <MaterialCommunityIcons
               name={isFavorite ? "heart" : "heart-outline"}
               size={20}
               color={isFavorite ? "#FF4757" : "#fff"}
             />
-          </TouchableOpacity>
+          </Pressable>
         </View>
 
         <View style={styles.priceTag}>
