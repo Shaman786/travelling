@@ -79,7 +79,7 @@ export default function VerifyEmailScreen() {
             </Text>
             <Button
               mode="contained"
-              onPress={() => router.replace("/(tabs)/")}
+              onPress={() => router.replace("/(tabs)")}
               style={styles.button}
             >
               Go Home

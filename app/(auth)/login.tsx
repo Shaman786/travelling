@@ -1,9 +1,13 @@
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+/**
+ * Login Screen
+ *
+ * Basic email/password authentication.
+ */
+
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
-import * as SecureStore from "expo-secure-store";
-import React, { useEffect, useState } from "react";
-import { StyleSheet, View } from "react-native";
+import React, { useState } from "react";
+import { KeyboardAvoidingView, Platform, StyleSheet, View } from "react-native";
 import {
   Button,
   HelperText,
@@ -12,35 +16,26 @@ import {
   useTheme,
 } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { authService } from "../../src/lib/authService";
+import { useAuth } from "../../src/hooks/useAuth";
 
 export default function LoginScreen() {
   const theme = useTheme();
   const router = useRouter();
+  const { login, isLoading, error, clearError } = useAuth();
+
   const [email, setEmail] = useState("");
-  const [isEmailSent, setIsEmailSent] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [authError, setAuthError] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
-  useEffect(() => {
-    // Optional: Check pre-filled email from secure store
-    SecureStore.getItemAsync("user_email").then((stored) => {
-      if (stored) setEmail(stored);
-    });
-  }, []);
+  const handleLogin = async () => {
+    if (!email || !password) {
+      return;
+    }
 
-  const handleMagicLogin = async () => {
-    if (!email) return;
-    setIsLoading(true);
-    setAuthError("");
-    try {
-      await authService.initiateMagicLinkLogin(email);
-      await SecureStore.setItemAsync("user_email", email);
-      setIsEmailSent(true);
-    } catch (error: any) {
-      setAuthError(error.message || "Failed to send magic link");
-    } finally {
-      setIsLoading(false);
+    clearError();
+    const success = await login(email.trim().toLowerCase(), password);
+    if (success) {
+      router.replace("/(tabs)");
     }
   };
 
@@ -48,88 +43,115 @@ export default function LoginScreen() {
     <SafeAreaView
       style={[styles.container, { backgroundColor: theme.colors.background }]}
     >
-      <View style={styles.header}>
-        <Image
-          source={require("../../assets/images/icon.png")}
-          style={{ width: 80, height: 80, borderRadius: 16 }}
-        />
-        <Text
-          variant="displaySmall"
-          style={[styles.title, { color: theme.colors.primary }]}
-        >
-          Travelling
-        </Text>
-        <Text variant="bodyLarge" style={styles.subtitle}>
-          Your premium travel consultancy
-        </Text>
-      </View>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={styles.keyboardView}
+      >
+        <View style={styles.header}>
+          <Image
+            source={require("../../assets/images/icon.png")}
+            style={{ width: 80, height: 80, borderRadius: 16 }}
+          />
+          <Text
+            variant="displaySmall"
+            style={[styles.title, { color: theme.colors.primary }]}
+          >
+            Travelling
+          </Text>
+          <Text variant="bodyLarge" style={styles.subtitle}>
+            Your premium travel consultancy
+          </Text>
+        </View>
 
-      <View style={styles.form}>
-        {!isEmailSent ? (
-          <>
-            <TextInput
-              label="Email"
-              value={email}
-              onChangeText={setEmail}
-              mode="outlined"
-              style={styles.input}
-              autoCapitalize="none"
-              keyboardType="email-address"
+        <View style={styles.form}>
+          <TextInput
+            label="Email"
+            value={email}
+            onChangeText={(text) => {
+              setEmail(text);
+              clearError();
+            }}
+            mode="outlined"
+            style={styles.input}
+            autoCapitalize="none"
+            keyboardType="email-address"
+            autoComplete="email"
+            left={<TextInput.Icon icon="email-outline" />}
+          />
+
+          <TextInput
+            label="Password"
+            value={password}
+            onChangeText={(text) => {
+              setPassword(text);
+              clearError();
+            }}
+            mode="outlined"
+            style={styles.input}
+            secureTextEntry={!showPassword}
+            autoCapitalize="none"
+            autoComplete="password"
+            left={<TextInput.Icon icon="lock-outline" />}
+            right={
+              <TextInput.Icon
+                icon={showPassword ? "eye-off" : "eye"}
+                onPress={() => setShowPassword(!showPassword)}
+              />
+            }
+          />
+
+          {error ? (
+            <HelperText type="error" visible={!!error}>
+              {error}
+            </HelperText>
+          ) : null}
+
+          <Button
+            mode="contained"
+            onPress={handleLogin}
+            loading={isLoading}
+            disabled={isLoading || !email || !password}
+            style={styles.button}
+            contentStyle={{ height: 50 }}
+          >
+            Sign In
+          </Button>
+
+          <Button
+            mode="text"
+            onPress={() => router.push("/(auth)/forgot-password" as any)}
+            style={styles.textButton}
+          >
+            Forgot Password?
+          </Button>
+
+          <View style={styles.divider}>
+            <View
+              style={[
+                styles.dividerLine,
+                { backgroundColor: theme.colors.outline },
+              ]}
             />
-
-            {authError ? (
-              <HelperText type="error" visible={!!authError}>
-                {authError}
-              </HelperText>
-            ) : null}
-
-            <Button
-              mode="contained"
-              onPress={handleMagicLogin}
-              loading={isLoading}
-              disabled={isLoading || !email}
-              style={styles.button}
-              contentStyle={{ height: 50 }}
-            >
-              Send Magic Link
-            </Button>
-
-            <View style={styles.divider}>
-              <Text>OR</Text>
-            </View>
-
-            <Button
-              mode="outlined"
-              onPress={() => router.push("/(auth)/login-phone" as any)}
-              style={styles.button}
-              icon="cellphone"
-            >
-              Continue with Phone
-            </Button>
-          </>
-        ) : (
-          <View style={styles.successContainer}>
-            <MaterialCommunityIcons
-              name="email-check"
-              size={64}
-              color={theme.colors.primary}
+            <Text style={{ color: theme.colors.outline, marginHorizontal: 16 }}>
+              OR
+            </Text>
+            <View
+              style={[
+                styles.dividerLine,
+                { backgroundColor: theme.colors.outline },
+              ]}
             />
-            <Text variant="headlineSmall" style={styles.successTitle}>
-              Check your inbox!
-            </Text>
-            <Text style={styles.successText}>
-              We sent a magic link to {email}. Click the link to log in.
-            </Text>
-            <Button
-              mode="text"
-              onPress={() => setIsEmailSent(false)}
-              style={styles.textButton}
-            >
-              Try different email
-            </Button>
           </View>
-        )}
-      </View>
+
+          <Button
+            mode="outlined"
+            onPress={() => router.push("/(auth)/signup" as any)}
+            style={styles.button}
+          >
+            Create New Account
+          </Button>
+        </View>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
@@ -138,6 +160,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 24,
+  },
+  keyboardView: {
+    flex: 1,
     justifyContent: "center",
   },
   header: {
@@ -153,7 +178,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   form: {
-    gap: 16,
+    gap: 12,
   },
   input: {
     backgroundColor: "#fff",
@@ -163,29 +188,15 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   textButton: {
-    marginTop: 8,
-  },
-  biometricBtn: {
-    alignItems: "center",
-    marginTop: 16,
-    padding: 8,
+    marginTop: 4,
   },
   divider: {
+    flexDirection: "row",
     alignItems: "center",
     marginVertical: 16,
   },
-  successContainer: {
-    alignItems: "center",
-    padding: 16,
-  },
-  successTitle: {
-    fontWeight: "bold",
-    marginTop: 16,
-    textAlign: "center",
-  },
-  successText: {
-    textAlign: "center",
-    marginTop: 8,
-    opacity: 0.7,
+  dividerLine: {
+    flex: 1,
+    height: 1,
   },
 });

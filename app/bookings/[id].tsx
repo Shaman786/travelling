@@ -29,6 +29,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Toast } from "toastify-react-native";
 
 import StepTracker from "../../src/components/StepTracker";
+import { usePayment } from "../../src/hooks/usePayment";
 import databaseService from "../../src/lib/databaseService";
 import type { Booking, BookingStatus } from "../../src/types";
 

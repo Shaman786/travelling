@@ -33,7 +33,7 @@ export default function ReviewScreen() {
   const { packageId } = useLocalSearchParams<{ packageId: string }>();
 
   const { package: pkg } = usePackage(packageId);
-  const { initiatePayment, isProcessing: isPaymentProcessing } = usePayment();
+  const { startPayment, isProcessing: isPaymentProcessing } = usePayment();
 
   const user = useStore((state) => state.user);
   const bookingDraft = useStore((state) => state.bookingDraft);
@@ -117,7 +117,7 @@ export default function ReviewScreen() {
       addBookedTrip(booking);
 
       // Step 2: Initiate Airwallex payment
-      const paymentResult = await initiatePayment(
+      const paymentResult = await startPayment(
         booking.$id,
         Math.round(totalPrice * 100), // Convert to cents
         "USD"
@@ -152,7 +152,7 @@ export default function ReviewScreen() {
     addBookedTrip,
     resetBookingDraft,
     router,
-    initiatePayment,
+    startPayment,
   ]);
 
   const isLoading = isSubmitting || isPaymentProcessing;

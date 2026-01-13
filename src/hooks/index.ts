@@ -15,4 +15,4 @@ export {
   usePackages,
   default as usePackagesDefault,
 } from "./usePackages";
-export { usePayment, default as usePaymentDefault } from "./usePayment";
+export { usePayment } from "./usePayment";
