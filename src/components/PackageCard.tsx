@@ -49,10 +49,17 @@ const PackageCard = ({ item, style }: PackageCardProps) => {
     <Card style={[styles.card, style]} onPress={handlePress} mode="elevated">
       <View style={styles.imageContainer}>
         <Image
-          source={{ uri: item.imageUrl }}
+          source={{
+            uri:
+              item.imageUrl ||
+              "https://picsum.photos/seed/" + item.$id + "/600/400",
+          }}
           style={styles.image}
           contentFit="cover"
           transition={500}
+          placeholder={{
+            uri: "https://via.placeholder.com/600x400/cccccc/888888?text=Loading...",
+          }}
         />
         <LinearGradient
           colors={["transparent", "rgba(0,0,0,0.7)"]}
@@ -90,7 +97,9 @@ const PackageCard = ({ item, style }: PackageCardProps) => {
         </View>
 
         <View style={styles.priceTag}>
-          <Text style={styles.priceText}>${item.price.toLocaleString()}</Text>
+          <Text style={styles.priceText}>
+            ${(item.price ?? 0).toLocaleString()}
+          </Text>
         </View>
         <Chip
           icon="clock-outline"
@@ -109,7 +118,7 @@ const PackageCard = ({ item, style }: PackageCardProps) => {
           </Text>
           <View style={styles.ratingContainer}>
             <MaterialCommunityIcons name="star" size={16} color="#FFC107" />
-            <Text style={styles.rating}>{item.rating}</Text>
+            <Text style={styles.rating}>{item.rating ?? 0}</Text>
           </View>
         </View>
 
@@ -126,7 +135,7 @@ const PackageCard = ({ item, style }: PackageCardProps) => {
           </View>
 
           <Text variant="bodySmall" style={{ color: theme.colors.outline }}>
-            {item.reviewCount} reviews
+            {item.reviewCount ?? 0} reviews
           </Text>
         </View>
       </Card.Content>

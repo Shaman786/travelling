@@ -156,10 +156,18 @@ export default function MyTripsScreen() {
                 </Chip>
               </View>
               <Text variant="bodySmall" style={{ color: theme.colors.outline }}>
-                {format(
-                  new Date(trip.departureDate || Date.now()),
-                  "MMM dd, yyyy"
-                )}{" "}
+                {(() => {
+                  try {
+                    const date = trip.departureDate
+                      ? new Date(trip.departureDate)
+                      : new Date();
+                    return isNaN(date.getTime())
+                      ? "Date TBD"
+                      : format(date, "MMM dd, yyyy");
+                  } catch {
+                    return "Date TBD";
+                  }
+                })()}{" "}
                 • {trip.destination}
               </Text>
             </View>

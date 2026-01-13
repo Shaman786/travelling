@@ -90,12 +90,14 @@ export default function EditProfileScreen() {
         {/* Avatar Section */}
         <View style={styles.avatarSection}>
           <Pressable onPress={handlePickImage} style={styles.avatarWrapper}>
-            <Avatar.Image
-              size={120}
-              source={{
-                uri: avatar || "https://i.pravatar.cc/300",
-              }}
-            />
+            {avatar ? (
+              <Avatar.Image size={120} source={{ uri: avatar }} />
+            ) : (
+              <Avatar.Text
+                size={120}
+                label={name?.substring(0, 2).toUpperCase() || "U"}
+              />
+            )}
             <View
               style={[
                 styles.editBadge,

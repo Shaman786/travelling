@@ -304,8 +304,15 @@ export const bookingService = {
   ): Promise<Booking> {
     try {
       const now = new Date().toISOString();
+
+      // Destructure to remove fields that don't exist in Appwrite schema
+      // We keep packageTitle as it seems to be required by Appwrite schema
+      const { packageImageUrl, ...cleanedData } = bookingData as any;
+
       const data = {
-        ...bookingData,
+        ...cleanedData,
+        // Map packageTitle to packageName for Appwrite schema compatibility (if needed)
+        packageName: bookingData.packageTitle,
         // Stringify complex objects for TablesDB
         travelers: JSON.stringify(bookingData.travelers),
         statusHistory: JSON.stringify(bookingData.statusHistory),
