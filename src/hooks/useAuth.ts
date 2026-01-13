@@ -1,13 +1,16 @@
 /**
  * useAuth Hook
- * 
+ *
  * React hook for authentication state and actions.
  * Provides login, signup, logout, and user state management.
  */
 
 import { useCallback, useEffect, useState } from "react";
 import { authService } from "../lib/authService";
-import { registerForPushNotificationsAsync, savePushToken } from "../lib/notifications";
+import {
+  registerForPushNotificationsAsync,
+  savePushToken,
+} from "../lib/notifications";
 import { User, useStore } from "../store/useStore";
 
 interface UseAuthReturn {
@@ -26,7 +29,7 @@ export function useAuth(): UseAuthReturn {
   const [isLoading, setIsLoading] = useState(false);
   const [isInitializing, setIsInitializing] = useState(true); // NEW: Track initial session check
   const [error, setError] = useState<string | null>(null);
-  
+
   const user = useStore((state) => state.user);
   const isLoggedIn = useStore((state) => state.isLoggedIn);
   const setUser = useStore((state) => state.setUser);
@@ -49,9 +52,9 @@ export function useAuth(): UseAuthReturn {
             createdAt: new Date().toISOString(),
           });
         }
-        
+
         // Register for push notifications
-        registerForPushNotificationsAsync().then(token => {
+        registerForPushNotificationsAsync().then((token) => {
           if (token) savePushToken(token, authUser.$id);
         });
       } else {
@@ -60,74 +63,74 @@ export function useAuth(): UseAuthReturn {
       }
     } catch {
       // No active session on backend, so clear local state to be safe
-      storeLogout(); 
+      storeLogout();
     } finally {
       setIsInitializing(false); // Session check complete
     }
-  }, [setUser, storeLogout]);
+  }, [storeLogout, setUser]);
 
   // Check for existing session on mount
   useEffect(() => {
     checkSession();
   }, [checkSession]);
 
-  const login = useCallback(async (email: string, password: string): Promise<boolean> => {
-    setIsLoading(true);
-    setError(null);
-    
-    try {
-      const authUser = await authService.login(email, password);
-      
-      // Get full profile
-      const profile = await authService.getUserProfile(authUser.$id);
-      
-      setUser(profile || {
-        $id: authUser.$id,
-        name: authUser.name,
-        email: authUser.email,
-        createdAt: new Date().toISOString(),
-      });
-      
-      // Register for push notifications
-      registerForPushNotificationsAsync().then(token => {
-        if (token) savePushToken(token, authUser.$id);
-      });
-      
-      return true;
-    } catch (err: any) {
-      setError(err.message || "Login failed");
-      return false;
-    } finally {
-      setIsLoading(false);
-    }
-  }, [setUser]);
+  const login = useCallback(
+    async (email: string, password: string): Promise<boolean> => {
+      setIsLoading(true);
+      setError(null);
 
-  const signup = useCallback(async (
-    email: string, 
-    password: string, 
-    name: string
-  ): Promise<boolean> => {
-    setIsLoading(true);
-    setError(null);
-    
-    try {
-      const authUser = await authService.register(email, password, name);
-      
-      setUser({
-        $id: authUser.$id,
-        name: authUser.name,
-        email: authUser.email,
-        createdAt: new Date().toISOString(),
-      });
-      
-      return true;
-    } catch (err: any) {
-      setError(err.message || "Registration failed");
-      return false;
-    } finally {
-      setIsLoading(false);
-    }
-  }, [setUser]);
+      try {
+        const authUser = await authService.login(email, password);
+
+        // Get full profile
+        const profile = await authService.getUserProfile(authUser.$id);
+
+        setUser(
+          profile || {
+            $id: authUser.$id,
+            name: authUser.name,
+            email: authUser.email,
+            createdAt: new Date().toISOString(),
+          }
+        );
+
+        // Register for push notifications
+        registerForPushNotificationsAsync().then((token) => {
+          if (token) savePushToken(token, authUser.$id);
+        });
+
+        return true;
+      } catch (err: any) {
+        setError(err.message || "Login failed");
+        return false;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [setUser]
+  );
+
+  const signup = useCallback(
+    async (email: string, password: string, name: string): Promise<boolean> => {
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        await authService.register(email, password, name);
+
+        // Do NOT set user locally on signup, as no session exists until login/verification
+        // setUser({ ... });
+
+        return true;
+      } catch (err: any) {
+        setError(err.message || "Registration failed");
+        return false;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [setUser]
+  );
 
   const logout = useCallback(async () => {
     setIsLoading(true);

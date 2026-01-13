@@ -53,25 +53,31 @@ export default function CatalogScreen() {
       if (!isRefresh) setIsLoading(true);
       try {
         const filters: any = {};
-        if (selectedCategory !== "all") {
-          // Find the category object to match strict filtering if needed,
-          // or just pass the ID if your backend expects that.
-          // The previous hardcoded IDs were lowercase, our new dynamic ones are too.
-          // However, dependent on how you saved data, 'category' might be 'India' or 'india'.
-          // Let's assume the ID we generated (lowercase) matches what we want to filter by, OR filter by the Name if that's what is stored.
-          // Inspecting getUniqueCategories: I used pkg.category (likely capitalized) to generate ID (lower).
-          // If the DB stores "India", and we filter by "india", it might fail without case-insensitivity.
-          // Robust fix: Use the Name (original casing) for filtering if that's what matches the DB field.
+
+        // Only apply category filter if valid and not "all"
+        if (selectedCategory && selectedCategory !== "all") {
+          // Safe cat lookup
           const catObj = categories.find((c) => c.id === selectedCategory);
-          filters.category = catObj ? catObj.name : selectedCategory;
+          if (catObj) {
+            filters.category = catObj.name;
+          } else {
+            // Should not happen if UI is consistent, but fallback safely
+            console.warn("Category ID not found:", selectedCategory);
+            filters.category = selectedCategory; // Try ID as fallback
+          }
         }
+
         if (searchQuery) {
           filters.search = searchQuery;
         }
+
         const response = await databaseService.packages.getPackages(filters);
-        setPackages(response.documents);
-      } catch {
-        // Fallback handled by service
+        // Ensure response.documents exists
+        setPackages(response?.documents || []);
+      } catch (err) {
+        console.error("Fetch Packages Error:", err);
+        // Do not throw, keep UI alive
+        setPackages([]);
       } finally {
         setIsLoading(false);
         setRefreshing(false);

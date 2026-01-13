@@ -69,10 +69,7 @@ export default function SignupScreen() {
     }
   };
 
-  const handleSkipVerification = () => {
-    // Allow user to skip for now and verify later
-    router.replace("/(tabs)");
-  };
+  // handleSkipVerification removed as confusing
 
   if (step === "verify") {
     return (
@@ -111,11 +108,11 @@ export default function SignupScreen() {
 
           <Button
             mode="contained"
-            onPress={handleSkipVerification}
+            onPress={() => router.replace("/(auth)/login")}
             style={styles.button}
             contentStyle={{ height: 50 }}
           >
-            Continue to App
+            Go to Login
           </Button>
 
           <Button
