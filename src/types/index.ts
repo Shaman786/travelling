@@ -119,6 +119,9 @@ export interface Booking extends Models.Document {
   paymentStatus: PaymentStatus;
   paymentId?: string;
   specialRequests?: string;
+  isWorkTrip?: boolean;
+  companyName?: string;
+  taxId?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -146,7 +149,11 @@ export interface BookingDraft {
   adultsCount: number;
   childrenCount: number;
   infantsCount: number;
+  isWorkTrip?: boolean;
+  companyName?: string;
+  taxId?: string;
   specialRequests?: string;
+  selectedAddons?: string[]; // Array of Add-on IDs
   currentStep: number;
 }
 
@@ -223,6 +230,16 @@ export interface ApiError {
 export interface PaginatedResponse<T> {
   documents: T[];
   total: number;
+}
+
+// ============ Add-on Types ============
+export interface Addon extends Models.Document {
+  name: string;
+  description: string;
+  price: number;
+  type: "per_person" | "per_booking";
+  icon: string;
+  isActive: boolean;
 }
 
 // ============ Filter Types ============

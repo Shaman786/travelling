@@ -1,3 +1,4 @@
+import { useRouter } from "expo-router";
 import React from "react";
 import { FlatList, StyleSheet, View } from "react-native";
 import { Avatar, Button, Card, Text, useTheme } from "react-native-paper";
@@ -29,6 +30,7 @@ const EXPERTS = [
 
 export default function ExpertScreen() {
   const theme = useTheme();
+  const router = useRouter();
 
   const renderItem = ({ item }: { item: (typeof EXPERTS)[0] }) => (
     <Card style={styles.card} mode="elevated">
@@ -48,8 +50,19 @@ export default function ExpertScreen() {
             {item.rate}
           </Text>
         </View>
-        <Button mode="outlined" compact onPress={() => {}}>
-          Call
+        <Button
+          mode="outlined"
+          compact
+          onPress={() => {
+            // In real app, this would integrate with video SDK
+            // Fallback to support request for appointment
+            router.push({
+              pathname: "/support/create",
+              params: { subject: `Appointment Request: ${item.name}` },
+            });
+          }}
+        >
+          Book Call
         </Button>
       </Card.Content>
     </Card>

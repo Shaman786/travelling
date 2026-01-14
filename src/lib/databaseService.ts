@@ -9,6 +9,7 @@
  */
 
 import type {
+  Addon,
   Booking,
   BookingStatus,
   PackageFilters,
@@ -954,6 +955,27 @@ export const supportService = {
   },
 };
 
+// ============ Add-on Service ============
+
+export const addonService = {
+  /**
+   * Get all active add-ons
+   */
+  async getAddons(): Promise<Addon[]> {
+    try {
+      const response = await databases.listDocuments<Addon>(
+        DATABASE_ID,
+        TABLES.ADDONS,
+        [Query.equal("isActive", true)]
+      );
+      return response.documents;
+    } catch (error: any) {
+      console.error("Get add-ons error:", error);
+      return [];
+    }
+  },
+};
+
 // ============ Traveler Service (Saved) ============
 
 export const travelerService = {
@@ -1298,4 +1320,5 @@ export default {
   travelers: travelerService,
   reviews: reviewService,
   payments: paymentService,
+  addons: addonService,
 };

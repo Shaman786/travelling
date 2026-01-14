@@ -85,6 +85,10 @@ const initialBookingDraft: BookingDraft = {
   childrenCount: 0,
   infantsCount: 0,
   specialRequests: undefined,
+  selectedAddons: [],
+  isWorkTrip: false,
+  companyName: undefined,
+  taxId: undefined,
   currentStep: 0,
 };
 
@@ -125,6 +129,8 @@ interface AppState {
   // Actions - Booking Draft (New)
   updateBookingDraft: (updates: Partial<BookingDraft>) => void;
   resetBookingDraft: () => void;
+  addAddon: (addonId: string) => void;
+  removeAddon: (addonId: string) => void;
 
   // Actions - Booked Trips
   bookTrip: (
@@ -204,6 +210,27 @@ export const useStore = create<AppState>()(
         })),
 
       resetBookingDraft: () => set({ bookingDraft: initialBookingDraft }),
+
+      addAddon: (addonId) =>
+        set((state) => ({
+          bookingDraft: {
+            ...state.bookingDraft,
+            selectedAddons: [
+              ...(state.bookingDraft.selectedAddons || []),
+              addonId,
+            ],
+          },
+        })),
+
+      removeAddon: (addonId) =>
+        set((state) => ({
+          bookingDraft: {
+            ...state.bookingDraft,
+            selectedAddons: (state.bookingDraft.selectedAddons || []).filter(
+              (id) => id !== addonId
+            ),
+          },
+        })),
 
       setDraftStep: (step) =>
         set((state) => ({

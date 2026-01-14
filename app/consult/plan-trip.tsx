@@ -4,35 +4,43 @@ import { ScrollView, StyleSheet } from "react-native";
 import { Button, Text, TextInput, useTheme } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Toast } from "toastify-react-native";
-import { useStore } from "../../src/store/useStore";
+import { useSupport } from "../../src/hooks/useSupport";
 
 export default function PlanTripScreen() {
   const theme = useTheme();
   const router = useRouter();
-  const user = useStore((state) => state.user);
 
   const [destination, setDestination] = useState("");
   const [dates, setDates] = useState("");
   const [budget, setBudget] = useState("");
   const [notes, setNotes] = useState("");
-  const [loading, setLoading] = useState(false);
+  const { createTicket, isLoading: isSubmitting } = useSupport();
 
   const handleSubmit = async () => {
     if (!destination || !dates) {
       Toast.warn("Please details about your trip.");
       return;
     }
-    setLoading(true);
-    try {
-      // We'll treat this as a Support Ticket for now, or a new Collection "inquiries"
-      // For now, let's just log it or simulate success
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+    const message = `Trip Plan Request:
+Destination: ${destination}
+Dates: ${dates}
+Budget: ${budget}
+Notes: ${notes}
+    `;
+
+    const success = await createTicket({
+      subject: `Trip Plan: ${destination}`,
+      message,
+      category: "general",
+      priority: "medium",
+    });
+
+    if (success) {
       Toast.success("Request sent! An expert will contact you shortly.");
       router.back();
-    } catch (error) {
+    } else {
       Toast.error("Failed to submit request.");
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -85,7 +93,7 @@ export default function PlanTripScreen() {
         <Button
           mode="contained"
           onPress={handleSubmit}
-          loading={loading}
+          loading={isSubmitting}
           style={{ marginTop: 10 }}
         >
           Get Free Consultation

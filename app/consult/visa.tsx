@@ -12,8 +12,15 @@ export default function VisaScreen() {
   const [citizenship, setCitizenship] = useState("");
 
   const handleSubmit = () => {
-    Toast.success("Visa requirements checks initiated.");
-    setTimeout(() => router.back(), 1500);
+    if (!country || !citizenship) {
+      Toast.warn("Please fill in all fields");
+      return;
+    }
+    Toast.success("Initiating visa check...");
+    router.push({
+      pathname: "/support/create",
+      params: { subject: `Visa Inquiry: ${citizenship} citizen to ${country}` },
+    });
   };
 
   return (

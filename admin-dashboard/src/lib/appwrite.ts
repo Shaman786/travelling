@@ -21,6 +21,7 @@ export const TABLES = {
   REVIEWS: "reviews",
   PAYMENTS: "payments",
   SYSTEM_CONFIG: "system_config",
+  ADDONS: "addons",
 };
 
 export const BUCKETS = {

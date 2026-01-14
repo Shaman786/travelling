@@ -11,8 +11,15 @@ export default function GroupScreen() {
   const [size, setSize] = useState("");
 
   const handleSubmit = () => {
-    Toast.success("Group request received.");
-    setTimeout(() => router.back(), 1500);
+    if (!size) {
+      Toast.warn("Please enter group size");
+      return;
+    }
+    Toast.success("Group inquiry started.");
+    router.push({
+      pathname: "/support/create",
+      params: { subject: `Group Booking Inquiry: ${size} people` },
+    });
   };
 
   return (

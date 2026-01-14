@@ -15,6 +15,7 @@ import {
   useTheme,
 } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Toast } from "toastify-react-native";
 import { useAuth } from "../../src/hooks/useAuth";
 import { useStore } from "../../src/store/useStore";
 
@@ -67,8 +68,8 @@ export default function ProfileScreen() {
   const openWhatsApp = () => {
     const supportNumber = process.env.EXPO_PUBLIC_SUPPORT_PHONE || "";
     if (!supportNumber) {
-      alert(
-        "WhatsApp support not configured. Please use the Support Tickets feature."
+      Toast.info(
+        "WhatsApp support not configured. Please use Support Tickets."
       );
       return;
     }
@@ -77,7 +78,7 @@ export default function ProfileScreen() {
       message
     )}`;
     Linking.openURL(url).catch(() => {
-      alert("WhatsApp is not installed on this device.");
+      Toast.error("WhatsApp is not installed on this device.");
     });
   };
 

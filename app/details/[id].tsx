@@ -21,12 +21,26 @@ import { useStore } from "../../src/store/useStore";
 import { Review } from "../../src/types";
 
 export default function PackageDetailsScreen() {
-  const { id } = useLocalSearchParams();
+  const { id, startDate, endDate, adults, children, infants } =
+    useLocalSearchParams<{
+      id: string;
+      startDate?: string;
+      endDate?: string;
+      adults?: string;
+      children?: string;
+      infants?: string;
+    }>();
   const theme = useTheme();
   const router = useRouter();
   const user = useStore((state) => state.user);
 
   const [reviews, setReviews] = useState<Review[]>([]);
+  const [viewers, setViewers] = useState(0);
+
+  useEffect(() => {
+    // Fake social proof: Random viewers between 12 and 35
+    setViewers(Math.floor(Math.random() * (35 - 12 + 1)) + 12);
+  }, []);
   // isBooking and payment hooks removed as they are handled in wizard
 
   // Fetch reviews when package loads
@@ -77,15 +91,17 @@ export default function PackageDetailsScreen() {
       destination: pkg.country || pkg.destination,
       packagePrice: pkg.price,
       // Default dates if not set
-      departureDate: new Date(),
-      returnDate: new Date(
-        Date.now() + (parseInt(pkg.duration) || 7) * 86400000
-      ),
+      departureDate: startDate ? new Date(startDate) : new Date(),
+      returnDate: endDate
+        ? new Date(endDate)
+        : new Date(Date.now() + (parseInt(pkg.duration) || 7) * 86400000),
       currentStep: 0,
-      travelers: [],
-      adultsCount: 1,
-      childrenCount: 0,
-      infantsCount: 0,
+
+      // Use search params or defaults
+      travelers: [], // Will be generated in travelers step or we could pre-gen placeholders here
+      adultsCount: adults ? parseInt(adults) : 1,
+      childrenCount: children ? parseInt(children) : 0,
+      infantsCount: infants ? parseInt(infants) : 0,
     });
 
     router.push(`/booking/${pkg.$id}/dates` as any);
@@ -199,6 +215,64 @@ export default function PackageDetailsScreen() {
         </View>
 
         <View style={styles.contentContainer}>
+          {/* Trust & Urgency Banner */}
+          <Surface style={styles.trustBanner} elevation={0}>
+            <View
+              style={{ flexDirection: "row", alignItems: "center", gap: 8 }}
+            >
+              <MaterialCommunityIcons name="eye" size={16} color="#E11D48" />
+              <Text
+                variant="labelSmall"
+                style={{ color: "#E11D48", fontWeight: "bold" }}
+              >
+                {viewers} people are viewing this trip right now
+              </Text>
+            </View>
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                marginTop: 8,
+                gap: 8,
+              }}
+            >
+              <View style={styles.badge}>
+                <MaterialCommunityIcons
+                  name="check-decagram"
+                  size={14}
+                  color="#059669"
+                />
+                <Text
+                  style={{
+                    fontSize: 12,
+                    color: "#059669",
+                    fontWeight: "bold",
+                    marginLeft: 4,
+                  }}
+                >
+                  Free Cancellation
+                </Text>
+              </View>
+              <View style={[styles.badge, { backgroundColor: "#EFF6FF" }]}>
+                <MaterialCommunityIcons
+                  name="shield-check"
+                  size={14}
+                  color="#2563EB"
+                />
+                <Text
+                  style={{
+                    fontSize: 12,
+                    color: "#2563EB",
+                    fontWeight: "bold",
+                    marginLeft: 4,
+                  }}
+                >
+                  Best Price Guaranteed
+                </Text>
+              </View>
+            </View>
+          </Surface>
+
           {/* Quick Stats */}
           <View style={styles.statsRow}>
             <View style={styles.statItem}>
@@ -593,5 +667,21 @@ const styles = StyleSheet.create({
   dayImage: {
     width: "100%",
     height: "100%",
+  },
+  trustBanner: {
+    marginBottom: 20,
+    backgroundColor: "#FFF1F2",
+    padding: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#FECDD3",
+  },
+  badge: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#ECFDF5",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
   },
 });

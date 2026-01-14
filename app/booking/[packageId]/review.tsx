@@ -23,10 +23,10 @@ import { Toast } from "toastify-react-native";
 
 import { usePackage } from "../../../src/hooks/usePackages";
 import { usePayment } from "../../../src/hooks/usePayment";
-import { bookingService } from "../../../src/lib/databaseService";
+import { addonService, bookingService } from "../../../src/lib/databaseService";
 import { sendLocalNotification } from "../../../src/lib/notifications";
 import { useStore } from "../../../src/store/useStore";
-import type { Booking } from "../../../src/types";
+import type { Addon, Booking } from "../../../src/types";
 
 export default function ReviewScreen() {
   const theme = useTheme();
@@ -47,6 +47,30 @@ export default function ReviewScreen() {
   );
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [addons, setAddons] = useState<Addon[]>([]);
+
+  // Fetch selected add-ons
+  React.useEffect(() => {
+    const fetchAddons = async () => {
+      if (
+        bookingDraft.selectedAddons &&
+        bookingDraft.selectedAddons.length > 0
+      ) {
+        try {
+          // In a real app we might want a bulk fetch or cache
+          // For now, fetch all active and filter client-side
+          const allAddons = await addonService.getAddons();
+          const selected = allAddons.filter((a) =>
+            bookingDraft.selectedAddons?.includes(a.$id)
+          );
+          setAddons(selected);
+        } catch (e) {
+          console.error("Failed to fetch addon details", e);
+        }
+      }
+    };
+    fetchAddons();
+  }, [bookingDraft.selectedAddons]);
 
   // Calculations
   const basePrice = pkg?.price || 0;
@@ -58,7 +82,18 @@ export default function ReviewScreen() {
   const adultTotal = bookingDraft.adultsCount * basePrice;
   const childTotal = bookingDraft.childrenCount * (basePrice * 0.5);
   const infantTotal = 0;
-  const subtotal = adultTotal + childTotal + infantTotal;
+
+  // Calculate Add-ons Total
+  const addonsTotal = addons.reduce((sum, addon) => {
+    if (addon.type === "per_person") {
+      const peopleCount = bookingDraft.adultsCount + bookingDraft.childrenCount;
+      return sum + addon.price * peopleCount;
+    }
+    return sum + addon.price;
+  }, 0);
+
+  const subtotal = adultTotal + childTotal + infantTotal + addonsTotal;
+
   const serviceFee = subtotal * 0.05; // 5% service fee
   const totalPrice = subtotal + serviceFee;
 
@@ -112,6 +147,9 @@ export default function ReviewScreen() {
         ],
         paymentStatus: "pending",
         specialRequests: specialRequests || undefined,
+        isWorkTrip: bookingDraft.isWorkTrip,
+        companyName: bookingDraft.companyName,
+        taxId: bookingDraft.taxId,
       };
 
       // Create booking in Appwrite
@@ -319,6 +357,37 @@ export default function ReviewScreen() {
           />
         </Surface>
 
+        {/* Business Details */}
+        {bookingDraft.isWorkTrip && (
+          <Surface style={styles.card} elevation={1}>
+            <Text variant="labelLarge" style={styles.cardTitle}>
+              Business Details
+            </Text>
+            <View style={styles.priceRow}>
+              <Text
+                variant="bodyMedium"
+                style={{ color: theme.colors.outline }}
+              >
+                Company
+              </Text>
+              <Text variant="bodyMedium" style={{ fontWeight: "bold" }}>
+                {bookingDraft.companyName}
+              </Text>
+            </View>
+            <View style={styles.priceRow}>
+              <Text
+                variant="bodyMedium"
+                style={{ color: theme.colors.outline }}
+              >
+                Tax ID
+              </Text>
+              <Text variant="bodyMedium" style={{ fontWeight: "bold" }}>
+                {bookingDraft.taxId}
+              </Text>
+            </View>
+          </Surface>
+        )}
+
         {/* Price Breakdown */}
         <Surface style={styles.card} elevation={1}>
           <Text variant="labelLarge" style={styles.cardTitle}>
@@ -354,6 +423,36 @@ export default function ReviewScreen() {
                 FREE
               </Text>
             </View>
+          )}
+
+          {addons.length > 0 && (
+            <>
+              <Divider style={{ marginVertical: 8 }} />
+              <Text
+                variant="labelMedium"
+                style={{ marginBottom: 4, color: theme.colors.primary }}
+              >
+                Add-ons
+              </Text>
+              {addons.map((addon) => {
+                const isPerPerson = addon.type === "per_person";
+                const peopleCount =
+                  bookingDraft.adultsCount + bookingDraft.childrenCount;
+                const itemTotal = isPerPerson
+                  ? addon.price * peopleCount
+                  : addon.price;
+
+                return (
+                  <View key={addon.$id} style={styles.priceRow}>
+                    <Text variant="bodyMedium" style={{ flex: 1 }}>
+                      {addon.name} {isPerPerson && `(x${peopleCount})`}
+                    </Text>
+                    <Text variant="bodyMedium">${itemTotal.toFixed(2)}</Text>
+                  </View>
+                );
+              })}
+              <Divider style={{ marginVertical: 8 }} />
+            </>
           )}
 
           <View style={styles.priceRow}>

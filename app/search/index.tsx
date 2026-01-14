@@ -21,8 +21,11 @@ import {
 } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { format } from "date-fns";
+import { DatePickerModal } from "react-native-paper-dates";
 import FilterSheet from "../../src/components/FilterSheet";
 import PackageCard from "../../src/components/PackageCard";
+import TravelerSelector from "../../src/components/search/TravelerSelector";
 import { useSearch } from "../../src/hooks/useSearch";
 import databaseService from "../../src/lib/databaseService";
 import { PackageFilters, TravelPackage } from "../../src/types";
@@ -55,6 +58,36 @@ export default function SearchScreen() {
   // Filters
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState<PackageFilters>({});
+
+  // Extended Search Params
+  const [range, setRange] = useState<{
+    startDate: Date | undefined;
+    endDate: Date | undefined;
+  }>({ startDate: undefined, endDate: undefined });
+  const [openDate, setOpenDate] = useState(false);
+
+  const [openTravelers, setOpenTravelers] = useState(false);
+  const [adults, setAdults] = useState(1);
+  const [childrenCount, setChildren] = useState(0);
+  const [infants, setInfants] = useState(0);
+
+  const onDismissDate = useCallback(() => {
+    setOpenDate(false);
+  }, [setOpenDate]);
+
+  const onConfirmDate = useCallback(
+    ({
+      startDate,
+      endDate,
+    }: {
+      startDate: Date | undefined;
+      endDate: Date | undefined;
+    }) => {
+      setOpenDate(false);
+      setRange({ startDate, endDate });
+    },
+    [setOpenDate, setRange]
+  );
 
   const performSearch = useCallback(async () => {
     setIsLoading(true);
@@ -147,6 +180,42 @@ export default function SearchScreen() {
         </View>
       </View>
 
+      {/* Extended Inputs */}
+      <View
+        style={{
+          flexDirection: "row",
+          paddingHorizontal: 16,
+          paddingBottom: 12,
+          gap: 8,
+          backgroundColor: "#fff",
+          borderBottomWidth: 1,
+          borderBottomColor: "#f0f0f0",
+        }}
+      >
+        <Button
+          mode="outlined"
+          onPress={() => setOpenDate(true)}
+          icon="calendar"
+          compact
+          style={{ flex: 1, borderColor: theme.colors.outlineVariant }}
+          contentStyle={{ flexDirection: "row-reverse" }}
+        >
+          {range.startDate
+            ? `${format(range.startDate, "MMM dd")} - ${range.endDate ? format(range.endDate, "MMM dd") : "..."}`
+            : "Dates"}
+        </Button>
+        <Button
+          mode="outlined"
+          onPress={() => setOpenTravelers(true)}
+          icon="account-group"
+          compact
+          style={{ flex: 1, borderColor: theme.colors.outlineVariant }}
+          contentStyle={{ flexDirection: "row-reverse" }}
+        >
+          {adults + childrenCount + infants} Guests
+        </Button>
+      </View>
+
       {/* Results */}
       {isLoading && results.length === 0 ? (
         <View style={styles.centered}>
@@ -158,7 +227,16 @@ export default function SearchScreen() {
           keyExtractor={(item) => item.$id}
           renderItem={({ item }) => (
             <View style={{ marginBottom: 16 }}>
-              <PackageCard item={item} />
+              <PackageCard
+                item={item}
+                searchParams={{
+                  startDate: range.startDate?.toISOString(),
+                  endDate: range.endDate?.toISOString(),
+                  adults,
+                  children: childrenCount,
+                  infants,
+                }}
+              />
             </View>
           )}
           contentContainerStyle={styles.list}
@@ -268,6 +346,27 @@ export default function SearchScreen() {
         onDismiss={() => setShowFilters(false)}
         currentFilters={filters}
         onApply={setFilters}
+      />
+
+      <DatePickerModal
+        locale="en"
+        mode="range"
+        visible={openDate}
+        onDismiss={onDismissDate}
+        startDate={range.startDate}
+        endDate={range.endDate}
+        onConfirm={onConfirmDate}
+      />
+
+      <TravelerSelector
+        visible={openTravelers}
+        onDismiss={() => setOpenTravelers(false)}
+        adults={adults}
+        setAdults={setAdults}
+        childrenCount={childrenCount}
+        setChildren={setChildren}
+        infants={infants}
+        setInfants={setInfants}
       />
     </SafeAreaView>
   );

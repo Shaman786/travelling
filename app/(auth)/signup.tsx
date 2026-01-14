@@ -9,6 +9,7 @@ import {
   useTheme,
 } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Toast } from "toastify-react-native";
 import { useAuth } from "../../src/hooks/useAuth";
 import { authService } from "../../src/lib/authService";
 
@@ -61,7 +62,7 @@ export default function SignupScreen() {
     try {
       await authService.sendVerificationEmail();
       setError(""); // Clear error
-      alert("Verification email resent! Check your inbox.");
+      Toast.success("Verification email resent! Check your inbox.");
     } catch (err: any) {
       setError(err.message || "Failed to resend email");
     } finally {

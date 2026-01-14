@@ -11,9 +11,16 @@ import type { TravelPackage } from "../types";
 interface PackageCardProps {
   item: TravelPackage;
   style?: any;
+  searchParams?: {
+    startDate?: string;
+    endDate?: string;
+    adults?: number;
+    children?: number;
+    infants?: number;
+  };
 }
 
-const PackageCard = ({ item, style }: PackageCardProps) => {
+const PackageCard = ({ item, style, searchParams }: PackageCardProps) => {
   const theme = useTheme();
   const router = useRouter();
   const activeComparison = useStore((state) =>
@@ -35,7 +42,10 @@ const PackageCard = ({ item, style }: PackageCardProps) => {
   const isFavorite = favoritePackages.includes(item.$id);
 
   const handlePress = () => {
-    router.push(`/details/${item.$id}`);
+    router.push({
+      pathname: `/details/${item.$id}` as any,
+      params: searchParams,
+    });
   };
 
   const handleToggleFavorite = () => {

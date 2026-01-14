@@ -12,8 +12,15 @@ export default function FlightsScreen() {
   const [to, setTo] = useState("");
 
   const handleSubmit = () => {
-    Toast.success("Searching for best agent fares...");
-    setTimeout(() => router.back(), 1500);
+    if (!from || !to) {
+      Toast.warn("Please enter origin and destination");
+      return;
+    }
+    Toast.success("Requesting flight quote...");
+    router.push({
+      pathname: "/support/create",
+      params: { subject: `Flight Quote: ${from} to ${to}` },
+    });
   };
 
   return (

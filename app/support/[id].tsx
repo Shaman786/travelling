@@ -77,7 +77,26 @@ export default function TicketDetailsScreen() {
 
   useEffect(() => {
     fetchData();
-  }, [fetchData]);
+
+    // Poll for new messages every 5 seconds
+    const interval = setInterval(async () => {
+      if (!id || typeof id !== "string") return;
+      try {
+        const messagesData = await supportService.getTicketMessages(id);
+        // Only update if count differs or last message ID differs (simple check)
+        // For robustness, we just set it, React diffing handles the rest
+        setMessages(messagesData);
+
+        // Also refresh ticket status if needed
+        const ticketData = await supportService.getTicketById(id);
+        if (ticketData) setTicket(ticketData);
+      } catch (e) {
+        // Silent fail on poll
+      }
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [fetchData, id]);
 
   const handleSendReply = async () => {
     if (!replyText.trim() || !user?.$id || !id || typeof id !== "string")

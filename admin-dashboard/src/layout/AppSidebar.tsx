@@ -38,6 +38,11 @@ const navItems: NavItem[] = [
     path: "/bookings",
   },
   {
+    icon: <GridIcon />,
+    name: "Add-ons",
+    path: "/addons",
+  },
+  {
     icon: <GridIcon />, // Using GridIcon as placeholder or import UserIcon
     name: "Users",
     path: "/users",

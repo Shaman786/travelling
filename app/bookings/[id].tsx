@@ -103,14 +103,11 @@ export default function BookingDetailsScreen() {
   const handleContactSupport = () => {
     const supportPhone = process.env.EXPO_PUBLIC_SUPPORT_PHONE || "";
     if (!supportPhone) {
-      Alert.alert(
-        "Support",
-        "Please use the Support Tickets feature in the app."
-      );
+      Toast.info("Please use the Support Tickets feature.");
       return;
     }
     Linking.openURL(`whatsapp://send?phone=${supportPhone}`).catch(() => {
-      Alert.alert("Error", "WhatsApp is not installed.");
+      Toast.error("WhatsApp is not installed.");
     });
   };
 

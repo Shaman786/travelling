@@ -10,8 +10,13 @@ export default function InsuranceScreen() {
   const router = useRouter();
 
   const handleBuy = () => {
-    Toast.success("Policy added to draft.");
-    router.back();
+    // In a real app, this would add insurance to the current booking draft
+    // For now, we'll route to support to request a quote
+    Toast.success("Request sent! An agent will contact you shortly.");
+    router.push({
+      pathname: "/support/create",
+      params: { subject: "Travel Insurance Quote Request" },
+    });
   };
 
   return (

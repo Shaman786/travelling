@@ -4,7 +4,7 @@ import { format } from "date-fns";
 import { Image } from "expo-image"; // Added Image import
 import { useFocusEffect, useRouter } from "expo-router";
 import React, { useState } from "react";
-import { Alert, Pressable, StyleSheet, View } from "react-native";
+import { Alert, Pressable, Share, StyleSheet, View } from "react-native";
 import {
   Button,
   Card,
@@ -125,6 +125,21 @@ export default function MyTripsScreen() {
     router.push(`/bookings/${tripId}` as any);
   };
 
+  const handleShareTrip = async (trip: BookedTrip) => {
+    try {
+      const message = `Check out my trip to ${trip.destination || trip.packageTitle}! I booked it on Travelling App.`;
+      await Share.share({
+        message,
+      });
+    } catch (error) {
+      console.error("Share error:", error);
+    }
+  };
+
+  const handleBookAgain = (packageId: string) => {
+    router.push(`/details/${packageId}` as any);
+  };
+
   const renderEmptyState = () => (
     <View style={styles.center}>
       <MaterialCommunityIcons
@@ -160,17 +175,32 @@ export default function MyTripsScreen() {
   );
 
   const renderTripItem = ({ item: trip }: { item: BookedTrip }) => {
-    // Determine visual status color
+    // Determine visual status color and text
     let statusColor = theme.colors.primary;
-    if (trip.status === "visa_approved") statusColor = "#2196F3"; // Blue
-    if (trip.status === "ready_to_fly" || trip.status === "completed")
-      statusColor = "#4CAF50"; // Green
-
-    // Format Status Text
-    const statusText = trip.status
+    let statusText = trip.status
       .split("_")
       .map((w: string) => w.charAt(0).toUpperCase() + w.slice(1))
       .join(" ");
+
+    if (trip.status === "processing") {
+      if (trip.paymentStatus === "paid") {
+        statusText = "Paid - Processing";
+        statusColor = "#4CAF50"; // Green for paid
+      } else {
+        statusText = "Awaiting Confirmation";
+        statusColor = "#FF9800"; // Orange
+      }
+    } else if (
+      trip.status === "visa_approved" ||
+      trip.status === "ready_to_fly"
+    ) {
+      statusColor = "#4CAF50"; // Green
+    } else if (trip.status === "cancelled") {
+      statusColor = theme.colors.error;
+    } else if (trip.status === "visa_submitted") {
+      statusText = "Visa Submitted";
+      statusColor = "#2196F3";
+    }
 
     return (
       <Pressable
@@ -274,14 +304,57 @@ export default function MyTripsScreen() {
                 </View>
               ) : trip.status === "completed" ||
                 trip.status === "ready_to_fly" ? (
-                <Button
-                  mode="contained"
-                  compact
-                  buttonColor={theme.colors.secondary}
-                  onPress={() => handleOpenReview(trip)}
-                  icon="star"
+                <View
+                  style={{ flexDirection: "row", gap: 8, flexWrap: "wrap" }}
                 >
-                  Review
+                  <Button
+                    mode="contained"
+                    compact
+                    buttonColor={theme.colors.secondary}
+                    onPress={() => handleOpenReview(trip)}
+                    icon="star"
+                  >
+                    Review
+                  </Button>
+                  <Button
+                    mode="outlined"
+                    compact
+                    icon="share-variant"
+                    onPress={() => handleShareTrip(trip)}
+                  >
+                    Share
+                  </Button>
+                  <Button
+                    mode="text"
+                    compact
+                    onPress={() => handleBookAgain(trip.packageId)}
+                  >
+                    Book Again
+                  </Button>
+                </View>
+              ) : trip.status === "processing" &&
+                trip.paymentStatus === "paid" ? (
+                <Button
+                  mode="outlined"
+                  compact
+                  icon="headphones"
+                  onPress={() => router.push("/support")}
+                >
+                  Contact Support
+                </Button>
+              ) : /* Hide Cancel for advanced stages to prevent issues */
+              [
+                  "visa_submitted",
+                  "visa_approved",
+                  "documents_verified",
+                ].includes(trip.status) ? (
+                <Button
+                  mode="outlined"
+                  compact
+                  icon="eye"
+                  onPress={() => handleViewDetails(trip.id)}
+                >
+                  View Details
                 </Button>
               ) : (
                 <Button
@@ -376,7 +449,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 16,
     backgroundColor: "#fafafa",
-    gap: 12, // Added gap
+    gap: 12,
   },
   cardImage: {
     width: 60,
@@ -403,7 +476,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    flexWrap: "wrap", // Allow wrapping if space is tight
+    flexWrap: "wrap",
     gap: 12,
   },
 });

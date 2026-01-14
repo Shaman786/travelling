@@ -13,6 +13,7 @@ import {
   Divider,
   HelperText,
   Surface,
+  Switch,
   Text,
   TextInput,
   useTheme,
@@ -136,7 +137,7 @@ export default function TravelerDetailsScreen() {
       currentStep: 3,
     });
 
-    router.push(`/booking/${packageId}/review` as any);
+    router.push(`/booking/${packageId}/addons` as any);
   }, [validateForm, updateBookingDraft, router, packageId, travelers]);
 
   // Get traveler icon
@@ -267,6 +268,53 @@ export default function TravelerDetailsScreen() {
           </>
         )}
 
+        {/* Business Trip Section */}
+        <Surface style={[styles.card, { marginTop: 16 }]} elevation={1}>
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+              marginBottom: bookingDraft.isWorkTrip ? 16 : 0,
+            }}
+          >
+            <View>
+              <Text variant="titleMedium" style={{ fontWeight: "bold" }}>
+                Work Trip
+              </Text>
+              <Text variant="bodySmall" style={{ color: theme.colors.outline }}>
+                Traveling for business?
+              </Text>
+            </View>
+            <Switch
+              value={bookingDraft.isWorkTrip}
+              onValueChange={(val) => updateBookingDraft({ isWorkTrip: val })}
+              color={theme.colors.primary}
+            />
+          </View>
+
+          {bookingDraft.isWorkTrip && (
+            <View>
+              <TextInput
+                label="Company Name"
+                value={bookingDraft.companyName || ""}
+                onChangeText={(text) =>
+                  updateBookingDraft({ companyName: text })
+                }
+                mode="outlined"
+                style={styles.input}
+              />
+              <TextInput
+                label="Tax ID / VAT / GST"
+                value={bookingDraft.taxId || ""}
+                onChangeText={(text) => updateBookingDraft({ taxId: text })}
+                mode="outlined"
+                style={styles.input}
+              />
+            </View>
+          )}
+        </Surface>
+
         {/* Children */}
         {children.length > 0 && (
           <>
@@ -339,6 +387,11 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 12,
     marginBottom: 16,
+  },
+  card: {
+    padding: 16,
+    borderRadius: 12,
+    backgroundColor: "#fff",
   },
   travelerHeader: {
     flexDirection: "row",

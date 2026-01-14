@@ -6,8 +6,8 @@ import {
   ID,
   Query,
   Storage,
+  TablesDB,
 } from "react-native-appwrite";
-import { TablesDB } from "react-native-appwrite/src/services/tables-db";
 import "react-native-url-polyfill/auto";
 
 // Appwrite Configuration from environment variables
@@ -34,6 +34,7 @@ export const TABLES = {
   REVIEWS: "reviews",
   PAYMENTS: "payments",
   MESSAGES: "ticket_messages",
+  ADDONS: "addons",
 };
 
 export const BUCKETS = {
