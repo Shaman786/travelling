@@ -1,4 +1,5 @@
 import { LinearGradient } from "expo-linear-gradient";
+import { useRouter } from "expo-router"; // Added useRouter import
 import React, { useEffect, useRef, useState } from "react";
 import {
   Dimensions,
@@ -20,6 +21,7 @@ const CAROUSEL_DATA = [
     image:
       "https://images.unsplash.com/photo-1549144511-2b632d43329d?q=80&w=2070&auto=format&fit=crop",
     cta: "Plan Now",
+    link: "/consult/plan-trip",
   },
   {
     id: "2",
@@ -28,6 +30,7 @@ const CAROUSEL_DATA = [
     image:
       "https://images.unsplash.com/photo-1499856839499-12fecadb64bf?q=80&w=2070&auto=format&fit=crop",
     cta: "Check Eligibility",
+    link: "/consult/visa",
   },
   {
     id: "3",
@@ -36,14 +39,16 @@ const CAROUSEL_DATA = [
     image:
       "https://images.unsplash.com/photo-1537996194471-e657df975ab4?q=80&w=1938&auto=format&fit=crop",
     cta: "Explore",
+    link: "/search",
   },
 ];
 
 export default function HeroCarousel() {
   const theme = useTheme();
+  const router = useRouter(); // Added router hook
   const flatListRef = useRef<FlatList>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const { banners, loading } = useBanners();
+  const { banners } = useBanners();
 
   // Fallback data if no banners or loading
   const data = (banners.length > 0 ? banners : CAROUSEL_DATA).map(
@@ -53,6 +58,7 @@ export default function HeroCarousel() {
       subtitle: item.subtitle,
       image: item.imageUrl || item.image,
       cta: item.ctaText || item.cta,
+      link: item.ctaLink || item.link, // Added link mapping
     })
   );
 
@@ -70,6 +76,12 @@ export default function HeroCarousel() {
 
     return () => clearInterval(timer);
   }, [currentIndex, data.length]);
+
+  const handlePress = (link?: string) => {
+    if (link) {
+      router.push(link as any);
+    }
+  };
 
   const renderItem = ({ item }: { item: any }) => (
     <View style={styles.cardContainer}>
@@ -91,7 +103,7 @@ export default function HeroCarousel() {
             </Text>
             <Button
               mode="contained"
-              onPress={() => {}}
+              onPress={() => handlePress(item.link)}
               style={styles.button}
               labelStyle={{ fontSize: 12 }}
               compact
@@ -108,7 +120,7 @@ export default function HeroCarousel() {
     <View style={styles.container}>
       <FlatList
         ref={flatListRef}
-        data={CAROUSEL_DATA}
+        data={data} // Use dynamic data
         renderItem={renderItem}
         horizontal
         pagingEnabled
@@ -118,6 +130,11 @@ export default function HeroCarousel() {
           const index = Math.round(event.nativeEvent.contentOffset.x / width);
           setCurrentIndex(index);
         }}
+        getItemLayout={(_, index) => ({
+          length: width,
+          offset: width * index,
+          index,
+        })}
       />
       {/* Paginator */}
       <View style={styles.paginator}>

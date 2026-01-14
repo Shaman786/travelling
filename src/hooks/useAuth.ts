@@ -117,10 +117,25 @@ export function useAuth(): UseAuthReturn {
       setError(null);
 
       try {
-        await authService.register(email, password, name);
+        const authUser = await authService.register(email, password, name);
 
-        // Do NOT set user locally on signup, as no session exists until login/verification
-        // setUser({ ... });
+        // Fetch full profile to ensure all data is available
+        const profile = await authService.getUserProfile(authUser.$id);
+
+        // Update local state - Auto login handled by authService.register
+        setUser(
+          profile || {
+            $id: authUser.$id,
+            name: authUser.name,
+            email: authUser.email,
+            createdAt: new Date().toISOString(),
+          }
+        );
+
+        // Register for push notifications
+        registerForPushNotificationsAsync().then((token) => {
+          if (token) savePushToken(token, authUser.$id);
+        });
 
         return true;
       } catch (err: any) {
@@ -130,7 +145,7 @@ export function useAuth(): UseAuthReturn {
         setIsLoading(false);
       }
     },
-    []
+    [setUser]
   );
 
   const logout = useCallback(async () => {

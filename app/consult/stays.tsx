@@ -1,78 +1,29 @@
-import React, { useEffect, useState } from "react";
-import { ActivityIndicator, FlatList, StyleSheet, View } from "react-native";
-import { Text, useTheme } from "react-native-paper";
-import { SafeAreaView } from "react-native-safe-area-context";
-import PackageCard from "../../src/components/PackageCard";
-import databaseService from "../../src/lib/databaseService";
-import type { TravelPackage } from "../../src/types";
+import { Stack } from "expo-router";
+import React from "react";
+import { StyleSheet, View } from "react-native";
+import ConsultationForm from "../../src/components/consult/ConsultationForm";
 
 export default function StaysScreen() {
-  const theme = useTheme();
-  const [packages, setPackages] = useState<TravelPackage[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    const load = async () => {
-      try {
-        // Fetch packages categorized as 'luxury' or just all for demo
-        const res = await databaseService.packages.getPackages({
-          category: "luxury",
-        });
-        setPackages(
-          res.documents.length > 0
-            ? res.documents
-            : (await databaseService.packages.getPackages({})).documents
-        );
-      } catch (e) {
-        console.error(e);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    load();
-  }, []);
-
-  if (isLoading) {
-    return (
-      <SafeAreaView
-        style={[
-          styles.container,
-          styles.centered,
-          { backgroundColor: theme.colors.background },
-        ]}
-      >
-        <ActivityIndicator size="large" color={theme.colors.primary} />
-      </SafeAreaView>
-    );
-  }
-
   return (
-    <SafeAreaView
-      style={[styles.container, { backgroundColor: theme.colors.background }]}
-    >
-      <View style={styles.header}>
-        <Text variant="headlineMedium" style={styles.title}>
-          Curated Stays
-        </Text>
-        <Text variant="bodyMedium" style={{ color: "#666" }}>
-          Handpicked luxury hotels and boutique stays.
-        </Text>
-      </View>
-      <FlatList
-        data={packages}
-        renderItem={({ item }) => (
-          <View style={{ marginBottom: 20 }}>
-            <PackageCard item={item} />
-          </View>
-        )}
-        contentContainerStyle={{ padding: 20 }}
+    <View style={styles.container}>
+      <Stack.Screen options={{ title: "Curated Stays" }} />
+      <ConsultationForm
+        type="stays"
+        title="Find Unique Stays"
+        subtitle="From luxury villas to boutique hotels."
+        showDestination={true}
+        showDates={true}
+        showTravelers={true}
+        showBudget={true}
+        placeholderNotes="Preferences? (e.g. Pool, Beachfront, City Center)"
       />
-    </SafeAreaView>
+    </View>
   );
 }
+
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  centered: { justifyContent: "center", alignItems: "center" },
-  header: { padding: 20 },
-  title: { fontWeight: "bold" },
+  container: {
+    flex: 1,
+    backgroundColor: "#fff",
+  },
 });

@@ -401,6 +401,39 @@ const COLLECTIONS: any = {
     ],
     indexes: [{ key: "sort_order", type: "key", attributes: ["sortOrder"] }],
   },
+  consultations: {
+    name: "Consultations",
+    documentSecurity: true,
+    permissions: [
+      Permission.create(Role.any()), // Allow unauthenticated (maybe) or users
+      Permission.read(Role.users()),
+      Permission.read(Role.team(TEAM_NAME)),
+      Permission.write(Role.team(TEAM_NAME)),
+    ],
+    attributes: [
+      { key: "userId", type: "string", size: 36, required: false },
+      { key: "userName", type: "string", size: 128, required: true },
+      { key: "userPhone", type: "string", size: 32, required: true },
+      { key: "userEmail", type: "string", size: 128, required: false },
+      { key: "type", type: "string", size: 32, required: true }, // plan_trip, expert, visa, etc.
+      { key: "destination", type: "string", size: 128, required: false },
+      { key: "dates", type: "string", size: 128, required: false },
+      { key: "travelers", type: "string", size: 64, required: false },
+      { key: "budget", type: "string", size: 64, required: false },
+      { key: "notes", type: "string", size: 2000, required: false },
+      {
+        key: "status",
+        type: "string",
+        size: 32,
+        required: false,
+        default: "new", // new, contacted, closed
+      },
+    ],
+    indexes: [
+      { key: "type_idx", type: "key", attributes: ["type"] },
+      { key: "status_idx", type: "key", attributes: ["status"] },
+    ],
+  },
 };
 
 const BUCKETS = [

@@ -382,4 +382,101 @@ export const databaseService = {
       }
     },
   },
+
+  // ============ CONSULTATIONS ============
+  consultations: {
+    async list(limit = 100, status?: string) {
+      try {
+        const queries = [Query.orderDesc("$createdAt"), Query.limit(limit)];
+        if (status && status !== "all") {
+          queries.push(Query.equal("status", status));
+        }
+        const response = await databases.listDocuments(
+          DATABASE_ID,
+          TABLES.CONSULTATIONS,
+          queries,
+        );
+        return response.documents;
+      } catch (error) {
+        console.error("List consultations error:", error);
+        return [];
+      }
+    },
+    async updateStatus(id: string, status: string) {
+      try {
+        return await databases.updateDocument(
+          DATABASE_ID,
+          TABLES.CONSULTATIONS,
+          id,
+          { status },
+        );
+      } catch (error) {
+        console.error("Update consultation status error:", error);
+        throw error;
+      }
+    },
+    async get(id: string) {
+      try {
+        return await databases.getDocument(
+          DATABASE_ID,
+          TABLES.CONSULTATIONS,
+          id,
+        );
+      } catch (error) {
+        console.error("Get consultation error:", error);
+        return null;
+      }
+    },
+  },
+
+  // ============ BANNERS ============
+  banners: {
+    async list() {
+      try {
+        const response = await databases.listDocuments(
+          DATABASE_ID,
+          TABLES.BANNERS,
+          [Query.orderAsc("sortOrder")],
+        );
+        return response.documents;
+      } catch (error) {
+        console.error("List banners error:", error);
+        return [];
+      }
+    },
+    async create(data: any) {
+      try {
+        return await databases.createDocument(
+          DATABASE_ID,
+          TABLES.BANNERS,
+          ID.unique(),
+          { ...data, createdAt: new Date().toISOString() },
+        );
+      } catch (error) {
+        console.error("Create banner error:", error);
+        throw error;
+      }
+    },
+    async update(id: string, data: any) {
+      try {
+        return await databases.updateDocument(
+          DATABASE_ID,
+          TABLES.BANNERS,
+          id,
+          data,
+        );
+      } catch (error) {
+        console.error("Update banner error:", error);
+        throw error;
+      }
+    },
+    async delete(id: string) {
+      try {
+        return await databases.deleteDocument(DATABASE_ID, TABLES.BANNERS, id);
+      } catch (error) {
+        console.error("Delete banner error:", error);
+        throw error;
+      }
+    },
+  },
 };

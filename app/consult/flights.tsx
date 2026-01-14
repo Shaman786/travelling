@@ -1,69 +1,28 @@
-import { useRouter } from "expo-router";
-import React, { useState } from "react";
-import { ScrollView, StyleSheet } from "react-native";
-import { Button, Text, TextInput, useTheme } from "react-native-paper";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { Toast } from "toastify-react-native";
+import { Stack } from "expo-router";
+import React from "react";
+import { StyleSheet, View } from "react-native";
+import ConsultationForm from "../../src/components/consult/ConsultationForm";
 
 export default function FlightsScreen() {
-  const theme = useTheme();
-  const router = useRouter();
-  const [from, setFrom] = useState("");
-  const [to, setTo] = useState("");
-
-  const handleSubmit = () => {
-    if (!from || !to) {
-      Toast.warn("Please enter origin and destination");
-      return;
-    }
-    Toast.success("Requesting flight quote...");
-    router.push({
-      pathname: "/support/create",
-      params: { subject: `Flight Quote: ${from} to ${to}` },
-    });
-  };
-
   return (
-    <SafeAreaView
-      style={[styles.container, { backgroundColor: theme.colors.background }]}
-    >
-      <ScrollView contentContainerStyle={styles.content}>
-        <Text variant="headlineMedium" style={styles.title}>
-          Flight Deals
-        </Text>
-        <Text variant="bodyMedium" style={{ marginBottom: 20, color: "#666" }}>
-          Exclusive consultant rates not available online.
-        </Text>
-
-        <TextInput
-          label="From (City/Airport)"
-          value={from}
-          onChangeText={setFrom}
-          mode="outlined"
-          style={styles.input}
-        />
-        <TextInput
-          label="To (Destination)"
-          value={to}
-          onChangeText={setTo}
-          mode="outlined"
-          style={styles.input}
-        />
-
-        <Button
-          mode="contained"
-          onPress={handleSubmit}
-          style={{ marginTop: 10 }}
-        >
-          Request Quote
-        </Button>
-      </ScrollView>
-    </SafeAreaView>
+    <View style={styles.container}>
+      <Stack.Screen options={{ title: "Flight Deals" }} />
+      <ConsultationForm
+        type="flights"
+        title="Best Flight Deals"
+        subtitle="Let us find the cheapest and fastest connections for you."
+        showDestination={true}
+        showDates={true}
+        showTravelers={true}
+        placeholderNotes="Preferred Airlines? Specific timing?"
+      />
+    </View>
   );
 }
+
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  content: { padding: 20 },
-  title: { fontWeight: "bold", marginBottom: 8 },
-  input: { marginBottom: 16, backgroundColor: "#fff" },
+  container: {
+    flex: 1,
+    backgroundColor: "#fff",
+  },
 });

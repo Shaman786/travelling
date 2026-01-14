@@ -1357,6 +1357,71 @@ export const bannerService = {
   },
 };
 
+// ============ Consultation Service ============
+
+export const consultationService = {
+  /**
+   * Create a new consultation request
+   */
+  async createConsultation(data: any): Promise<any> {
+    try {
+      const row = await tables.createRow({
+        databaseId: DATABASE_ID,
+        tableId: TABLES.CONSULTATIONS,
+        rowId: ID.unique(),
+        data: {
+          ...data,
+          status: "new",
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        },
+      });
+      return row;
+    } catch (error: any) {
+      console.error("Create consultation error:", error);
+      throw new Error(error.message || "Failed to submit request");
+    }
+  },
+
+  /**
+   * Get consultations (Admin)
+   */
+  async getConsultations(status?: string): Promise<any[]> {
+    try {
+      const queries = [Query.orderDesc("$createdAt")];
+      if (status && status !== "all") {
+        queries.push(Query.equal("status", status));
+      }
+
+      const response = await tables.listRows({
+        databaseId: DATABASE_ID,
+        tableId: TABLES.CONSULTATIONS,
+        queries,
+      });
+      return response.rows;
+    } catch (error: any) {
+      console.error("Get consultations error:", error);
+      return [];
+    }
+  },
+
+  /**
+   * Update consultation status
+   */
+  async updateStatus(id: string, status: string): Promise<void> {
+    try {
+      await tables.updateRow({
+        databaseId: DATABASE_ID,
+        tableId: TABLES.CONSULTATIONS,
+        rowId: id,
+        data: { status, updatedAt: new Date().toISOString() },
+      });
+    } catch (error: any) {
+      throw new Error(error.message || "Failed to update status");
+    }
+  },
+};
+
 export default {
   packages: packageService,
   bookings: bookingService,
@@ -1367,4 +1432,5 @@ export default {
   payments: paymentService,
   addons: addonService,
   banners: bannerService,
+  consultations: consultationService,
 };

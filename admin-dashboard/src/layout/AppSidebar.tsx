@@ -58,6 +58,11 @@ const navItems: NavItem[] = [
     path: "/tickets",
   },
   {
+    icon: <ChatIcon />, // Reusing ChatIcon or similar
+    name: "Consultations",
+    path: "/consultations",
+  },
+  {
     icon: <ListIcon />,
     name: "Payments",
     path: "/payments",

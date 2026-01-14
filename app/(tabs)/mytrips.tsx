@@ -389,7 +389,9 @@ export default function MyTripsScreen() {
         keyExtractor={(item) => item.id}
         renderItem={renderTripItem}
         contentContainerStyle={
-          bookedTrips.length === 0 ? { flex: 1 } : styles.listContent
+          bookedTrips.length === 0
+            ? { flexGrow: 1, justifyContent: "center" }
+            : styles.listContent
         }
         ListEmptyComponent={renderEmptyState}
         showsVerticalScrollIndicator={false}
@@ -417,7 +419,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   center: {
-    flex: 1,
+    // flex: 1, // Removed to rely on parent centering
     justifyContent: "center",
     alignItems: "center",
     padding: 32,

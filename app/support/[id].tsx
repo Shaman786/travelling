@@ -177,7 +177,6 @@ export default function TicketDetailsScreen() {
   const statusColor = STATUS_COLORS[ticket.status] || theme.colors.primary;
   const renderMessage = ({ item }: { item: TicketMessage }) => {
     const isMe = item.senderId === user?.$id;
-    const isAdmin = item.isAdmin;
 
     return (
       <View

@@ -37,6 +37,7 @@ export const TABLES = {
   MESSAGES: "ticket_messages",
   ADDONS: "addons",
   BANNERS: "banners",
+  CONSULTATIONS: "consultations",
 };
 
 export const BUCKETS = {

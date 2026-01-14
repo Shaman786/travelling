@@ -45,9 +45,9 @@ export default function SignupScreen() {
     try {
       const success = await signup(email, password, name);
       if (success) {
-        // Account created and verification email sent
-        // Move to OTP verification step
-        setStep("verify");
+        // Account created and auto-logged in
+        Toast.success("Welcome to Travelling!");
+        router.replace("/(tabs)");
       }
     } catch (err: any) {
       setError(err.message || "Failed to create account");

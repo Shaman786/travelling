@@ -25,6 +25,8 @@ export const TABLES = {
   SYSTEM_CONFIG: "system_config",
   MESSAGES: "ticket_messages",
   ADDONS: "addons",
+  CONSULTATIONS: "consultations",
+  BANNERS: "banners",
 };
 
 export const BUCKETS = {
