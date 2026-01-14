@@ -1,12 +1,11 @@
 import * as LocalAuthentication from "expo-local-authentication";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 export function useBiometrics() {
   const [isCompatible, setIsCompatible] = useState(false);
   const [isEnrolled, setIsEnrolled] = useState(false);
-  const [biometricType, setBiometricType] = useState<
-    LocalAuthentication.AuthenticationType | null
-  >(null);
+  const [biometricType, setBiometricType] =
+    useState<LocalAuthentication.AuthenticationType | null>(null);
 
   useEffect(() => {
     checkHardware();
@@ -23,9 +22,17 @@ export function useBiometrics() {
 
         const types =
           await LocalAuthentication.supportedAuthenticationTypesAsync();
-        if (types.includes(LocalAuthentication.AuthenticationType.FACIAL_RECOGNITION)) {
-          setBiometricType(LocalAuthentication.AuthenticationType.FACIAL_RECOGNITION);
-        } else if (types.includes(LocalAuthentication.AuthenticationType.FINGERPRINT)) {
+        if (
+          types.includes(
+            LocalAuthentication.AuthenticationType.FACIAL_RECOGNITION
+          )
+        ) {
+          setBiometricType(
+            LocalAuthentication.AuthenticationType.FACIAL_RECOGNITION
+          );
+        } else if (
+          types.includes(LocalAuthentication.AuthenticationType.FINGERPRINT)
+        ) {
           setBiometricType(LocalAuthentication.AuthenticationType.FINGERPRINT);
         }
       }
@@ -34,7 +41,7 @@ export function useBiometrics() {
     }
   };
 
-  const authenticate = async () => {
+  const authenticate = useCallback(async () => {
     try {
       const result = await LocalAuthentication.authenticateAsync({
         promptMessage: "Login to Travelling",
@@ -45,7 +52,7 @@ export function useBiometrics() {
       console.error("Biometric auth failed", e);
       return false;
     }
-  };
+  }, []);
 
   return { isCompatible, isEnrolled, biometricType, authenticate };
 }
