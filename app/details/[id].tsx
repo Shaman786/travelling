@@ -217,54 +217,72 @@ export default function PackageDetailsScreen() {
         <View style={styles.contentContainer}>
           {/* Trust & Urgency Banner */}
           <Surface style={styles.trustBanner} elevation={0}>
-            <View
-              style={{ flexDirection: "row", alignItems: "center", gap: 8 }}
-            >
-              <MaterialCommunityIcons name="eye" size={16} color="#E11D48" />
+            <View style={styles.trustHeader}>
+              <View
+                style={[
+                  styles.viewersBadge,
+                  { backgroundColor: theme.colors.errorContainer },
+                ]}
+              >
+                <MaterialCommunityIcons
+                  name="eye"
+                  size={14}
+                  color={theme.colors.error}
+                />
+                <Text
+                  variant="labelSmall"
+                  style={{
+                    color: theme.colors.error,
+                    fontWeight: "bold",
+                    marginLeft: 4,
+                  }}
+                >
+                  {viewers} viewing now
+                </Text>
+              </View>
               <Text
                 variant="labelSmall"
-                style={{ color: "#E11D48", fontWeight: "bold" }}
+                style={{ color: theme.colors.outline }}
               >
-                {viewers} people are viewing this trip right now
+                Popular choice!
               </Text>
             </View>
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                marginTop: 8,
-                gap: 8,
-              }}
-            >
+
+            <View style={styles.trustBadgesRow}>
               <View style={styles.badge}>
                 <MaterialCommunityIcons
                   name="check-decagram"
-                  size={14}
-                  color="#059669"
+                  size={16}
+                  color={theme.colors.primary}
                 />
                 <Text
+                  variant="labelSmall"
                   style={{
-                    fontSize: 12,
-                    color: "#059669",
+                    color: theme.colors.primary,
                     fontWeight: "bold",
-                    marginLeft: 4,
+                    marginLeft: 6,
                   }}
                 >
                   Free Cancellation
                 </Text>
               </View>
-              <View style={[styles.badge, { backgroundColor: "#EFF6FF" }]}>
+              <View
+                style={[
+                  styles.badge,
+                  { backgroundColor: theme.colors.secondaryContainer },
+                ]}
+              >
                 <MaterialCommunityIcons
                   name="shield-check"
-                  size={14}
-                  color="#2563EB"
+                  size={16}
+                  color={theme.colors.secondary}
                 />
                 <Text
+                  variant="labelSmall"
                   style={{
-                    fontSize: 12,
-                    color: "#2563EB",
+                    color: theme.colors.secondary,
                     fontWeight: "bold",
-                    marginLeft: 4,
+                    marginLeft: 6,
                   }}
                 >
                   Best Price Guaranteed
@@ -669,19 +687,42 @@ const styles = StyleSheet.create({
     height: "100%",
   },
   trustBanner: {
-    marginBottom: 20,
-    backgroundColor: "#FFF1F2",
-    padding: 12,
-    borderRadius: 12,
+    marginBottom: 24,
+    backgroundColor: "#fff",
+    padding: 16,
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: "#FECDD3",
+    borderColor: "#f0f0f0",
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+  },
+  trustHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  viewersBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  trustBadgesRow: {
+    flexDirection: "row",
+    gap: 8,
   },
   badge: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#ECFDF5",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
+    backgroundColor: "#F0Fdf4", // Light green
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "rgba(0,0,0,0.05)",
   },
 });

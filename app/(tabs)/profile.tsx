@@ -1,3 +1,4 @@
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import * as DocumentPicker from "expo-document-picker";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
@@ -6,7 +7,6 @@ import { Linking, ScrollView, StyleSheet, View } from "react-native";
 import {
   Avatar,
   Button,
-  Card,
   Divider,
   IconButton,
   List,
@@ -106,26 +106,43 @@ export default function ProfileScreen() {
 
         <View style={styles.sectionContainer}>
           {/* Travel Vault */}
-          <Card style={styles.card} mode="elevated">
-            <Card.Title
-              title={t("travel_vault")}
-              subtitle={t("store_docs_subtitle")}
-              left={(props) => (
-                <Avatar.Icon
-                  {...props}
-                  icon="safe"
-                  style={{ backgroundColor: theme.colors.primary }}
-                />
-              )}
-            />
-            <Card.Content>
-              {documents.length === 0 ? (
-                <Text variant="bodySmall" style={styles.emptyText}>
-                  {t("no_docs")}
+          <Surface style={styles.card} elevation={2}>
+            <View style={styles.cardHeader}>
+              <Avatar.Icon
+                size={48}
+                icon="safe"
+                style={{ backgroundColor: theme.colors.primaryContainer }}
+                color={theme.colors.primary}
+              />
+              <View style={{ marginLeft: 16 }}>
+                <Text variant="titleMedium" style={{ fontWeight: "bold" }}>
+                  {t("travel_vault")}
                 </Text>
+                <Text
+                  variant="bodySmall"
+                  style={{ color: theme.colors.outline }}
+                >
+                  {t("store_docs_subtitle") ??
+                    "Secure your important documents"}
+                </Text>
+              </View>
+            </View>
+
+            <View style={styles.cardContent}>
+              {documents.length === 0 ? (
+                <View style={styles.emptyState}>
+                  <MaterialCommunityIcons
+                    name="file-document-outline"
+                    size={40}
+                    color={theme.colors.outlineVariant}
+                  />
+                  <Text variant="bodySmall" style={styles.emptyText}>
+                    {t("no_docs")}
+                  </Text>
+                </View>
               ) : (
                 documents.map((doc, idx) => (
-                  <View key={idx} style={styles.docItem}>
+                  <Surface key={idx} style={styles.docItem} elevation={0}>
                     <List.Icon
                       icon="file-document-outline"
                       color={theme.colors.secondary}
@@ -137,39 +154,49 @@ export default function ProfileScreen() {
                     >
                       {doc.name}
                     </Text>
-                  </View>
+                  </Surface>
                 ))
               )}
               <Button
-                mode="outlined"
+                mode="contained"
                 onPress={handleUpload}
                 icon="cloud-upload"
                 style={styles.actionBtn}
+                contentStyle={{ height: 44 }}
               >
                 {t("upload_doc")}
               </Button>
-            </Card.Content>
-          </Card>
+            </View>
+          </Surface>
 
           {/* Expert Support */}
-          <Card style={[styles.card, { marginTop: 16 }]} mode="elevated">
-            <Card.Content style={styles.supportContent}>
+          <Surface style={[styles.card, { marginTop: 16 }]} elevation={2}>
+            <View style={styles.supportContent}>
               <View style={{ flex: 1 }}>
-                <Text variant="titleMedium" style={{ fontWeight: "bold" }}>
+                <Text
+                  variant="titleMedium"
+                  style={{ fontWeight: "bold", marginBottom: 4 }}
+                >
                   {t("support")}
                 </Text>
-                <Text variant="bodySmall">{t("chat_expert_subtitle")}</Text>
+                <Text
+                  variant="bodySmall"
+                  style={{ color: theme.colors.outline }}
+                >
+                  {t("chat_expert_subtitle") ??
+                    "Need help? Chat with an expert instantly."}
+                </Text>
               </View>
               <IconButton
                 icon="whatsapp"
                 mode="contained"
                 containerColor="#25D366"
                 iconColor="#fff"
-                size={30}
+                size={28}
                 onPress={openWhatsApp}
               />
-            </Card.Content>
-          </Card>
+            </View>
+          </Surface>
 
           {/* Account Actions */}
           <Surface style={styles.menuContainer} elevation={0}>
@@ -257,12 +284,31 @@ const styles = StyleSheet.create({
   },
   card: {
     backgroundColor: "#fff",
+    borderRadius: 16,
+    overflow: "hidden",
+    padding: 16,
+  },
+  cardHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  cardContent: {
+    gap: 8,
+  },
+  emptyState: {
+    alignItems: "center",
+    padding: 16,
+    backgroundColor: "#f9f9f9",
     borderRadius: 12,
+    borderStyle: "dashed",
+    borderWidth: 1,
+    borderColor: "#e0e0e0",
+    marginBottom: 12,
   },
   emptyText: {
     color: "#999",
-    fontStyle: "italic",
-    marginBottom: 10,
+    marginTop: 8,
     textAlign: "center",
   },
   docItem: {
@@ -271,15 +317,16 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     backgroundColor: "#F5F7FA",
     padding: 8,
-    borderRadius: 8,
+    borderRadius: 12,
   },
   docName: {
     marginLeft: 8,
     flex: 1,
+    fontWeight: "500",
   },
   actionBtn: {
-    marginTop: 10,
-    borderColor: "#0056D2",
+    marginTop: 8,
+    borderRadius: 12,
   },
   supportContent: {
     flexDirection: "row",
