@@ -33,9 +33,7 @@ import databaseService from "../../src/lib/databaseService";
 import { PackageFilters, TravelPackage } from "../../src/types";
 
 // Public Token for Mapbox (Client-side)
-Mapbox.setAccessToken(
-  "pk.eyJ1IjoiZmF5YWphIiwiYSI6ImNtNXdlY2w0bjAwM3gyanB4eHM1ZzIzaTMifQ.-3a5_XbEbC2eD_6hM6iWwA"
-);
+Mapbox.setAccessToken(process.env.EXPO_PUBLIC_MAPBOX_PUBLIC_KEY || "");
 
 // Simple Debounce Hook
 function useDebounce<T>(value: T, delay: number): T {
