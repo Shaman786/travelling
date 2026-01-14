@@ -1,5 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 const HISTORY_KEY = "search_history";
 const MAX_HISTORY = 5;
@@ -22,29 +22,35 @@ export const useSearch = () => {
     }
   };
 
-  const addToHistory = async (term: string) => {
+  const addToHistory = useCallback(async (term: string) => {
     if (!term.trim()) return;
     try {
-      const newHistory = [
-        term,
-        ...history.filter((h) => h !== term),
-      ].slice(0, MAX_HISTORY);
-      
-      setHistory(newHistory);
-      await AsyncStorage.setItem(HISTORY_KEY, JSON.stringify(newHistory));
-    } catch (e) {
-      console.error("Failed to save search history", e);
-    }
-  };
+      // Use functional state update to access latest history without dependency
+      setHistory((prevHistory) => {
+        const newHistory = [
+          term,
+          ...prevHistory.filter((h) => h !== term),
+        ].slice(0, MAX_HISTORY);
 
-  const clearHistory = async () => {
+        AsyncStorage.setItem(HISTORY_KEY, JSON.stringify(newHistory)).catch(
+          (e) => console.error("Failed to save search history", e)
+        );
+
+        return newHistory;
+      });
+    } catch (e) {
+      console.error("Failed to update history", e);
+    }
+  }, []);
+
+  const clearHistory = useCallback(async () => {
     try {
       setHistory([]);
       await AsyncStorage.removeItem(HISTORY_KEY);
     } catch (e) {
       console.error("Failed to clear search history", e);
     }
-  };
+  }, []);
 
   return { history, addToHistory, clearHistory };
 };
