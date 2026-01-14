@@ -77,7 +77,7 @@ export default function ExpertiseShowcase() {
                   style={{ backgroundColor: "transparent" }}
                 />
               </View>
-              <View>
+              <View style={{ flex: 1 }}>
                 <Text variant="titleSmall" style={{ fontWeight: "bold" }}>
                   {item.title}
                 </Text>
@@ -112,7 +112,7 @@ const styles = StyleSheet.create({
     paddingRight: 8,
   },
   card: {
-    width: 180,
+    width: 200,
     marginRight: 12,
   },
   cardContent: {
