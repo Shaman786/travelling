@@ -96,6 +96,12 @@ export default function SearchScreen() {
     [setOpenDate, setRange]
   );
 
+  // Ref for addToHistory to avoid dependency cycles
+  const addToHistoryRef = React.useRef(addToHistory);
+  useEffect(() => {
+    addToHistoryRef.current = addToHistory;
+  }, [addToHistory]);
+
   const performSearch = useCallback(async () => {
     setIsLoading(true);
     try {
@@ -103,12 +109,11 @@ export default function SearchScreen() {
 
       // 1. If we have a query, use the robust Search (Title OR Dest)
       if (debouncedQuery.trim().length > 0) {
-        // Save to history
-        addToHistory(debouncedQuery);
+        // Save to history using Ref
+        addToHistoryRef.current(debouncedQuery);
 
         data = await databaseService.packages.searchPackages(debouncedQuery);
-
-        // 2. Client-side filtering for search results
+        // ... filtering logic ...
         if (filters.category && filters.category !== "all") {
           data = data.filter(
             (p) => p.category.toLowerCase() === filters.category!.toLowerCase()
@@ -125,8 +130,6 @@ export default function SearchScreen() {
         }
       } else {
         // 3. No query? Just use standard browse with filters
-        // Note: We typically don't show "All Packages" in search unless filters are active
-        // If query is empty and filters are default, show History instead.
         const hasFilters = Object.keys(filters).some(
           (k) => filters[k as keyof PackageFilters] !== undefined
         );
@@ -138,7 +141,6 @@ export default function SearchScreen() {
           );
           data = response.documents;
         } else {
-          // Empty query, no filters -> Empty results (Show History)
           data = [];
         }
       }
@@ -149,10 +151,14 @@ export default function SearchScreen() {
     } finally {
       setIsLoading(false);
     }
-  }, [debouncedQuery, filters, addToHistory]);
+  }, [debouncedQuery, filters]);
 
   // Trigger search when Debounced Query or Filters change
   useEffect(() => {
+    console.log("SearchScreen: performSearch effect triggered", {
+      query: debouncedQuery,
+      filters,
+    });
     performSearch();
   }, [performSearch]);
 

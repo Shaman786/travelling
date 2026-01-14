@@ -13,17 +13,17 @@ import {
 } from "node-appwrite";
 import path from "path";
 
-// Load environment variables from .env.local
-dotenv.config({ path: path.resolve(process.cwd(), ".env.local") });
+// Load environment variables from .env
+dotenv.config({ path: path.resolve(process.cwd(), ".env") });
 
 // 1. Environment Configuration
 const ENDPOINT =
-  process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT || "https://cloud.appwrite.io/v1";
-const PROJECT_ID = process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID;
+  process.env.EXPO_PUBLIC_APPWRITE_ENDPOINT || "https://cloud.appwrite.io/v1";
+const PROJECT_ID = process.env.EXPO_PUBLIC_APPWRITE_PROJECT_ID;
 const API_KEY =
   process.env.APPWRITE_API_KEY || process.env.NEXT_PUBLIC_APPWRITE_API_KEY;
 const DATABASE_ID =
-  process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID || "travelling_db";
+  process.env.EXPO_PUBLIC_APPWRITE_DATABASE_ID || "travelling_db";
 
 if (!API_KEY || !PROJECT_ID) {
   console.error("❌ Error: Missing required env vars.");
@@ -383,6 +383,24 @@ const COLLECTIONS: any = {
     ],
     indexes: [{ key: "config_key", type: "unique", attributes: ["key"] }],
   },
+  banners: {
+    name: "Banners",
+    documentSecurity: false,
+    permissions: [
+      Permission.read(Role.any()),
+      Permission.write(Role.team(TEAM_NAME)),
+    ],
+    attributes: [
+      { key: "title", type: "string", size: 128, required: true },
+      { key: "subtitle", type: "string", size: 128, required: false },
+      { key: "imageUrl", type: "string", size: 1024, required: true },
+      { key: "ctaText", type: "string", size: 64, required: false },
+      { key: "ctaLink", type: "string", size: 1024, required: false },
+      { key: "sortOrder", type: "integer", required: true },
+      { key: "isActive", type: "boolean", required: false, default: true },
+    ],
+    indexes: [{ key: "sort_order", type: "key", attributes: ["sortOrder"] }],
+  },
 };
 
 const BUCKETS = [
@@ -586,6 +604,11 @@ async function init() {
     ];
     // System Config
     COLLECTIONS.system_config.permissions = [
+      Permission.read(Role.any()),
+      Permission.write(adminRole),
+    ];
+    // Banners
+    COLLECTIONS.banners.permissions = [
       Permission.read(Role.any()),
       Permission.write(adminRole),
     ];

@@ -1,5 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 const HISTORY_KEY = "search_history";
 const MAX_HISTORY = 5;
@@ -52,5 +52,10 @@ export const useSearch = () => {
     }
   }, []);
 
-  return { history, addToHistory, clearHistory };
+  const contextValue = useMemo(
+    () => ({ history, addToHistory, clearHistory }),
+    [history, addToHistory, clearHistory]
+  );
+
+  return contextValue;
 };

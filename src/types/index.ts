@@ -257,3 +257,14 @@ export interface PackageFilters {
   ids?: string[];
   sortBy?: "price_asc" | "price_desc" | "rating" | "newest";
 }
+
+// ============ Banner Types ============
+export interface Banner extends Models.Document {
+  title: string;
+  subtitle?: string;
+  imageUrl: string;
+  ctaText?: string;
+  ctaLink?: string;
+  sortOrder: number;
+  isActive: boolean;
+}

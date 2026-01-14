@@ -1340,4 +1340,5 @@ export default {
   reviews: reviewService,
   payments: paymentService,
   addons: addonService,
+  banners: bannerService,
 };

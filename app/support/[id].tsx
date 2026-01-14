@@ -18,9 +18,7 @@ import {
 import {
   ActivityIndicator,
   Button,
-  Card,
   Chip,
-  Divider,
   IconButton,
   Surface,
   Text,
@@ -173,8 +171,9 @@ export default function TicketDetailsScreen() {
     );
   }
 
-  const statusColor = STATUS_COLORS[ticket.status] || theme.colors.primary;
-
+  /*
+   * UI: Modern Chat Interface
+   */
   const renderMessage = ({ item }: { item: TicketMessage }) => {
     const isMe = item.senderId === user?.$id;
     const isAdmin = item.isAdmin;
@@ -183,51 +182,60 @@ export default function TicketDetailsScreen() {
       <View
         style={[
           styles.messageRow,
-          isMe ? styles.messageRight : styles.messageLeft,
+          isMe ? styles.messageRowRight : styles.messageRowLeft,
         ]}
       >
         {!isMe && (
-          <View
+          <Surface
             style={[
-              styles.avatar,
-              { backgroundColor: isAdmin ? theme.colors.primary : "#ccc" },
+              styles.avatarContainer,
+              { backgroundColor: theme.colors.primary },
             ]}
+            elevation={1}
           >
-            <MaterialCommunityIcons
-              name={isAdmin ? "shield-account" : "account"}
-              size={16}
-              color="#fff"
-            />
-          </View>
+            <MaterialCommunityIcons name="face-agent" size={20} color="#fff" />
+          </Surface>
         )}
 
         <View
           style={[
-            styles.messageBubble,
+            styles.bubble,
             isMe
-              ? { backgroundColor: theme.colors.primaryContainer }
-              : { backgroundColor: theme.colors.surfaceVariant },
+              ? [styles.bubbleRight, { backgroundColor: theme.colors.primary }]
+              : [
+                  styles.bubbleLeft,
+                  { backgroundColor: theme.colors.surfaceVariant },
+                ],
           ]}
         >
           {!isMe && (
             <Text
               variant="labelSmall"
-              style={{ marginBottom: 4, color: theme.colors.primary }}
+              style={{
+                color: theme.colors.primary,
+                marginBottom: 2,
+                fontWeight: "bold",
+              }}
             >
-              {item.senderName} {isAdmin && "(Support)"}
+              {item.senderName || "Support"}
             </Text>
           )}
-          <Text variant="bodyMedium">{item.message}</Text>
+          <Text
+            variant="bodyMedium"
+            style={{ color: isMe ? "#fff" : theme.colors.onSurfaceVariant }}
+          >
+            {item.message}
+          </Text>
           <Text
             variant="labelSmall"
             style={{
               marginTop: 4,
               fontSize: 10,
-              color: theme.colors.outline,
+              color: isMe ? "rgba(255,255,255,0.7)" : theme.colors.outline,
               alignSelf: "flex-end",
             }}
           >
-            {format(new Date(item.createdAt), "MMM dd, HH:mm")}
+            {format(new Date(item.createdAt), "HH:mm")}
           </Text>
         </View>
       </View>
@@ -237,39 +245,54 @@ export default function TicketDetailsScreen() {
   return (
     <SafeAreaView
       style={[styles.container, { backgroundColor: theme.colors.background }]}
+      edges={["top", "left", "right"]} // Don't handle bottom here, KeyboardAvoidingView does it
     >
       <Stack.Screen
-        options={{ title: `Ticket #${ticket.$id.substring(0, 8)}` }}
+        options={{
+          title: "Support Chat",
+          headerStyle: { backgroundColor: theme.colors.surface },
+          headerShadowVisible: false,
+        }}
       />
 
       <Surface style={styles.header} elevation={1}>
-        <View style={styles.headerTop}>
-          <Text variant="titleMedium" style={styles.subject}>
-            {ticket.subject}
-          </Text>
+        <View style={styles.headerRow}>
+          <View style={{ flex: 1 }}>
+            <Text
+              variant="titleMedium"
+              numberOfLines={1}
+              style={styles.headerTitle}
+            >
+              {ticket.subject}
+            </Text>
+            <Text variant="bodySmall" style={{ color: theme.colors.outline }}>
+              Ticket #{ticket.$id.substring(0, 8)} •{" "}
+              {format(new Date(ticket.createdAt), "MMM dd")}
+            </Text>
+          </View>
           <Chip
-            style={{ backgroundColor: statusColor + "20" }}
-            textStyle={{ color: statusColor, fontSize: 11, fontWeight: "bold" }}
+            style={{ backgroundColor: statusColor + "15", borderRadius: 8 }}
+            textStyle={{ color: statusColor, fontSize: 12, fontWeight: "700" }}
+            compact
           >
             {ticket.status.toUpperCase().replace("_", " ")}
           </Chip>
         </View>
-        <View style={styles.headerBottom}>
-          <Text variant="bodySmall" style={{ color: theme.colors.outline }}>
-            {ticket.category} •{" "}
-            {format(new Date(ticket.createdAt), "MMM dd, yyyy")}
-          </Text>
-          {ticket.status !== "closed" && (
-            <Button
-              mode="text"
-              compact
-              textColor={theme.colors.error}
-              onPress={handleCloseTicket}
-            >
-              Close Ticket
-            </Button>
-          )}
-        </View>
+        {ticket.status !== "closed" && (
+          <Button
+            mode="text"
+            textColor={theme.colors.error}
+            compact
+            onPress={handleCloseTicket}
+            contentStyle={{
+              justifyContent: "flex-start",
+              paddingLeft: 0,
+              marginLeft: -8,
+            }}
+          >
+            Mark as Resolved
+          </Button>
+        )}
       </Surface>
 
       <FlatList
@@ -279,37 +302,50 @@ export default function TicketDetailsScreen() {
         keyExtractor={(item) => item.$id}
         contentContainerStyle={styles.listContent}
         ListHeaderComponent={() => (
-          <View style={styles.initialMessage}>
+          <View style={styles.systemMessage}>
             <Text
               variant="bodySmall"
-              style={{ textAlign: "center", color: theme.colors.outline }}
+              style={{
+                color: theme.colors.outline,
+                textAlign: "center",
+                marginBottom: 8,
+              }}
             >
-              Ticket created with message:
+              You started this conversation
             </Text>
-            <Card style={styles.initialCard}>
-              <Card.Content>
-                <Text variant="bodyMedium">{ticket.message}</Text>
-              </Card.Content>
-            </Card>
-            <Divider style={{ marginVertical: 16 }} />
+            <Surface style={styles.originalReq} elevation={0}>
+              <Text
+                variant="bodyMedium"
+                style={{ fontStyle: "italic", color: theme.colors.secondary }}
+              >
+                &quot;{ticket.message}&quot;
+              </Text>
+            </Surface>
           </View>
         )}
       />
 
-      {ticket.status !== "closed" ? (
-        <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : undefined}
-          keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0}
-        >
-          <Surface style={styles.inputContainer} elevation={4}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
+        style={{ backgroundColor: theme.colors.surface }}
+      >
+        {ticket.status !== "closed" ? (
+          <View style={styles.inputBar}>
             <TextInput
               mode="outlined"
-              placeholder="Type your reply..."
+              placeholder="Type your message..."
               value={replyText}
               onChangeText={setReplyText}
               style={styles.input}
               multiline
               dense
+              contentStyle={{ paddingTop: 8, paddingBottom: 8 }}
+              outlineStyle={{ borderRadius: 24, borderWidth: 0 }}
+              placeholderTextColor={theme.colors.outline}
+              right={
+                <TextInput.Icon icon="paperclip" color={theme.colors.outline} />
+              }
             />
             <IconButton
               icon="send"
@@ -320,24 +356,33 @@ export default function TicketDetailsScreen() {
               onPress={handleSendReply}
               loading={isSending}
               disabled={isSending || !replyText.trim()}
+              style={styles.sendButton}
             />
-          </Surface>
-        </KeyboardAvoidingView>
-      ) : (
-        <View style={styles.closedContainer}>
-          <MaterialCommunityIcons
-            name="lock"
-            size={20}
-            color={theme.colors.outline}
-          />
-          <Text
-            variant="bodyMedium"
-            style={{ marginLeft: 8, color: theme.colors.outline }}
-          >
-            This ticket is closed.
-          </Text>
-        </View>
-      )}
+          </View>
+        ) : (
+          <View style={styles.closedFooter}>
+            <MaterialCommunityIcons
+              name="check-circle-outline"
+              size={20}
+              color={theme.colors.secondary}
+            />
+            <Text
+              variant="bodyMedium"
+              style={{
+                marginLeft: 8,
+                color: theme.colors.secondary,
+                fontWeight: "500",
+              }}
+            >
+              This conversation has been resolved.
+            </Text>
+          </View>
+        )}
+      </KeyboardAvoidingView>
+      <SafeAreaView
+        edges={["bottom"]}
+        style={{ backgroundColor: theme.colors.surface }}
+      />
     </SafeAreaView>
   );
 }
@@ -361,77 +406,88 @@ const styles = StyleSheet.create({
     padding: 16,
     backgroundColor: "#fff",
     borderBottomWidth: 1,
-    borderBottomColor: "#eee",
+    borderBottomColor: "#f0f0f0",
   },
-  headerTop: {
+  headerRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
-    marginBottom: 4,
   },
-  headerBottom: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  subject: {
-    flex: 1,
+  headerTitle: {
     fontWeight: "bold",
-    marginRight: 12,
+    marginBottom: 2,
   },
   listContent: {
     padding: 16,
     paddingBottom: 24,
   },
-  initialMessage: {
-    marginBottom: 8,
+  systemMessage: {
+    alignItems: "center",
+    marginVertical: 16,
   },
-  initialCard: {
-    marginTop: 8,
-    backgroundColor: "#f9f9f9",
+  originalReq: {
+    padding: 12,
+    backgroundColor: "#f5f5f5",
+    borderRadius: 12,
+    maxWidth: "90%",
   },
   messageRow: {
     flexDirection: "row",
-    marginBottom: 16,
-    maxWidth: "80%",
+    marginBottom: 12,
+    alignItems: "flex-end",
   },
-  messageLeft: {
+  messageRowLeft: {
     alignSelf: "flex-start",
   },
-  messageRight: {
+  messageRowRight: {
     alignSelf: "flex-end",
     flexDirection: "row-reverse",
   },
-  avatar: {
+  avatarContainer: {
     width: 32,
     height: 32,
     borderRadius: 16,
     justifyContent: "center",
     alignItems: "center",
     marginRight: 8,
-    marginLeft: 0,
   },
-  messageBubble: {
+  bubble: {
     padding: 12,
-    borderRadius: 12,
-    maxWidth: "100%",
+    maxWidth: "75%",
+    borderRadius: 20,
   },
-  inputContainer: {
-    padding: 12,
+  bubbleLeft: {
+    borderBottomLeftRadius: 4,
+  },
+  bubbleRight: {
+    borderBottomRightRadius: 4,
+  },
+  inputBar: {
     flexDirection: "row",
     alignItems: "center",
+    padding: 12,
+    paddingHorizontal: 16,
+    borderTopWidth: 1,
+    borderTopColor: "#f0f0f0",
     backgroundColor: "#fff",
+    gap: 8,
   },
   input: {
     flex: 1,
-    marginRight: 8,
+    backgroundColor: "#f5f5f5",
     maxHeight: 100,
+    borderRadius: 24,
   },
-  closedContainer: {
-    padding: 16,
+  sendButton: {
+    margin: 0,
+  },
+  closedFooter: {
+    padding: 20,
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#f5f5f5",
+    backgroundColor: "#f9f9f9",
+    borderTopWidth: 1,
+    borderTopColor: "#eee",
   },
 });

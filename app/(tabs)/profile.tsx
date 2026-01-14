@@ -29,7 +29,7 @@ export default function ProfileScreen() {
   const theme = useTheme();
   const router = useRouter();
   const { t, i18n } = useTranslation();
-  const { user } = useStore();
+  const user = useStore((state) => state.user);
   const { logout } = useAuth();
   const [documents, setDocuments] = useState<UploadedFile[]>([]);
 

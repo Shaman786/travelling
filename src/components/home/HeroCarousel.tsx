@@ -8,6 +8,7 @@ import {
   View,
 } from "react-native";
 import { Button, Text, useTheme } from "react-native-paper";
+import { useBanners } from "../../hooks/useBanners";
 
 const { width } = Dimensions.get("window");
 
@@ -42,12 +43,25 @@ export default function HeroCarousel() {
   const theme = useTheme();
   const flatListRef = useRef<FlatList>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const { banners, loading } = useBanners();
+
+  // Fallback data if no banners or loading
+  const data = (banners.length > 0 ? banners : CAROUSEL_DATA).map(
+    (item: any) => ({
+      id: item.$id || item.id,
+      title: item.title,
+      subtitle: item.subtitle,
+      image: item.imageUrl || item.image,
+      cta: item.ctaText || item.cta,
+    })
+  );
 
   // Auto-play
   useEffect(() => {
+    if (data.length === 0) return;
     const timer = setInterval(() => {
       let nextIndex = currentIndex + 1;
-      if (nextIndex >= CAROUSEL_DATA.length) {
+      if (nextIndex >= data.length) {
         nextIndex = 0;
       }
       flatListRef.current?.scrollToIndex({ index: nextIndex, animated: true });
@@ -55,9 +69,9 @@ export default function HeroCarousel() {
     }, 4000);
 
     return () => clearInterval(timer);
-  }, [currentIndex]);
+  }, [currentIndex, data.length]);
 
-  const renderItem = ({ item }: { item: (typeof CAROUSEL_DATA)[0] }) => (
+  const renderItem = ({ item }: { item: any }) => (
     <View style={styles.cardContainer}>
       <ImageBackground
         source={{ uri: item.image }}
@@ -107,19 +121,20 @@ export default function HeroCarousel() {
       />
       {/* Paginator */}
       <View style={styles.paginator}>
-        {CAROUSEL_DATA.map((_, index) => (
-          <View
-            key={index}
-            style={[
-              styles.dot,
-              {
-                backgroundColor:
-                  index === currentIndex ? theme.colors.primary : "#ccc",
-                width: index === currentIndex ? 20 : 8,
-              },
-            ]}
-          />
-        ))}
+        {data.length > 0 &&
+          data.map((_, index) => (
+            <View
+              key={index}
+              style={[
+                styles.dot,
+                {
+                  backgroundColor:
+                    index === currentIndex ? theme.colors.primary : "#ccc",
+                  width: index === currentIndex ? 20 : 8,
+                },
+              ]}
+            />
+          ))}
       </View>
     </View>
   );
