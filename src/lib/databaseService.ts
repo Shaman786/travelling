@@ -1331,6 +1331,32 @@ export const paymentService = {
   },
 };
 
+// ============ Banner Service ============
+
+export const bannerService = {
+  /**
+   * Get active banners sorted by sortOrder
+   */
+  async getBanners(): Promise<import("../types").Banner[]> {
+    try {
+      const response = await tables.listRows({
+        databaseId: DATABASE_ID,
+        tableId: TABLES.BANNERS,
+        queries: [Query.equal("isActive", true), Query.orderAsc("sortOrder")],
+      });
+
+      return response.rows.map((banner: any) => ({
+        ...banner,
+        createdAt: banner.$createdAt,
+        updatedAt: banner.$updatedAt,
+      })) as import("../types").Banner[];
+    } catch (error: any) {
+      console.error("Get banners error:", error);
+      return [];
+    }
+  },
+};
+
 export default {
   packages: packageService,
   bookings: bookingService,
