@@ -44,6 +44,7 @@ export const BUCKETS = {
   TRAVEL_DOCUMENTS: "travel_documents",
   PACKAGE_IMAGES: "package_images",
   AVATARS: "avatars",
+  CONSULTATION_ATTACHMENTS: "consultation_attachments",
 };
 
 // Function IDs

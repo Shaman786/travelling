@@ -1,8 +1,7 @@
 "use client";
 import {
-  BookingIcon,
-  GridIcon, // Using as package icon placeholder
-  UserIcon, // Using as user icon placeholder
+  BookingIcon, // Using as package icon placeholder
+  UserIcon,
 } from "@/icons";
 import { DATABASE_ID, databases, TABLES } from "@/lib/appwrite";
 import { Query } from "appwrite";
@@ -87,19 +86,13 @@ export default function Home() {
           TABLES.USERS,
           [
             Query.greaterThanEqual("$createdAt", sixtyDaysAgo.toISOString()),
-            Query.limit(100), // Adjust based on expected volume or just use total for main stat and sample for trend
+            Query.limit(100),
           ],
         );
-        // For total count we need a separate query if we want *all* time, but listDocuments returns 'total'.
-        // To save read quotas, we usually do one query. But standard list returns total.
-        // We need total count AND trend. valid strategy:
-        // A. Get Total (limit 0) -> Stats.totalUsers
-        // B. Get Recent (limit 100, > 60d) -> Compute Trend.
-        // Let's do B for trend, and A for total.
         const usersTotalRes = await databases.listDocuments(
           DATABASE_ID,
           TABLES.USERS,
-          [Query.limit(1)], // limit(0) is invalid, use 1 and rely on .total
+          [Query.limit(1)],
         );
 
         // 3. Bookings (Last 60 Days for Revenue & Trend)
@@ -112,11 +105,17 @@ export default function Home() {
             Query.orderDesc("$createdAt"),
           ],
         );
-        // Total bookings count
         const bookingsTotalRes = await databases.listDocuments(
           DATABASE_ID,
           TABLES.BOOKINGS,
-          [Query.limit(1)], // limit(0) is invalid, use 1 and rely on .total
+          [Query.limit(1)],
+        );
+
+        // 4. Consultations (New)
+        const consultationsRes = await databases.listDocuments(
+          DATABASE_ID,
+          TABLES.CONSULTATIONS,
+          [Query.equal("status", "new"), Query.limit(1)],
         );
 
         // --- Calculate Trends ---
@@ -161,11 +160,7 @@ export default function Home() {
         const totalRevenue = confirmedBookings.reduce(
           (acc: number, b: any) => acc + (b.totalPrice || 0),
           0,
-        ); // Note: This is 60-day revenue. For TOTAL Lifetime revenue we need aggregation or separate query. Assuming "Total Revenue" on dashboard usually implies Lifetime. Implementation trade-off: calculating lifetime client-side is expensive. Let's use 60-day for now or rough estimate.
-        // BETTER: Fetch all confirmed bookings with limit(5000) for revenue if possible, or just accept this is "Recent Revenue".
-        // Let's stick to 60-day revenue for "Active" feel or if we can fetch total, we need a function.
-        // Workaround: We will use the fetched 60-day confirmed bookings for trend, but for the "Total Revenue" card verify if we can get a sum. Appwrite has no Sum API yet.
-        // We will display 60-Day Revenue for now as "Recent Revenue" or just Revenue.
+        );
 
         // Bookings Trend
         const bookingsTrend = calculateTrend(bookingsRes.documents);
@@ -174,10 +169,10 @@ export default function Home() {
         const usersTrend = calculateTrend(usersRes.documents);
 
         setStats({
-          totalRevenue: totalRevenue, // Displaying 60-day revenue to match trend context
+          totalRevenue: totalRevenue,
           totalBookings: bookingsTotalRes.total,
           totalUsers: usersTotalRes.total,
-          activePackages: packages.total,
+          pendingConsultations: consultationsRes.total,
           revenueTrend,
           bookingsTrend,
           usersTrend,
@@ -225,6 +220,14 @@ export default function Home() {
             trend={(stats as any).bookingsTrend}
           />
         </Link>
+        <Link href="/consultations">
+          <StatsCard
+            title="Pending Requests"
+            value={(stats as any).pendingConsultations || 0}
+            icon={<span className="text-xl font-bold">?</span>}
+            gradient="bg-gradient-to-br from-orange-500 to-rose-600"
+          />
+        </Link>
         <Link href="/users">
           <StatsCard
             title="Total Users"
@@ -232,14 +235,6 @@ export default function Home() {
             icon={<UserIcon className="h-6 w-6" />}
             gradient="bg-gradient-to-br from-violet-500 to-purple-600"
             trend={(stats as any).usersTrend}
-          />
-        </Link>
-        <Link href="/packages">
-          <StatsCard
-            title="Active Packages"
-            value={stats.activePackages}
-            icon={<GridIcon className="h-6 w-6" />}
-            gradient="bg-gradient-to-br from-orange-500 to-rose-600"
           />
         </Link>
       </div>

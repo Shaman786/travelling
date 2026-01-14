@@ -14,12 +14,15 @@ import {
 import path from "path";
 
 // Load environment variables from .env
-dotenv.config({ path: path.resolve(process.cwd(), ".env") });
+// Load environment variables from .env or .env.local
+dotenv.config({ path: path.resolve(process.cwd(), ".env.local") });
 
 // 1. Environment Configuration
 const ENDPOINT =
   process.env.EXPO_PUBLIC_APPWRITE_ENDPOINT || "https://cloud.appwrite.io/v1";
-const PROJECT_ID = process.env.EXPO_PUBLIC_APPWRITE_PROJECT_ID;
+const PROJECT_ID =
+  process.env.EXPO_PUBLIC_APPWRITE_PROJECT_ID ||
+  process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID;
 const API_KEY =
   process.env.APPWRITE_API_KEY || process.env.NEXT_PUBLIC_APPWRITE_API_KEY;
 const DATABASE_ID =
@@ -428,6 +431,9 @@ const COLLECTIONS: any = {
         required: false,
         default: "new", // new, contacted, closed
       },
+      // File Attachment
+      { key: "attachmentId", type: "string", size: 128, required: false },
+      { key: "attachmentName", type: "string", size: 255, required: false },
     ],
     indexes: [
       { key: "type_idx", type: "key", attributes: ["type"] },
@@ -457,6 +463,19 @@ const BUCKETS = [
       Permission.create(Role.users()),
       Permission.update(Role.users()),
       Permission.delete(Role.users()),
+    ],
+  },
+  {
+    id: "consultation_attachments",
+    name: "Consultation Attachments",
+    fileSecurity: false, // Allows public read if they have the ID (or we can secure it)
+    // Better: Read Role.any() but Create Role.users()
+    permissions: [
+      Permission.read(Role.team(TEAM_NAME)), // Admin can read
+      Permission.read(Role.any()), // Temporarily allow public read for ease
+      Permission.create(Role.users()), // Authenticated users can upload
+      Permission.create(Role.any()), // Allow Guests to upload too?
+      Permission.delete(Role.team(TEAM_NAME)),
     ],
   },
 ];

@@ -6,12 +6,16 @@
 
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { useCallback, useState } from "react";
-import { ScrollView, StyleSheet, View } from "react-native";
+import React, { useCallback, useEffect, useState } from "react";
+import { ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
 import {
   Button,
+  Chip,
+  Dialog,
   Divider,
   HelperText,
+  List,
+  Portal,
   Surface,
   Switch,
   Text,
@@ -21,8 +25,9 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Toast } from "toastify-react-native";
 
+import databaseService from "../../../src/lib/databaseService";
 import { useStore } from "../../../src/store/useStore";
-import type { Traveler } from "../../../src/types";
+import type { SavedTraveler, Traveler } from "../../../src/types";
 
 export default function TravelerDetailsScreen() {
   const theme = useTheme();
@@ -31,6 +36,28 @@ export default function TravelerDetailsScreen() {
 
   const bookingDraft = useStore((state) => state.bookingDraft);
   const updateBookingDraft = useStore((state) => state.updateBookingDraft);
+  const user = useStore((state) => state.user);
+
+  // Saved Travelers State
+  const [savedTravelers, setSavedTravelers] = useState<SavedTraveler[]>([]);
+  const [isDialogVisible, setIsDialogVisible] = useState(false);
+  const [activeTravelerId, setActiveTravelerId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchSavedTravelers = async () => {
+      if (user?.$id) {
+        try {
+          const travelers = await databaseService.travelers.getUserTravelers(
+            user.$id
+          );
+          setSavedTravelers(travelers);
+        } catch (error) {
+          console.error("Failed to fetch saved travelers", error);
+        }
+      }
+    };
+    fetchSavedTravelers();
+  }, [user?.$id]);
 
   // Create initial travelers array based on counts
   const createInitialTravelers = (): Traveler[] => {
@@ -93,6 +120,28 @@ export default function TravelerDetailsScreen() {
     );
     // Clear error
     setErrors((prev) => ({ ...prev, [`${id}_${field}`]: "" }));
+  };
+
+  const handleOpenSavedDialog = (id: string) => {
+    setActiveTravelerId(id);
+    setIsDialogVisible(true);
+  };
+
+  const handleSelectSavedTraveler = (saved: SavedTraveler) => {
+    if (!activeTravelerId) return;
+
+    // Auto-fill
+    updateTraveler(activeTravelerId, "name", saved.name);
+    updateTraveler(activeTravelerId, "age", saved.age);
+    if (saved.passportNumber) {
+      updateTraveler(activeTravelerId, "passportNumber", saved.passportNumber);
+    }
+
+    // Auto-select gender implied? No field in booking form yet, but that's fine.
+
+    setIsDialogVisible(false);
+    setActiveTravelerId(null);
+    Toast.success("Traveler details loaded");
   };
 
   // Validate form
@@ -168,17 +217,29 @@ export default function TravelerDetailsScreen() {
   const renderTravelerForm = (traveler: Traveler, index: number) => (
     <Surface key={traveler.id} style={styles.travelerCard} elevation={1}>
       <View style={styles.travelerHeader}>
-        <MaterialCommunityIcons
-          name={getTravelerIcon(traveler.type) as any}
-          size={24}
-          color={theme.colors.primary}
-        />
-        <Text
-          variant="titleMedium"
-          style={{ marginLeft: 8, fontWeight: "bold" }}
-        >
-          {getTravelerLabel(traveler.type, index)}
-        </Text>
+        <View style={{ flexDirection: "row", alignItems: "center", flex: 1 }}>
+          <MaterialCommunityIcons
+            name={getTravelerIcon(traveler.type) as any}
+            size={24}
+            color={theme.colors.primary}
+          />
+          <Text
+            variant="titleMedium"
+            style={{ marginLeft: 8, fontWeight: "bold" }}
+          >
+            {getTravelerLabel(traveler.type, index)}
+          </Text>
+        </View>
+        {savedTravelers.length > 0 && (
+          <Chip
+            icon="account-arrow-left"
+            mode="outlined"
+            onPress={() => handleOpenSavedDialog(traveler.id)}
+            compact
+          >
+            Load Saved
+          </Chip>
+        )}
       </View>
 
       <TextInput
@@ -358,6 +419,62 @@ export default function TravelerDetailsScreen() {
           Review & Pay
         </Button>
       </Surface>
+
+      {/* Saved Travelers Dialog */}
+      <Portal>
+        <Dialog
+          visible={isDialogVisible}
+          onDismiss={() => setIsDialogVisible(false)}
+          style={{ maxHeight: "80%" }}
+        >
+          <Dialog.Title>Select Traveler</Dialog.Title>
+          <Dialog.ScrollArea style={{ paddingHorizontal: 0 }}>
+            <ScrollView
+              contentContainerStyle={{
+                paddingHorizontal: 24,
+                paddingBottom: 16,
+              }}
+            >
+              {savedTravelers.length === 0 ? (
+                <Text
+                  style={{
+                    textAlign: "center",
+                    fontStyle: "italic",
+                    marginVertical: 20,
+                  }}
+                >
+                  No saved travelers found.
+                </Text>
+              ) : (
+                savedTravelers.map((t) => (
+                  <TouchableOpacity
+                    key={t.$id}
+                    onPress={() => handleSelectSavedTraveler(t)}
+                  >
+                    <List.Item
+                      title={t.name}
+                      description={`${t.age} years • ${t.gender}`}
+                      left={(props) => <List.Icon {...props} icon="account" />}
+                    />
+                    <Divider />
+                  </TouchableOpacity>
+                ))
+              )}
+            </ScrollView>
+          </Dialog.ScrollArea>
+          <Dialog.Actions>
+            <Button onPress={() => setIsDialogVisible(false)}>Cancel</Button>
+            <Button
+              onPress={() => {
+                setIsDialogVisible(false);
+                router.push("/profile/travelers" as any);
+              }}
+            >
+              Add New
+            </Button>
+          </Dialog.Actions>
+        </Dialog>
+      </Portal>
     </SafeAreaView>
   );
 }

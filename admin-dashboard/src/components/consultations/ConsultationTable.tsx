@@ -118,6 +118,20 @@ export default function ConsultationTable({
                       {consultation.travelDates}
                     </div>
                   )}
+                  {/* Attachment Link */}
+                  {(consultation as any).attachmentId && (
+                    <div className="mt-1">
+                      <a
+                        href={`https://cloud.appwrite.io/v1/storage/buckets/consultation_attachments/files/${(consultation as any).attachmentId}/view?project=${process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-1 text-xs font-medium text-blue-500 hover:text-blue-600"
+                      >
+                        <span className="text-lg">📎</span>
+                        {(consultation as any).attachmentName || "Attachment"}
+                      </a>
+                    </div>
+                  )}
                 </td>
                 <td className="px-6 py-4 text-sm whitespace-nowrap text-gray-500 dark:text-gray-400">
                   {new Date(consultation.$createdAt).toLocaleDateString()}
@@ -145,6 +159,13 @@ export default function ConsultationTable({
                         Mark Contacted
                       </button>
                     )}
+                    {/* Send Email Action */}
+                    <a
+                      href={`mailto:${consultation.userEmail}?subject=Re: Your Consultation Request for ${consultation.destination || "Trip Planning"}&body=Hi ${consultation.userName},\n\nWe received your request for...`}
+                      className="rounded-lg bg-gray-100 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-200 dark:bg-white/10 dark:text-gray-300 dark:hover:bg-white/20"
+                    >
+                      Email
+                    </a>
                     {consultation.status === "contacted" && (
                       <button
                         onClick={() =>
