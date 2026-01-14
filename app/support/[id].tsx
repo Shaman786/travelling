@@ -174,6 +174,7 @@ export default function TicketDetailsScreen() {
   /*
    * UI: Modern Chat Interface
    */
+  const statusColor = STATUS_COLORS[ticket.status] || theme.colors.primary;
   const renderMessage = ({ item }: { item: TicketMessage }) => {
     const isMe = item.senderId === user?.$id;
     const isAdmin = item.isAdmin;
