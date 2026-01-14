@@ -1,79 +1,132 @@
 "use client";
+import Button from "@/components/ui/button/Button";
 import { ArrowRightIcon } from "@/icons";
 import { DATABASE_ID, databases, TABLES } from "@/lib/appwrite";
-import { format } from "date-fns";
+import { databaseService } from "@/lib/databaseService";
+import { Query } from "appwrite";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
-export default function TicketDetailPage() {
+export default function TicketDetailsPage() {
   const params = useParams();
   const router = useRouter();
   const id = params.id as string;
 
   const [ticket, setTicket] = useState<any>(null);
+  const [messages, setMessages] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [updating, setUpdating] = useState(false);
-  const [user, setUser] = useState<any>(null);
+  const [replyText, setReplyText] = useState("");
+  const [sending, setSending] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const fetchTicket = useCallback(async () => {
     try {
-      const data = await databases.getDocument(
+      const doc = await databases.getDocument(
         DATABASE_ID,
         (TABLES as any).TICKETS || "tickets",
         id,
       );
-      setTicket(data);
-
-      if (data.userId) {
-        try {
-          const u = await databases.getDocument(
-            DATABASE_ID,
-            TABLES.USERS,
-            data.userId,
-          );
-          setUser(u);
-        } catch {
-          console.log("User not found");
-        }
-      }
+      setTicket(doc);
     } catch (error) {
       console.error("Error fetching ticket:", error);
-      alert("Ticket not found");
+      alert("Failed to load ticket details.");
       router.push("/tickets");
-    } finally {
-      setLoading(false);
     }
   }, [id, router]);
 
-  useEffect(() => {
-    fetchTicket();
-  }, [fetchTicket]);
+  const fetchMessages = useCallback(async () => {
+    try {
+      const response = await databases.listDocuments(
+        DATABASE_ID,
+        (TABLES as any).MESSAGES || "ticket_messages",
+        [Query.equal("ticketId", id), Query.orderAsc("createdAt")],
+      );
+      setMessages(response.documents);
+    } catch (error) {
+      console.error("Error fetching messages:", error);
+    }
+  }, [id]);
 
-  const handleUpdate = async (field: string, value: string) => {
-    setUpdating(true);
+  const refreshData = useCallback(async () => {
+    await Promise.all([fetchTicket(), fetchMessages()]);
+    setLoading(false);
+  }, [fetchTicket, fetchMessages]);
+
+  useEffect(() => {
+    if (id) {
+      refreshData();
+      // Poll for new messages every 10 seconds
+      const interval = setInterval(fetchMessages, 10000);
+      return () => clearInterval(interval);
+    }
+  }, [id, refreshData, fetchMessages]);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  const handleSendReply = async () => {
+    if (!replyText.trim()) return;
+
+    setSending(true);
+    try {
+      // 1. Send Reply via Service
+      await databaseService.support.reply(
+        id,
+        replyText.trim(),
+        "admin",
+        "Support",
+        true,
+      );
+
+      // 2. Update Ticket Status if needed
+      if (ticket.status === "open") {
+        await databases.updateDocument(
+          DATABASE_ID,
+          (TABLES as any).TICKETS || "tickets",
+          id,
+          {
+            status: "in_progress",
+            updatedAt: new Date().toISOString(),
+          },
+        );
+        setTicket((prev: any) => ({ ...prev, status: "in_progress" }));
+      }
+
+      setReplyText("");
+      fetchMessages();
+    } catch (error) {
+      console.error("Error sending reply:", error);
+      alert("Failed to send reply.");
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const handleStatusChange = async (newStatus: string) => {
+    if (!confirm(`Change status to ${newStatus}?`)) return;
     try {
       await databases.updateDocument(
         DATABASE_ID,
         (TABLES as any).TICKETS || "tickets",
         id,
         {
-          [field]: value,
+          status: newStatus,
+          updatedAt: new Date().toISOString(),
         },
       );
-      setTicket((prev: any) => ({ ...prev, [field]: value }));
+      setTicket((prev: any) => ({ ...prev, status: newStatus }));
     } catch (error) {
-      console.error("Error updating ticket:", error);
-      alert("Failed to update ticket.");
-    } finally {
-      setUpdating(false);
+      console.error("Error updating status:", error);
+      alert("Failed to update status.");
     }
   };
 
   if (loading) {
     return (
-      <div className="flex h-screen items-center justify-center">
-        <div className="border-t-brand-500 dark:border-t-brand-400 h-8 w-8 animate-spin rounded-full border-4 border-gray-200 dark:border-gray-800"></div>
+      <div className="flex h-64 items-center justify-center">
+        <div className="border-t-brand-500 h-8 w-8 animate-spin rounded-full border-4 border-gray-200"></div>
       </div>
     );
   }
@@ -81,130 +134,130 @@ export default function TicketDetailPage() {
   if (!ticket) return null;
 
   return (
-    <div className="mx-auto max-w-5xl p-4 sm:p-6">
+    <div className="mx-auto flex h-[calc(100vh-100px)] max-w-5xl flex-col p-4 sm:p-6">
       {/* Header */}
-      <div className="mb-6 flex items-center justify-between">
-        <div className="flex items-center gap-4">
+      <div className="mb-4 flex flex-col gap-4 border-b border-gray-200 pb-4 sm:flex-row sm:items-center sm:justify-between dark:border-gray-800">
+        <div>
           <Link
             href="/tickets"
-            className="flex h-10 w-10 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-500 hover:bg-gray-50 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-400 dark:hover:bg-white/5"
+            className="mb-2 inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
           >
-            <ArrowRightIcon className="h-5 w-5 rotate-180" />
+            <ArrowRightIcon className="h-4 w-4 rotate-180" /> Back to Tickets
           </Link>
-          <div>
-            <h1 className="text-2xl font-bold text-gray-800 dark:text-white/90">
-              Ticket Details
-            </h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              ID: {ticket.$id}
-            </p>
-          </div>
+          <h1 className="text-xl font-bold text-gray-800 dark:text-white/90">
+            {ticket.subject}
+          </h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            Ticket #{ticket.$id} •{" "}
+            {new Date(ticket.$createdAt).toLocaleString()}
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <span
+            className={`rounded-full px-3 py-1 text-xs font-semibold tracking-wide uppercase ${
+              ticket.status === "open"
+                ? "bg-blue-100 text-blue-800"
+                : ticket.status === "resolved"
+                  ? "bg-green-100 text-green-800"
+                  : ticket.status === "closed"
+                    ? "bg-gray-100 text-gray-800"
+                    : "bg-yellow-100 text-yellow-800"
+            }`}
+          >
+            {ticket.status.replace("_", " ")}
+          </span>
+          <select
+            className="focus:ring-brand-500 rounded-md border border-gray-300 bg-white px-3 py-1 text-sm text-gray-700 focus:ring-2 focus:outline-none dark:border-gray-700 dark:bg-white/5 dark:text-gray-300"
+            value={ticket.status}
+            onChange={(e) => handleStatusChange(e.target.value)}
+          >
+            <option value="open">Open</option>
+            <option value="in_progress">In Progress</option>
+            <option value="resolved">Resolved</option>
+            <option value="closed">Closed</option>
+          </select>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        {/* Main Content */}
-        <div className="space-y-6 lg:col-span-2">
-          {/* Message Card */}
-          <div className="rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-white/5">
-            <h3 className="mb-4 text-lg font-bold text-gray-800 dark:text-white">
-              {ticket.subject}
-            </h3>
-            <div className="rounded-lg bg-gray-50 p-4 dark:bg-white/5">
-              <p className="text-base whitespace-pre-wrap text-gray-700 dark:text-gray-300">
-                {ticket.message}
-              </p>
-            </div>
-            <div className="mt-4 text-xs text-gray-500 dark:text-gray-400">
-              Submitted on {format(new Date(ticket.$createdAt), "PPP 'at' p")}
-            </div>
+      {/* Messages Area */}
+      <div className="flex-1 space-y-4 overflow-y-auto rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-800 dark:bg-black/20">
+        {/* Original Ticket Description */}
+        <div className="mb-6 flex justify-center">
+          <div className="w-full max-w-2xl rounded-lg border border-gray-200 bg-white p-4 text-center shadow-sm dark:border-gray-700 dark:bg-gray-800">
+            <p className="mb-2 text-xs font-bold text-gray-500 uppercase">
+              Original Request
+            </p>
+            <p className="text-gray-800 dark:text-gray-200">{ticket.message}</p>
           </div>
         </div>
 
-        {/* Sidebar */}
-        <div className="space-y-6">
-          {/* Status & Priority */}
-          <div className="rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-white/5">
-            <h3 className="mb-4 text-sm font-bold text-gray-400 uppercase">
-              Ticket Details
-            </h3>
-
-            <div className="flex flex-col gap-4">
-              <div>
-                <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Status
-                </label>
-                <select
-                  value={ticket.status}
-                  onChange={(e) => handleUpdate("status", e.target.value)}
-                  disabled={updating}
-                  className="focus:border-brand-500 focus:ring-brand-500 w-full rounded-lg border-gray-200 bg-gray-50 px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-white"
-                >
-                  <option value="open">Open</option>
-                  <option value="in_progress">In Progress</option>
-                  <option value="resolved">Resolved</option>
-                  <option value="closed">Closed</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Priority
-                </label>
-                <select
-                  value={ticket.priority}
-                  onChange={(e) => handleUpdate("priority", e.target.value)}
-                  disabled={updating}
-                  className="focus:border-brand-500 focus:ring-brand-500 w-full rounded-lg border-gray-200 bg-gray-50 px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-white"
-                >
-                  <option value="low">Low</option>
-                  <option value="medium">Medium</option>
-                  <option value="high">High</option>
-                  <option value="urgent">Urgent</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Category
-                </label>
-                <div className="text-sm font-medium text-gray-800 capitalize dark:text-white">
-                  {ticket.category.replace("_", " ")}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* User Info */}
-          <div className="rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-white/5">
-            <h3 className="mb-4 text-sm font-bold text-gray-400 uppercase">
-              User Information
-            </h3>
-            {user ? (
-              <div className="flex items-center gap-3">
-                <div className="bg-brand-100 text-brand-600 dark:bg-brand-500/10 flex h-10 w-10 items-center justify-center overflow-hidden rounded-full font-bold">
-                  {user.name.charAt(0).toUpperCase()}
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-800 dark:text-white">
-                    {user.name}
-                  </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    {user.email}
-                  </p>
-                  <Link
-                    href={`/users/${user.$id}`}
-                    className="text-brand-500 hover:text-brand-600 mt-1 block text-xs"
+        {messages.map((msg) => {
+          const isAdmin = msg.isAdmin;
+          return (
+            <div
+              key={msg.$id}
+              className={`flex ${isAdmin ? "justify-end" : "justify-start"}`}
+            >
+              <div
+                className={`max-w-[80%] rounded-lg p-3 ${
+                  isAdmin
+                    ? "bg-brand-600 rounded-br-none text-white"
+                    : "rounded-bl-none border border-gray-200 bg-white text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200"
+                }`}
+              >
+                <div className="mb-1 flex items-center justify-between gap-4">
+                  <span
+                    className={`text-xs font-bold ${isAdmin ? "text-brand-100" : "text-brand-600 dark:text-brand-400"}`}
                   >
-                    View Profile
-                  </Link>
+                    {msg.senderName || (isAdmin ? "Support" : "User")}
+                  </span>
+                  <span
+                    className={`text-[10px] ${isAdmin ? "text-brand-200" : "text-gray-400"}`}
+                  >
+                    {new Date(msg.createdAt).toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </span>
                 </div>
+                <p className="text-sm whitespace-pre-wrap">{msg.message}</p>
               </div>
-            ) : (
-              <p className="text-sm text-gray-500">User not found</p>
-            )}
+            </div>
+          );
+        })}
+        <div ref={messagesEndRef} />
+      </div>
+
+      {/* Input Area */}
+      <div className="mt-4">
+        {ticket.status === "closed" ? (
+          <div className="rounded-lg border border-gray-200 bg-gray-100 p-4 text-center text-gray-600 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400">
+            This ticket is closed. Re-open it to send a reply.
           </div>
-        </div>
+        ) : (
+          <div className="flex gap-2">
+            <textarea
+              className="focus:ring-brand-500 flex-1 rounded-lg border border-gray-300 p-3 text-sm focus:ring-2 focus:outline-none dark:border-gray-700 dark:bg-white/5 dark:text-white"
+              placeholder="Type your reply here..."
+              rows={3}
+              value={replyText}
+              onChange={(e) => setReplyText(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSendReply();
+                }
+              }}
+            />
+            <Button
+              className="bg-brand-600 hover:bg-brand-700 h-auto px-6 text-white"
+              onClick={handleSendReply}
+              disabled={sending || !replyText.trim()}
+            >
+              {sending ? "Sending..." : "Send"}
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );

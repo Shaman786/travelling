@@ -1,5 +1,6 @@
 "use client";
 
+import CustomIconSelect from "@/components/common/CustomIconSelect";
 import { databaseService } from "@/lib/databaseService";
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
@@ -109,16 +110,10 @@ export default function CreateAddonPage() {
           <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
             Icon (Material Design Name)
           </label>
-          <input
-            type="text"
-            className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+          <CustomIconSelect
             value={formData.icon}
-            onChange={(e) => setFormData({ ...formData, icon: e.target.value })}
-            placeholder="e.g. bag-suitcase, medical-bag, silver-fork-knife"
+            onChange={(val: string) => setFormData({ ...formData, icon: val })}
           />
-          <p className="mt-1 text-xs text-gray-500">
-            Use generic icon names. We'll map these in the app.
-          </p>
         </div>
 
         <div className="flex gap-4 pt-4">

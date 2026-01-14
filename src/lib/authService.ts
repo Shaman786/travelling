@@ -9,7 +9,14 @@
  */
 
 import type { AuthUser, User } from "../types";
-import { account, DATABASE_ID, databases, ID, TABLES } from "./appwrite";
+import {
+  account,
+  DATABASE_ID,
+  databases,
+  ID,
+  OAuthProvider,
+  TABLES,
+} from "./appwrite";
 
 // ============ Auth Service ============
 
@@ -372,6 +379,27 @@ export const authService = {
     } catch (error: any) {
       console.error("Magic link complete error:", error);
       throw new Error(error.message || "Invalid Magic Link");
+    }
+  },
+  /**
+   * Initiate OAuth2 Login (Google, Apple, etc.)
+   * @param provider 'google' | 'apple'
+   */
+  async initiateOAuth2Login(provider: "google" | "apple"): Promise<void> {
+    try {
+      const providerEnum =
+        provider === "google" ? OAuthProvider.Google : OAuthProvider.Apple;
+      // Create OAuth2 session
+      // This will open a browser window for authentication
+      // Success/Failure redirects back to the app via deep link
+      await account.createOAuth2Session(
+        providerEnum,
+        "travelling://oauth-callback", // Success URL
+        "travelling://login?error=oauth_failed" // Failure URL
+      );
+    } catch (error: any) {
+      console.error("OAuth2 init error:", error);
+      throw new Error(error.message || "Failed to initiate OAuth2");
     }
   },
 };

@@ -87,7 +87,10 @@ export default function ConsultingGrid() {
               style={{ backgroundColor: "transparent" }}
             />
           </View>
-          <Text variant="labelSmall" style={styles.label}>
+          <Text
+            variant="labelSmall"
+            style={[styles.label, { color: theme.colors.onSurface }]}
+          >
             {item.label}
           </Text>
         </TouchableOpacity>
@@ -120,6 +123,5 @@ const styles = StyleSheet.create({
     textAlign: "center",
     fontWeight: "600",
     fontSize: 11,
-    color: "#444",
   },
 });

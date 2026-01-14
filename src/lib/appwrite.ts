@@ -4,6 +4,7 @@ import {
   Databases,
   Functions,
   ID,
+  OAuthProvider,
   Query,
   Storage,
   TablesDB,
@@ -77,4 +78,4 @@ export const isAppwriteConfigured = (): boolean => {
 // ============ Query Builder ============
 
 // Export utilities
-export { client, ID, Query };
+export { client, ID, OAuthProvider, Query };

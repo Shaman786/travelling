@@ -207,33 +207,41 @@ export default function Home() {
 
       {/* Stats Grid */}
       <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatsCard
-          title="Revenue (Last 60d)"
-          value={`$${stats.totalRevenue.toLocaleString()}`}
-          icon={<span className="text-xl font-bold">$</span>}
-          gradient="bg-gradient-to-br from-emerald-500 to-teal-600"
-          trend={(stats as any).revenueTrend}
-        />
-        <StatsCard
-          title="Total Bookings"
-          value={stats.totalBookings}
-          icon={<BookingIcon className="h-6 w-6" />}
-          gradient="bg-gradient-to-br from-blue-500 to-indigo-600"
-          trend={(stats as any).bookingsTrend}
-        />
-        <StatsCard
-          title="Total Users"
-          value={stats.totalUsers}
-          icon={<UserIcon className="h-6 w-6" />}
-          gradient="bg-gradient-to-br from-violet-500 to-purple-600"
-          trend={(stats as any).usersTrend}
-        />
-        <StatsCard
-          title="Active Packages"
-          value={stats.activePackages}
-          icon={<GridIcon className="h-6 w-6" />}
-          gradient="bg-gradient-to-br from-orange-500 to-rose-600"
-        />
+        <Link href="/bookings">
+          <StatsCard
+            title="Revenue (Last 60d)"
+            value={`$${stats.totalRevenue.toLocaleString()}`}
+            icon={<span className="text-xl font-bold">$</span>}
+            gradient="bg-gradient-to-br from-emerald-500 to-teal-600"
+            trend={(stats as any).revenueTrend}
+          />
+        </Link>
+        <Link href="/bookings">
+          <StatsCard
+            title="Total Bookings"
+            value={stats.totalBookings}
+            icon={<BookingIcon className="h-6 w-6" />}
+            gradient="bg-gradient-to-br from-blue-500 to-indigo-600"
+            trend={(stats as any).bookingsTrend}
+          />
+        </Link>
+        <Link href="/users">
+          <StatsCard
+            title="Total Users"
+            value={stats.totalUsers}
+            icon={<UserIcon className="h-6 w-6" />}
+            gradient="bg-gradient-to-br from-violet-500 to-purple-600"
+            trend={(stats as any).usersTrend}
+          />
+        </Link>
+        <Link href="/packages">
+          <StatsCard
+            title="Active Packages"
+            value={stats.activePackages}
+            icon={<GridIcon className="h-6 w-6" />}
+            gradient="bg-gradient-to-br from-orange-500 to-rose-600"
+          />
+        </Link>
       </div>
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">

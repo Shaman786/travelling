@@ -23,6 +23,7 @@ interface UseAuthReturn {
   logout: () => Promise<void>;
   clearError: () => void;
   refreshUser: () => Promise<void>;
+  loginWithProvider: (provider: "google" | "apple") => Promise<void>;
 }
 
 export function useAuth(): UseAuthReturn {
@@ -129,7 +130,7 @@ export function useAuth(): UseAuthReturn {
         setIsLoading(false);
       }
     },
-    [setUser]
+    []
   );
 
   const logout = useCallback(async () => {
@@ -154,6 +155,23 @@ export function useAuth(): UseAuthReturn {
     await checkSession();
   }, [checkSession]);
 
+  const loginWithProvider = useCallback(
+    async (provider: "google" | "apple") => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        await authService.initiateOAuth2Login(provider);
+        // Note: Actual session update happens after redirect and deep link handling
+        // We don't await the redirect here, as it opens a browser
+      } catch (err: any) {
+        setError(err.message || "OAuth initiation failed");
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    []
+  );
+
   return {
     user,
     isLoggedIn,
@@ -164,6 +182,7 @@ export function useAuth(): UseAuthReturn {
     logout,
     clearError,
     refreshUser,
+    loginWithProvider,
   };
 }
 

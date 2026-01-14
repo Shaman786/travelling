@@ -1,32 +1,30 @@
 "use client";
 import BookingTable from "@/components/bookings/BookingTable";
 import ExportButton from "@/components/common/ExportButton";
-import { DATABASE_ID, databases, TABLES } from "@/lib/appwrite";
-import { Query } from "appwrite";
-import { useEffect, useState } from "react";
+import SearchInput from "@/components/common/SearchInput";
+import { databaseService } from "@/lib/databaseService";
+import { useCallback, useEffect, useState } from "react";
 
 export default function BookingsPage() {
   const [bookings, setBookings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
 
-  useEffect(() => {
-    fetchBookings();
-  }, []);
-
-  const fetchBookings = async () => {
+  const fetchBookings = useCallback(async () => {
+    setLoading(true);
     try {
-      const response = await databases.listDocuments(
-        DATABASE_ID,
-        TABLES.BOOKINGS,
-        [Query.orderDesc("$createdAt")],
-      );
-      setBookings(response.documents);
+      const docs = await databaseService.bookings.list(100);
+      setBookings(docs);
     } catch (error) {
       console.error("Error fetching bookings:", error);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchBookings();
+  }, [fetchBookings]);
 
   return (
     <div className="mx-auto max-w-7xl p-4 sm:p-6">
@@ -39,7 +37,10 @@ export default function BookingsPage() {
             Manage incoming travel bookings.
           </p>
         </div>
-        <ExportButton data={bookings} filename="bookings" />
+        <div className="flex items-center gap-3">
+          <SearchInput onSearch={setSearch} placeholder="Search bookings..." />
+          <ExportButton data={bookings} filename="bookings" />
+        </div>
       </div>
 
       {loading ? (

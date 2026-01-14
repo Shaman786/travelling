@@ -27,7 +27,6 @@ import {
   APPWRITE_PROJECT_ID,
   BUCKETS,
   DATABASE_ID,
-  databases,
   ID,
   Query,
   storage,
@@ -123,14 +122,14 @@ export const packageService = {
         ])
       );
 
-      const response = await databases.listDocuments<TravelPackage>(
-        DATABASE_ID,
-        TABLES.PACKAGES,
-        queries
-      );
+      const response = await tables.listRows({
+        databaseId: DATABASE_ID,
+        tableId: TABLES.PACKAGES,
+        queries,
+      });
 
       // Parse itinerary JSON string to object
-      const documents = response.documents.map((pkg) => ({
+      const rows = response.rows.map((pkg: any) => ({
         ...pkg,
         itinerary:
           typeof pkg.itinerary === "string"
@@ -139,7 +138,7 @@ export const packageService = {
       }));
 
       return {
-        documents: documents as TravelPackage[],
+        documents: rows as TravelPackage[],
         total: response.total,
       };
     } catch (error: any) {
@@ -153,11 +152,11 @@ export const packageService = {
    */
   async getPackageById(packageId: string): Promise<TravelPackage | null> {
     try {
-      const pkg = await databases.getDocument<TravelPackage>(
-        DATABASE_ID,
-        TABLES.PACKAGES,
-        packageId
-      );
+      const pkg = (await tables.getRow({
+        databaseId: DATABASE_ID,
+        tableId: TABLES.PACKAGES,
+        rowId: packageId,
+      })) as any;
       return {
         ...pkg,
         itinerary:
@@ -178,10 +177,10 @@ export const packageService = {
     limit = 10
   ): Promise<TravelPackage[]> {
     try {
-      const response = await databases.listDocuments<TravelPackage>(
-        DATABASE_ID,
-        TABLES.PACKAGES,
-        [
+      const response = await tables.listRows({
+        databaseId: DATABASE_ID,
+        tableId: TABLES.PACKAGES,
+        queries: [
           Query.equal("isActive", true),
           Query.equal("category", category),
           Query.limit(limit),
@@ -198,10 +197,10 @@ export const packageService = {
             "isActive",
             "itinerary",
           ]),
-        ]
-      );
+        ],
+      });
       // Itinerary might still be needed for parsing, even if empty/partial
-      return response.documents.map((pkg) => ({
+      return response.rows.map((pkg: any) => ({
         ...pkg,
         itinerary:
           typeof pkg.itinerary === "string"
@@ -219,10 +218,10 @@ export const packageService = {
    */
   async getFeaturedPackages(limit = 5): Promise<TravelPackage[]> {
     try {
-      const response = await databases.listDocuments<TravelPackage>(
-        DATABASE_ID,
-        TABLES.PACKAGES,
-        [
+      const response = await tables.listRows({
+        databaseId: DATABASE_ID,
+        tableId: TABLES.PACKAGES,
+        queries: [
           Query.equal("isActive", true),
           Query.orderDesc("rating"),
           Query.limit(limit),
@@ -239,9 +238,9 @@ export const packageService = {
             "isActive",
             "itinerary",
           ]),
-        ]
-      );
-      return response.documents.map((pkg) => ({
+        ],
+      });
+      return response.rows.map((pkg: any) => ({
         ...pkg,
         itinerary:
           typeof pkg.itinerary === "string"
@@ -262,20 +261,28 @@ export const packageService = {
     try {
       // Run queries in parallel
       const [titleResults, destResults] = await Promise.all([
-        databases.listDocuments<TravelPackage>(DATABASE_ID, TABLES.PACKAGES, [
-          Query.equal("isActive", true),
-          Query.search("title", query),
-          Query.limit(limit),
-        ]),
-        databases.listDocuments<TravelPackage>(DATABASE_ID, TABLES.PACKAGES, [
-          Query.equal("isActive", true),
-          Query.search("destination", query),
-          Query.limit(limit),
-        ]),
+        tables.listRows({
+          databaseId: DATABASE_ID,
+          tableId: TABLES.PACKAGES,
+          queries: [
+            Query.equal("isActive", true),
+            Query.search("title", query),
+            Query.limit(limit),
+          ],
+        }),
+        tables.listRows({
+          databaseId: DATABASE_ID,
+          tableId: TABLES.PACKAGES,
+          queries: [
+            Query.equal("isActive", true),
+            Query.search("destination", query),
+            Query.limit(limit),
+          ],
+        }),
       ]);
 
       // Merge and Deduplicate
-      const allDocs = [...titleResults.documents, ...destResults.documents];
+      const allDocs = [...titleResults.rows, ...destResults.rows] as any[];
       const seen = new Set<string>();
       const uniqueDocs: TravelPackage[] = [];
 
@@ -306,18 +313,18 @@ export const packageService = {
   async getUniqueCategories(): Promise<{ id: string; name: string }[]> {
     try {
       // Fetch a larger set to ensure we capture most categories
-      const response = await databases.listDocuments<TravelPackage>(
-        DATABASE_ID,
-        TABLES.PACKAGES,
-        [
+      const response = await tables.listRows({
+        databaseId: DATABASE_ID,
+        tableId: TABLES.PACKAGES,
+        queries: [
           Query.equal("isActive", true),
           Query.limit(100),
           Query.select(["category"]),
-        ]
-      );
+        ],
+      });
 
       const uniqueCats = new Set<string>();
-      response.documents.forEach((pkg) => {
+      response.rows.forEach((pkg: any) => {
         if (pkg.category) {
           // Normalize: Capitalize first letter
           const cat = pkg.category.trim();
@@ -383,12 +390,12 @@ export const bookingService = {
         updatedAt: now,
       };
 
-      const row = await databases.createDocument<Booking>(
-        DATABASE_ID,
-        TABLES.BOOKINGS,
-        ID.unique(),
-        data as any
-      );
+      const row = (await tables.createRow({
+        databaseId: DATABASE_ID,
+        tableId: TABLES.BOOKINGS,
+        rowId: ID.unique(),
+        data: data as any,
+      })) as any;
 
       return {
         ...row,
@@ -414,12 +421,12 @@ export const bookingService = {
    */
   async getUserBookings(userId: string): Promise<Booking[]> {
     try {
-      const response = await databases.listDocuments<Booking>(
-        DATABASE_ID,
-        TABLES.BOOKINGS,
-        [Query.equal("userId", userId), Query.orderDesc("$createdAt")]
-      );
-      return response.documents.map((booking) => ({
+      const response = await tables.listRows({
+        databaseId: DATABASE_ID,
+        tableId: TABLES.BOOKINGS,
+        queries: [Query.equal("userId", userId), Query.orderDesc("$createdAt")],
+      });
+      return response.rows.map((booking: any) => ({
         ...booking,
         travelers:
           typeof booking.travelers === "string"
@@ -443,11 +450,11 @@ export const bookingService = {
    */
   async getBookingById(bookingId: string): Promise<Booking | null> {
     try {
-      const booking = await databases.getDocument<Booking>(
-        DATABASE_ID,
-        TABLES.BOOKINGS,
-        bookingId
-      );
+      const booking = (await tables.getRow({
+        databaseId: DATABASE_ID,
+        tableId: TABLES.BOOKINGS,
+        rowId: bookingId,
+      })) as any;
       return {
         ...booking,
         travelers:
@@ -472,16 +479,16 @@ export const bookingService = {
   async createPayment(paymentData: any): Promise<any> {
     // try/catch removed to allow errors to propagate to the caller (ReviewScreen)
     // where they will be caught and displayed to the user.
-    const response = await databases.createDocument(
-      DATABASE_ID,
-      TABLES.PAYMENTS,
-      ID.unique(),
-      {
+    const response = await tables.createRow({
+      databaseId: DATABASE_ID,
+      tableId: TABLES.PAYMENTS,
+      rowId: ID.unique(),
+      data: {
         ...paymentData,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-      }
-    );
+      },
+    });
     return response;
   },
 
@@ -504,11 +511,11 @@ export const bookingService = {
 
       // 2. Prepare Operations
       // Fetch booking using TablesDB (Correct Modern API)
-      const booking = (await tables.getRow(
-        DATABASE_ID,
-        TABLES.BOOKINGS,
-        bookingId
-      )) as unknown as Booking;
+      const booking = (await tables.getRow({
+        databaseId: DATABASE_ID,
+        tableId: TABLES.BOOKINGS,
+        rowId: bookingId,
+      })) as unknown as Booking;
 
       // Parse statusHistory if it's a string (backwards compatibility)
       const currentHistory =
@@ -605,16 +612,16 @@ export const bookingService = {
 
       const updatedHistory = [...current.statusHistory, statusHistoryEntry];
 
-      const row = await databases.updateDocument<Booking>(
-        DATABASE_ID,
-        TABLES.BOOKINGS,
-        bookingId,
-        {
+      const row = (await tables.updateRow({
+        databaseId: DATABASE_ID,
+        tableId: TABLES.BOOKINGS,
+        rowId: bookingId,
+        data: {
           status,
           statusHistory: JSON.stringify(updatedHistory),
           updatedAt: new Date().toISOString(),
-        } as any
-      );
+        },
+      })) as any;
 
       return {
         ...row,
@@ -644,16 +651,16 @@ export const bookingService = {
     paymentId?: string
   ): Promise<Booking> {
     try {
-      const row = await databases.updateDocument<Booking>(
-        DATABASE_ID,
-        TABLES.BOOKINGS,
-        bookingId,
-        {
+      const row = (await tables.updateRow({
+        databaseId: DATABASE_ID,
+        tableId: TABLES.BOOKINGS,
+        rowId: bookingId,
+        data: {
           paymentStatus,
           paymentId,
           updatedAt: new Date().toISOString(),
-        }
-      );
+        },
+      })) as any;
       return {
         ...row,
         travelers:
@@ -719,11 +726,11 @@ export const documentService = {
       // Get view URL manually as SDK returns ArrayBuffer
       const fileUrl = `${APPWRITE_ENDPOINT}/storage/buckets/${BUCKETS.TRAVEL_DOCUMENTS}/files/${uploaded.$id}/view?project=${APPWRITE_PROJECT_ID}`;
 
-      const row = await databases.createDocument<TravelDocument>(
-        DATABASE_ID,
-        TABLES.DOCUMENTS,
-        ID.unique(),
-        {
+      const row = (await tables.createRow({
+        databaseId: DATABASE_ID,
+        tableId: TABLES.DOCUMENTS,
+        rowId: ID.unique(),
+        data: {
           userId,
           fileName: file.name,
           fileId: uploaded.$id,
@@ -731,8 +738,8 @@ export const documentService = {
           fileType: file.type,
           fileSize: file.size,
           uploadedAt: new Date().toISOString(),
-        }
-      );
+        },
+      })) as any;
 
       return {
         ...row,
@@ -749,12 +756,12 @@ export const documentService = {
    */
   async getUserDocuments(userId: string): Promise<TravelDocument[]> {
     try {
-      const response = await databases.listDocuments<TravelDocument>(
-        DATABASE_ID,
-        TABLES.DOCUMENTS,
-        [Query.equal("userId", userId), Query.orderDesc("$createdAt")]
-      );
-      return response.documents.map((doc) => ({
+      const response = await tables.listRows({
+        databaseId: DATABASE_ID,
+        tableId: TABLES.DOCUMENTS,
+        queries: [Query.equal("userId", userId), Query.orderDesc("$createdAt")],
+      });
+      return response.rows.map((doc: any) => ({
         ...doc,
         uploadedAt: doc.$createdAt,
       })) as TravelDocument[];
@@ -779,7 +786,11 @@ export const documentService = {
           console.warn("Failed to delete file from storage:", e);
         }
       }
-      await databases.deleteDocument(DATABASE_ID, TABLES.DOCUMENTS, documentId);
+      await tables.deleteRow({
+        databaseId: DATABASE_ID,
+        tableId: TABLES.DOCUMENTS,
+        rowId: documentId,
+      });
     } catch (error: any) {
       console.error("Delete document error:", error);
       throw new Error(error.message || "Failed to delete document");
@@ -816,17 +827,17 @@ export const supportService = {
   ): Promise<SupportTicket> {
     try {
       const now = new Date().toISOString();
-      const row = await databases.createDocument<SupportTicket>(
-        DATABASE_ID,
-        TABLES.TICKETS,
-        ID.unique(),
-        {
+      const row = (await tables.createRow({
+        databaseId: DATABASE_ID,
+        tableId: TABLES.TICKETS,
+        rowId: ID.unique(),
+        data: {
           ...ticketData,
           status: "open",
           createdAt: now,
           updatedAt: now,
-        }
-      );
+        },
+      })) as any;
       return {
         ...row,
         createdAt: row.$createdAt,
@@ -843,12 +854,12 @@ export const supportService = {
    */
   async getUserTickets(userId: string): Promise<SupportTicket[]> {
     try {
-      const response = await databases.listDocuments<SupportTicket>(
-        DATABASE_ID,
-        TABLES.TICKETS,
-        [Query.equal("userId", userId), Query.orderDesc("$createdAt")]
-      );
-      return response.documents.map((ticket) => ({
+      const response = await tables.listRows({
+        databaseId: DATABASE_ID,
+        tableId: TABLES.TICKETS,
+        queries: [Query.equal("userId", userId), Query.orderDesc("$createdAt")],
+      });
+      return response.rows.map((ticket: any) => ({
         ...ticket,
         createdAt: ticket.$createdAt,
         updatedAt: ticket.$updatedAt,
@@ -864,11 +875,11 @@ export const supportService = {
    */
   async getTicketById(ticketId: string): Promise<SupportTicket | null> {
     try {
-      const ticket = await databases.getDocument<SupportTicket>(
-        DATABASE_ID,
-        TABLES.TICKETS,
-        ticketId
-      );
+      const ticket = (await tables.getRow({
+        databaseId: DATABASE_ID,
+        tableId: TABLES.TICKETS,
+        rowId: ticketId,
+      })) as any;
       return {
         ...ticket,
         createdAt: ticket.$createdAt,
@@ -884,12 +895,15 @@ export const supportService = {
    */
   async getTicketMessages(ticketId: string): Promise<TicketMessage[]> {
     try {
-      const response = await databases.listDocuments<TicketMessage>(
-        DATABASE_ID,
-        TABLES.MESSAGES,
-        [Query.equal("ticketId", ticketId), Query.orderAsc("createdAt")]
-      );
-      return response.documents.map((msg) => ({
+      const response = await tables.listRows({
+        databaseId: DATABASE_ID,
+        tableId: TABLES.MESSAGES,
+        queries: [
+          Query.equal("ticketId", ticketId),
+          Query.orderAsc("createdAt"),
+        ],
+      });
+      return response.rows.map((msg: any) => ({
         ...msg,
         createdAt: msg.$createdAt,
       })) as TicketMessage[];
@@ -917,15 +931,15 @@ export const supportService = {
   ): Promise<TicketMessage> {
     try {
       const now = new Date().toISOString();
-      const row = await databases.createDocument<TicketMessage>(
-        DATABASE_ID,
-        TABLES.MESSAGES,
-        ID.unique(),
-        {
+      const row = (await tables.createRow({
+        databaseId: DATABASE_ID,
+        tableId: TABLES.MESSAGES,
+        rowId: ID.unique(),
+        data: {
           ...messageData,
           createdAt: now,
-        }
-      );
+        },
+      })) as any;
       return {
         ...row,
         createdAt: row.$createdAt,
@@ -944,9 +958,14 @@ export const supportService = {
     status: SupportTicket["status"]
   ): Promise<void> {
     try {
-      await databases.updateDocument(DATABASE_ID, TABLES.TICKETS, ticketId, {
-        status,
-        updatedAt: new Date().toISOString(),
+      await tables.updateRow({
+        databaseId: DATABASE_ID,
+        tableId: TABLES.TICKETS,
+        rowId: ticketId,
+        data: {
+          status,
+          updatedAt: new Date().toISOString(),
+        },
       });
     } catch (error: any) {
       console.error("Update status error:", error);
@@ -963,12 +982,12 @@ export const addonService = {
    */
   async getAddons(): Promise<Addon[]> {
     try {
-      const response = await databases.listDocuments<Addon>(
-        DATABASE_ID,
-        TABLES.ADDONS,
-        [Query.equal("isActive", true)]
-      );
-      return response.documents;
+      const response = await tables.listRows({
+        databaseId: DATABASE_ID,
+        tableId: TABLES.ADDONS,
+        queries: [Query.equal("isActive", true)],
+      });
+      return response.rows as unknown as Addon[];
     } catch (error: any) {
       console.error("Get add-ons error:", error);
       return [];
@@ -997,15 +1016,15 @@ export const travelerService = {
   ): Promise<SavedTraveler> {
     try {
       const now = new Date().toISOString();
-      const row = await databases.createDocument<SavedTraveler>(
-        DATABASE_ID,
-        TABLES.SAVED_TRAVELERS,
-        ID.unique(),
-        {
+      const row = (await tables.createRow({
+        databaseId: DATABASE_ID,
+        tableId: TABLES.SAVED_TRAVELERS,
+        rowId: ID.unique(),
+        data: {
           ...travelerData,
           createdAt: now,
-        }
-      );
+        },
+      })) as any;
       return {
         ...row,
         createdAt: row.$createdAt,
@@ -1021,12 +1040,12 @@ export const travelerService = {
    */
   async getUserTravelers(userId: string): Promise<SavedTraveler[]> {
     try {
-      const response = await databases.listDocuments<SavedTraveler>(
-        DATABASE_ID,
-        TABLES.SAVED_TRAVELERS,
-        [Query.equal("userId", userId), Query.orderDesc("$createdAt")]
-      );
-      return response.documents.map((traveler) => ({
+      const response = await tables.listRows({
+        databaseId: DATABASE_ID,
+        tableId: TABLES.SAVED_TRAVELERS,
+        queries: [Query.equal("userId", userId), Query.orderDesc("$createdAt")],
+      });
+      return response.rows.map((traveler: any) => ({
         ...traveler,
         createdAt: traveler.$createdAt,
       })) as SavedTraveler[];
@@ -1041,11 +1060,11 @@ export const travelerService = {
    */
   async deleteTraveler(travelerId: string): Promise<void> {
     try {
-      await databases.deleteDocument(
-        DATABASE_ID,
-        TABLES.SAVED_TRAVELERS,
-        travelerId
-      );
+      await tables.deleteRow({
+        databaseId: DATABASE_ID,
+        tableId: TABLES.SAVED_TRAVELERS,
+        rowId: travelerId,
+      });
     } catch (error: any) {
       console.error("Delete traveler error:", error);
       throw new Error(error.message || "Failed to delete traveler");
@@ -1074,15 +1093,15 @@ export const reviewService = {
   ): Promise<Review> {
     try {
       const now = new Date().toISOString();
-      const row = await databases.createDocument<Review>(
-        DATABASE_ID,
-        TABLES.REVIEWS,
-        ID.unique(),
-        {
+      const row = (await tables.createRow({
+        databaseId: DATABASE_ID,
+        tableId: TABLES.REVIEWS,
+        rowId: ID.unique(),
+        data: {
           ...reviewData,
           createdAt: now,
-        }
-      );
+        },
+      })) as any;
 
       return {
         ...row,
@@ -1099,16 +1118,16 @@ export const reviewService = {
    */
   async getPackageReviews(packageId: string, limit = 20): Promise<Review[]> {
     try {
-      const response = await databases.listDocuments<Review>(
-        DATABASE_ID,
-        TABLES.REVIEWS,
-        [
+      const response = await tables.listRows({
+        databaseId: DATABASE_ID,
+        tableId: TABLES.REVIEWS,
+        queries: [
           Query.equal("packageId", packageId),
           Query.orderDesc("$createdAt"),
           Query.limit(limit),
-        ]
-      );
-      return response.documents.map((review) => ({
+        ],
+      });
+      return response.rows.map((review: any) => ({
         ...review,
         createdAt: review.$createdAt,
       })) as Review[];
@@ -1132,17 +1151,17 @@ export const paymentService = {
     gatewayOrderId?: string;
   }): Promise<Payment> {
     try {
-      const payment = await databases.createDocument(
-        DATABASE_ID,
-        TABLES.PAYMENTS,
-        ID.unique(),
-        {
+      const payment = await tables.createRow({
+        databaseId: DATABASE_ID,
+        tableId: TABLES.PAYMENTS,
+        rowId: ID.unique(),
+        data: {
           ...paymentData,
           status: "pending",
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
-        }
-      );
+        },
+      });
       return payment as unknown as Payment;
     } catch (error: any) {
       console.error("Create payment error:", error);
@@ -1155,13 +1174,13 @@ export const paymentService = {
    */
   async getPaymentByBookingId(bookingId: string): Promise<Payment | null> {
     try {
-      const response = await databases.listDocuments(
-        DATABASE_ID,
-        TABLES.PAYMENTS,
-        [Query.equal("bookingId", bookingId), Query.limit(1)]
-      );
-      if (response.documents.length > 0) {
-        return response.documents[0] as unknown as Payment;
+      const response = await tables.listRows({
+        databaseId: DATABASE_ID,
+        tableId: TABLES.PAYMENTS,
+        queries: [Query.equal("bookingId", bookingId), Query.limit(1)],
+      });
+      if (response.rows.length > 0) {
+        return response.rows[0] as unknown as Payment;
       }
       return null;
     } catch (error: any) {
@@ -1175,11 +1194,11 @@ export const paymentService = {
    */
   async getPaymentById(paymentId: string): Promise<Payment | null> {
     try {
-      const payment = await databases.getDocument(
-        DATABASE_ID,
-        TABLES.PAYMENTS,
-        paymentId
-      );
+      const payment = await tables.getRow({
+        databaseId: DATABASE_ID,
+        tableId: TABLES.PAYMENTS,
+        rowId: paymentId,
+      });
       return payment as unknown as Payment;
     } catch (error: any) {
       console.error("Get payment error:", error);
@@ -1192,12 +1211,12 @@ export const paymentService = {
    */
   async getUserPayments(userId: string): Promise<Payment[]> {
     try {
-      const response = await databases.listDocuments(
-        DATABASE_ID,
-        TABLES.PAYMENTS,
-        [Query.equal("userId", userId), Query.orderDesc("$createdAt")]
-      );
-      return response.documents as unknown as Payment[];
+      const response = await tables.listRows({
+        databaseId: DATABASE_ID,
+        tableId: TABLES.PAYMENTS,
+        queries: [Query.equal("userId", userId), Query.orderDesc("$createdAt")],
+      });
+      return response.rows as unknown as Payment[];
     } catch (error: any) {
       console.error("Get user payments error:", error);
       return [];
@@ -1218,15 +1237,15 @@ export const paymentService = {
     }
   ): Promise<Payment> {
     try {
-      const payment = await databases.updateDocument(
-        DATABASE_ID,
-        TABLES.PAYMENTS,
-        paymentId,
-        {
+      const payment = await tables.updateRow({
+        databaseId: DATABASE_ID,
+        tableId: TABLES.PAYMENTS,
+        rowId: paymentId,
+        data: {
           ...gatewayData,
           updatedAt: new Date().toISOString(),
-        }
-      );
+        },
+      });
       return payment as unknown as Payment;
     } catch (error: any) {
       console.error("Update payment error:", error);
@@ -1246,16 +1265,16 @@ export const paymentService = {
     }
   ): Promise<Payment> {
     try {
-      const payment = await databases.updateDocument(
-        DATABASE_ID,
-        TABLES.PAYMENTS,
-        paymentId,
-        {
+      const payment = await tables.updateRow({
+        databaseId: DATABASE_ID,
+        tableId: TABLES.PAYMENTS,
+        rowId: paymentId,
+        data: {
           status: "refunded",
           ...refundData,
           updatedAt: new Date().toISOString(),
-        }
-      );
+        },
+      });
       return payment as unknown as Payment;
     } catch (error: any) {
       console.error("Process refund error:", error);
@@ -1268,12 +1287,12 @@ export const paymentService = {
    */
   async getAllPayments(limit = 50): Promise<Payment[]> {
     try {
-      const response = await databases.listDocuments(
-        DATABASE_ID,
-        TABLES.PAYMENTS,
-        [Query.orderDesc("$createdAt"), Query.limit(limit)]
-      );
-      return response.documents as unknown as Payment[];
+      const response = await tables.listRows({
+        databaseId: DATABASE_ID,
+        tableId: TABLES.PAYMENTS,
+        queries: [Query.orderDesc("$createdAt"), Query.limit(limit)],
+      });
+      return response.rows as unknown as Payment[];
     } catch (error: any) {
       console.error("Get all payments error:", error);
       return [];
@@ -1295,15 +1314,15 @@ export const paymentService = {
     }>
   ): Promise<Payment> {
     try {
-      const payment = await databases.updateDocument(
-        DATABASE_ID,
-        TABLES.PAYMENTS,
-        paymentId,
-        {
+      const payment = await tables.updateRow({
+        databaseId: DATABASE_ID,
+        tableId: TABLES.PAYMENTS,
+        rowId: paymentId,
+        data: {
           ...data,
           updatedAt: new Date().toISOString(),
-        }
-      );
+        },
+      });
       return payment as unknown as Payment;
     } catch (error: any) {
       console.error("Update payment error:", error);

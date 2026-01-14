@@ -21,14 +21,21 @@ import {
 } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import Mapbox from "@rnmapbox/maps";
 import { format } from "date-fns";
 import { DatePickerModal } from "react-native-paper-dates";
 import FilterSheet from "../../src/components/FilterSheet";
 import PackageCard from "../../src/components/PackageCard";
 import TravelerSelector from "../../src/components/search/TravelerSelector";
+import SortSheet from "../../src/components/SortSheet";
 import { useSearch } from "../../src/hooks/useSearch";
 import databaseService from "../../src/lib/databaseService";
 import { PackageFilters, TravelPackage } from "../../src/types";
+
+// Public Token for Mapbox (Client-side)
+Mapbox.setAccessToken(
+  "pk.eyJ1IjoiZmF5YWphIiwiYSI6ImNtNXdlY2w0bjAwM3gyanB4eHM1ZzIzaTMifQ.-3a5_XbEbC2eD_6hM6iWwA"
+);
 
 // Simple Debounce Hook
 function useDebounce<T>(value: T, delay: number): T {
@@ -54,9 +61,11 @@ export default function SearchScreen() {
 
   const [results, setResults] = useState<TravelPackage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isMapView, setIsMapView] = useState(false);
 
   // Filters
   const [showFilters, setShowFilters] = useState(false);
+  const [showSort, setShowSort] = useState(false);
   const [filters, setFilters] = useState<PackageFilters>({});
 
   // Extended Search Params
@@ -169,14 +178,21 @@ export default function SearchScreen() {
           autoFocus={true}
           loading={isLoading}
         />
-        <View>
+        <View style={{ flexDirection: "row" }}>
           <IconButton
-            icon="filter-variant"
-            onPress={() => setShowFilters(true)}
+            icon="sort"
+            onPress={() => setShowSort(true)}
+            iconColor={theme.colors.primary}
           />
-          {activeFilterCount > 0 && (
-            <Badge style={styles.badge}>{activeFilterCount}</Badge>
-          )}
+          <View>
+            <IconButton
+              icon="filter-variant"
+              onPress={() => setShowFilters(true)}
+            />
+            {activeFilterCount > 0 && (
+              <Badge style={styles.badge}>{activeFilterCount}</Badge>
+            )}
+          </View>
         </View>
       </View>
 
@@ -192,6 +208,15 @@ export default function SearchScreen() {
           borderBottomColor: "#f0f0f0",
         }}
       >
+        <Button
+          mode="contained-tonal"
+          onPress={() => setIsMapView(!isMapView)}
+          icon={isMapView ? "format-list-bulleted" : "map"}
+          compact
+          style={{ flex: 0 }}
+        >
+          {isMapView ? "List" : "Map"}
+        </Button>
         <Button
           mode="outlined"
           onPress={() => setOpenDate(true)}
@@ -217,7 +242,41 @@ export default function SearchScreen() {
       </View>
 
       {/* Results */}
-      {isLoading && results.length === 0 ? (
+      {isMapView ? (
+        <View style={{ flex: 1 }}>
+          <Mapbox.MapView style={{ flex: 1 }}>
+            <Mapbox.Camera
+              zoomLevel={2}
+              centerCoordinate={[78.9629, 20.5937]} // Default to India center
+            />
+            {results.map((pkg) => (
+              <Mapbox.PointAnnotation
+                key={pkg.$id}
+                id={pkg.$id}
+                coordinate={[pkg.longitude || 78.9629, pkg.latitude || 20.5937]}
+                onSelected={() =>
+                  router.push(
+                    `/package/${pkg.$id}` as `/package/${string}` as any
+                  )
+                }
+              >
+                <View
+                  style={{
+                    backgroundColor: "white",
+                    padding: 4,
+                    borderRadius: 8,
+                    elevation: 4,
+                  }}
+                >
+                  <Text variant="labelSmall" style={{ fontWeight: "bold" }}>
+                    ${pkg.price}
+                  </Text>
+                </View>
+              </Mapbox.PointAnnotation>
+            ))}
+          </Mapbox.MapView>
+        </View>
+      ) : isLoading && results.length === 0 ? (
         <View style={styles.centered}>
           <ActivityIndicator size="large" />
         </View>
@@ -346,6 +405,15 @@ export default function SearchScreen() {
         onDismiss={() => setShowFilters(false)}
         currentFilters={filters}
         onApply={setFilters}
+      />
+
+      <SortSheet
+        visible={showSort}
+        onDismiss={() => setShowSort(false)}
+        currentSort={filters.sortBy || "rating"}
+        onApply={(sort: any) =>
+          setFilters((prev) => ({ ...prev, sortBy: sort }))
+        }
       />
 
       <DatePickerModal

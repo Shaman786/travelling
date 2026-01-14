@@ -60,7 +60,13 @@
           "defaultChannel": "default"
         }
       ],
-      "./plugins/withAirwallex"
+      "./plugins/withAirwallex",
+      [
+        "@rnmapbox/maps",
+        {
+          "RNMapboxMapsImpl": "mapbox"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

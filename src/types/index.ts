@@ -57,6 +57,8 @@ export interface TravelPackage extends Models.Document {
   itinerary: PackageItineraryDay[];
   isActive: boolean;
   createdAt: string;
+  latitude?: number;
+  longitude?: number;
 }
 
 // ============ Traveler Types ============
@@ -240,6 +242,8 @@ export interface Addon extends Models.Document {
   type: "per_person" | "per_booking";
   icon: string;
   isActive: boolean;
+  latitude?: number;
+  longitude?: number;
 }
 
 // ============ Filter Types ============

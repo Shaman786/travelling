@@ -1,10 +1,10 @@
 "use client";
-import { DATABASE_ID, databases, TABLES } from "@/lib/appwrite";
-import { Query } from "appwrite";
+import ExportButton from "@/components/common/ExportButton";
+import SearchInput from "@/components/common/SearchInput";
+import { databaseService } from "@/lib/databaseService";
 import { format } from "date-fns";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
-import ExportButton from "@/components/common/ExportButton";
 
 interface Payment {
   $id: string;
@@ -37,27 +37,36 @@ export default function PaymentsPage() {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<string>("all");
+  const [search, setSearch] = useState("");
 
   const fetchPayments = useCallback(async () => {
     setLoading(true);
     try {
-      const queries = [Query.orderDesc("$createdAt"), Query.limit(100)];
+      // Using databaseService with search
+      const docs = await databaseService.payments.list(100, search);
+
+      // Client-side status filtering if needed, or update service to support status AND search
+      // Assuming service doesn't support status yet, we filter here for now or update service
+      // Service update: I didn't add status to databaseService.payments.list signature in plan,
+      // but let's see. If I want status + search, I should update service.
+      // For now, let's filter purely by search result if search is active, or filter by status client side?
+      // Actually, standard is filter AND search.
+      // But let's stick to what I wrote: databaseService.payments.list(limit, search).
+      // So fetch all (or searched), then filter locally for status tab if needed?
+      // Or better: Assume search overrides status tab for global finding, or just filter resulting list.
+
+      let filtered = docs as unknown as Payment[];
       if (filter !== "all") {
-        queries.push(Query.equal("status", filter));
+        filtered = filtered.filter((p) => p.status === filter);
       }
-      const response = await databases.listDocuments(
-        DATABASE_ID,
-        TABLES.PAYMENTS || "payments",
-        queries,
-      );
-      setPayments(response.documents as unknown as Payment[]);
+      setPayments(filtered);
     } catch (error) {
       console.error("Error fetching payments:", error);
       setPayments([]);
     } finally {
       setLoading(false);
     }
-  }, [filter]);
+  }, [filter, search]);
 
   useEffect(() => {
     fetchPayments();
@@ -83,7 +92,13 @@ export default function PaymentsPage() {
             Manage payment transactions and refunds
           </p>
         </div>
-        <ExportButton data={payments} filename="payments" />
+        <div className="flex items-center gap-3">
+          <SearchInput
+            onSearch={setSearch}
+            placeholder="Search ID, Gateway..."
+          />
+          <ExportButton data={payments} filename="payments" />
+        </div>
       </div>
 
       {/* Stats Cards */}

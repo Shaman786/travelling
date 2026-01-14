@@ -1,7 +1,8 @@
 "use client";
 import Button from "@/components/ui/button/Button";
 import { DATABASE_ID, databases, TABLES } from "@/lib/appwrite";
-import { ID, Query } from "appwrite";
+import { databaseService } from "@/lib/databaseService";
+import { Query } from "appwrite";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 
@@ -64,22 +65,16 @@ export default function TicketDetailsPage() {
 
     setSending(true);
     try {
-      // 1. Create Message
-      await databases.createDocument(
-        DATABASE_ID,
-        TABLES.MESSAGES,
-        ID.unique(),
-        {
-          ticketId: id,
-          senderId: "admin",
-          senderName: "Support Team",
-          message: replyText.trim(),
-          isAdmin: true,
-          createdAt: new Date().toISOString(),
-        },
+      // 1. Send Reply via Service
+      await databaseService.support.reply(
+        id,
+        replyText.trim(),
+        "admin",
+        "Support",
+        true,
       );
 
-      // 2. Update Ticket Status if needed (Optional, but good practice)
+      // 2. Update Ticket Status if needed
       if (ticket.status === "open") {
         await databases.updateDocument(DATABASE_ID, TABLES.TICKETS, id, {
           status: "in_progress",

@@ -39,7 +39,10 @@ export default function ExpertiseShowcase() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text variant="titleMedium" style={styles.title}>
+        <Text
+          variant="titleMedium"
+          style={[styles.title, { color: theme.colors.onBackground }]}
+        >
           Why Book With Us?
         </Text>
       </View>
@@ -49,7 +52,17 @@ export default function ExpertiseShowcase() {
         contentContainerStyle={styles.scrollContent}
       >
         {SHOWCASE_ITEMS.map((item) => (
-          <Card key={item.id} style={styles.card} mode="outlined">
+          <Card
+            key={item.id}
+            style={[
+              styles.card,
+              {
+                backgroundColor: theme.colors.surface,
+                borderColor: theme.colors.outlineVariant,
+              },
+            ]}
+            mode="outlined"
+          >
             <Card.Content style={styles.cardContent}>
               <View
                 style={[
@@ -68,7 +81,10 @@ export default function ExpertiseShowcase() {
                 <Text variant="titleSmall" style={{ fontWeight: "bold" }}>
                   {item.title}
                 </Text>
-                <Text variant="bodySmall" style={{ color: "#666" }}>
+                <Text
+                  variant="bodySmall"
+                  style={{ color: theme.colors.onSurfaceVariant }}
+                >
                   {item.subtitle}
                 </Text>
               </View>
@@ -90,7 +106,6 @@ const styles = StyleSheet.create({
   },
   title: {
     fontWeight: "bold",
-    color: "#1A1A2E",
   },
   scrollContent: {
     paddingHorizontal: 20,
@@ -99,8 +114,6 @@ const styles = StyleSheet.create({
   card: {
     width: 180,
     marginRight: 12,
-    backgroundColor: "#fff",
-    borderColor: "#eee",
   },
   cardContent: {
     flexDirection: "row",

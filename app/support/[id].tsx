@@ -90,7 +90,7 @@ export default function TicketDetailsScreen() {
         // Also refresh ticket status if needed
         const ticketData = await supportService.getTicketById(id);
         if (ticketData) setTicket(ticketData);
-      } catch (e) {
+      } catch {
         // Silent fail on poll
       }
     }, 5000);

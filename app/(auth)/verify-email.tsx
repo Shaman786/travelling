@@ -30,11 +30,6 @@ export default function VerifyEmailScreen() {
 
   const verify = React.useCallback(async () => {
     try {
-      // Magic Link Login (creates session)
-      // Note: We use completeMagicLinkLogin now instead of email verification
-      // But we need to update authService first. For now, let's assume we'll use a new method.
-      // Wait, we are fixing syntax first. Let's keep existing method call but fix structure.
-      // Actually, I'll update it to use the generic 'verify' placeholder and I'll update logic in next step.
       await authService.completeVerification(userId, secret);
       setStatus("success");
     } catch (err: any) {

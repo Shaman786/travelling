@@ -9,10 +9,12 @@ export const APPWRITE_ENDPOINT = endpoint;
 export const APPWRITE_PROJECT_ID = projectId;
 
 // Database ID
-export const DATABASE_ID = "travelling_db";
+export const DATABASE_ID =
+  process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID || "travelling_db";
 
 export const TABLES = {
   USERS: "users",
+  ADMINS: "admins", // Added
   PACKAGES: "packages",
   BOOKINGS: "bookings",
   DOCUMENTS: "documents",
@@ -21,6 +23,7 @@ export const TABLES = {
   REVIEWS: "reviews",
   PAYMENTS: "payments",
   SYSTEM_CONFIG: "system_config",
+  MESSAGES: "ticket_messages",
   ADDONS: "addons",
 };
 

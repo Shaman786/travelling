@@ -125,23 +125,21 @@ export default function LoginScreen() {
             Forgot Password?
           </Button>
 
+          {/* Social Login - Archived for future use when OAuth is configured
           <View style={styles.divider}>
-            <View
-              style={[
-                styles.dividerLine,
-                { backgroundColor: theme.colors.outline },
-              ]}
-            />
-            <Text style={{ color: theme.colors.outline, marginHorizontal: 16 }}>
-              OR
-            </Text>
-            <View
-              style={[
-                styles.dividerLine,
-                { backgroundColor: theme.colors.outline },
-              ]}
-            />
+            <View style={[styles.dividerLine, { backgroundColor: theme.colors.outline }]} />
+            <Text style={{ color: theme.colors.outline, marginHorizontal: 16 }}>OR</Text>
+            <View style={[styles.dividerLine, { backgroundColor: theme.colors.outline }]} />
           </View>
+          <Button mode="outlined" onPress={() => loginWithProvider("google")} icon="google" style={styles.button}>
+            Continue with Google
+          </Button>
+          <Button mode="outlined" onPress={() => loginWithProvider("apple")} icon="apple" style={styles.button}>
+            Continue with Apple
+          </Button>
+          */}
+
+          <View style={{ height: 16 }} />
 
           <Button
             mode="outlined"
