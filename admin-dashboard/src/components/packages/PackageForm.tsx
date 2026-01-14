@@ -17,7 +17,21 @@ export default function PackageForm({
   onSubmit,
   isLoading,
 }: PackageFormProps) {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    title: string;
+    destination: string;
+    country: string;
+    category: string;
+    price: string | number;
+    duration: string;
+    description: string;
+    imageUrl: string;
+    images: string[];
+    highlights: string;
+    inclusions: string;
+    exclusions: string;
+    isActive: boolean;
+  }>({
     title: initialData?.title || "",
     destination: initialData?.destination || "",
     country: initialData?.country || "",
@@ -314,7 +328,7 @@ export default function PackageForm({
                         type="button"
                         onClick={() => {
                           const newImages = formData.images?.filter(
-                            (_, i) => i !== index,
+                            (_: string, i: number) => i !== index,
                           );
                           setFormData((prev) => ({
                             ...prev,

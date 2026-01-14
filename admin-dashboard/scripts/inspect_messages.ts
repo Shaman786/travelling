@@ -6,9 +6,11 @@ dotenv.config({ path: path.resolve(process.cwd(), ".env.local") });
 
 const ENDPOINT =
   process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT || "https://cloud.appwrite.io/v1";
-const PROJECT_ID = process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID;
+const PROJECT_ID = process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID || "";
 const API_KEY =
-  process.env.APPWRITE_API_KEY || process.env.NEXT_PUBLIC_APPWRITE_API_KEY;
+  process.env.APPWRITE_API_KEY ||
+  process.env.NEXT_PUBLIC_APPWRITE_API_KEY ||
+  "";
 const DATABASE_ID =
   process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID || "travelling_db";
 
