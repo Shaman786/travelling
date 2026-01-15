@@ -341,17 +341,33 @@ export default function MyTripsScreen() {
                 {statusText}
               </Chip>
               {activeSegment === "completed" && (
-                <Pressable
-                  onPress={() => handleBookAgain(trip.packageId)}
-                  hitSlop={8}
-                >
-                  <Text
-                    variant="labelSmall"
-                    style={{ color: theme.colors.primary, fontWeight: "bold" }}
+                <View style={{ flexDirection: "row", gap: 8 }}>
+                  <Pressable onPress={() => handleShareTrip(trip)} hitSlop={8}>
+                    <Text
+                      variant="labelSmall"
+                      style={{
+                        color: theme.colors.secondary,
+                        fontWeight: "bold",
+                      }}
+                    >
+                      Share
+                    </Text>
+                  </Pressable>
+                  <Pressable
+                    onPress={() => handleBookAgain(trip.packageId)}
+                    hitSlop={8}
                   >
-                    Book Again
-                  </Text>
-                </Pressable>
+                    <Text
+                      variant="labelSmall"
+                      style={{
+                        color: theme.colors.primary,
+                        fontWeight: "bold",
+                      }}
+                    >
+                      Book Again
+                    </Text>
+                  </Pressable>
+                </View>
               )}
             </View>
           </View>

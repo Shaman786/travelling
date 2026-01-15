@@ -240,12 +240,21 @@ export default function PackageDetailsScreen() {
                   {viewers} viewing now
                 </Text>
               </View>
-              <Text
-                variant="labelSmall"
-                style={{ color: theme.colors.outline }}
+              <View
+                style={[styles.viewersBadge, { backgroundColor: "#FFF8E1" }]}
               >
-                Popular choice!
-              </Text>
+                <MaterialCommunityIcons name="fire" size={14} color="#FF9800" />
+                <Text
+                  variant="labelSmall"
+                  style={{
+                    color: "#E65100",
+                    fontWeight: "bold",
+                    marginLeft: 4,
+                  }}
+                >
+                  Popular choice!
+                </Text>
+              </View>
             </View>
 
             <View style={styles.trustBadgesRow}>
