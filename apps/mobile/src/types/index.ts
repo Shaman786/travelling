@@ -108,6 +108,7 @@ export interface Booking extends Models.Document {
   packageId: string;
   packageTitle: string;
   packageImageUrl?: string; // Added for UI display
+  bookingRef?: string; // Short ID for user display
   destination: string;
   departureDate: string;
   returnDate: string;

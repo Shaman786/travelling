@@ -1,4 +1,4 @@
-import { Account, Client, Databases, Storage } from "appwrite";
+import { Account, Client, Databases, Functions, Storage } from "appwrite";
 
 // Appwrite Configuration from environment variables
 const endpoint = process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT || "";

@@ -28,12 +28,12 @@ import {
   APPWRITE_PROJECT_ID,
   BUCKETS,
   DATABASE_ID,
-  ID,
   Query,
   storage,
   tables,
   TABLES,
 } from "./appwrite";
+import { generateBookingRef, generateId } from "./id";
 
 // ============ Payment Service ============
 
@@ -387,11 +387,17 @@ export const bookingService = {
         statusHistory: JSON.stringify(bookingData.statusHistory),
       };
 
+      const bookingRef = generateBookingRef();
+      const updatedData = {
+        ...data,
+        bookingRef, // Add short ID
+      };
+
       const row = (await tables.createRow({
         databaseId: DATABASE_ID,
         tableId: TABLES.BOOKINGS,
-        rowId: ID.unique(),
-        data: data as any,
+        rowId: generateId(),
+        data: updatedData as any,
       })) as any;
 
       return {
@@ -479,7 +485,7 @@ export const bookingService = {
     const response = await tables.createRow({
       databaseId: DATABASE_ID,
       tableId: TABLES.PAYMENTS,
-      rowId: ID.unique(),
+      rowId: generateId(),
       data: {
         ...paymentData,
       },
@@ -528,7 +534,7 @@ export const bookingService = {
         ...currentHistory,
         statusHistoryEntry,
       ]);
-      const paymentId = ID.unique();
+      const paymentId = generateId();
 
       // Define Operations
       const operations = [
@@ -712,7 +718,7 @@ export const documentService = {
       // Upload to Storage
       const uploaded = await storage.createFile({
         bucketId: BUCKETS.TRAVEL_DOCUMENTS,
-        fileId: ID.unique(),
+        fileId: generateId(),
         file: filePayload as any,
       });
 
@@ -722,7 +728,7 @@ export const documentService = {
       const row = (await tables.createRow({
         databaseId: DATABASE_ID,
         tableId: TABLES.DOCUMENTS,
-        rowId: ID.unique(),
+        rowId: generateId(),
         data: {
           userId,
           fileName: file.name,
@@ -819,16 +825,13 @@ export const supportService = {
     >
   ): Promise<SupportTicket> {
     try {
-      const now = new Date().toISOString();
       const row = (await tables.createRow({
         databaseId: DATABASE_ID,
         tableId: TABLES.TICKETS,
-        rowId: ID.unique(),
+        rowId: generateId(),
         data: {
           ...ticketData,
           status: "open",
-          createdAt: now,
-          updatedAt: now,
         },
       })) as any;
       return {
@@ -923,14 +926,12 @@ export const supportService = {
     >
   ): Promise<TicketMessage> {
     try {
-      const now = new Date().toISOString();
       const row = (await tables.createRow({
         databaseId: DATABASE_ID,
         tableId: TABLES.MESSAGES,
-        rowId: ID.unique(),
+        rowId: generateId(),
         data: {
           ...messageData,
-          createdAt: now,
         },
       })) as any;
       return {
@@ -1008,14 +1009,12 @@ export const travelerService = {
     >
   ): Promise<SavedTraveler> {
     try {
-      const now = new Date().toISOString();
       const row = (await tables.createRow({
         databaseId: DATABASE_ID,
         tableId: TABLES.SAVED_TRAVELERS,
-        rowId: ID.unique(),
+        rowId: generateId(),
         data: {
           ...travelerData,
-          createdAt: now,
         },
       })) as any;
       return {
@@ -1085,14 +1084,12 @@ export const reviewService = {
     >
   ): Promise<Review> {
     try {
-      const now = new Date().toISOString();
       const row = (await tables.createRow({
         databaseId: DATABASE_ID,
         tableId: TABLES.REVIEWS,
-        rowId: ID.unique(),
+        rowId: generateId(),
         data: {
           ...reviewData,
-          createdAt: now,
         },
       })) as any;
 
@@ -1147,12 +1144,10 @@ export const paymentService = {
       const payment = await tables.createRow({
         databaseId: DATABASE_ID,
         tableId: TABLES.PAYMENTS,
-        rowId: ID.unique(),
+        rowId: generateId(),
         data: {
           ...paymentData,
           status: "pending",
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
         },
       });
       return payment as unknown as Payment;
@@ -1361,12 +1356,10 @@ export const consultationService = {
       const row = await tables.createRow({
         databaseId: DATABASE_ID,
         tableId: TABLES.CONSULTATIONS,
-        rowId: ID.unique(),
+        rowId: generateId(),
         data: {
           ...data,
           status: "new",
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
         },
       });
       return row;
@@ -1431,7 +1424,7 @@ export const chatService = {
       const row = (await tables.createRow({
         databaseId: DATABASE_ID,
         tableId: TABLES.CHAT_MESSAGES,
-        rowId: ID.unique(),
+        rowId: generateId(),
         data: {
           conversationId,
           senderId,

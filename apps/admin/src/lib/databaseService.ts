@@ -1,5 +1,6 @@
 import { Models, Query } from "appwrite";
-import { DATABASE_ID, databases, ID, TABLES } from "./appwrite";
+import { DATABASE_ID, databases, TABLES } from "./appwrite";
+import { generateId } from "./id";
 
 // Types (simplified for Admin)
 export interface TravelPackage extends Models.Document {
@@ -70,11 +71,11 @@ export const databaseService = {
         return await databases.createDocument(
           DATABASE_ID,
           TABLES.PACKAGES,
-          ID.unique(),
+          generateId(),
           {
             ...data,
             isActive: true,
-            createdAt: new Date().toISOString(),
+
             // Ensure itinerary is stringified if needed, but array is supported in recent Appwrite
           },
         );
@@ -183,7 +184,7 @@ export const databaseService = {
         return await databases.createDocument(
           DATABASE_ID,
           TABLES.ADDONS,
-          ID.unique(),
+          generateId(),
           {
             ...data,
             isActive: true,
@@ -258,7 +259,7 @@ export const databaseService = {
         return await databases.createDocument(
           DATABASE_ID,
           TABLES.ADMINS,
-          ID.unique(),
+          generateId(),
           {
             ...data,
             isActive: true,
@@ -350,7 +351,7 @@ export const databaseService = {
         const response = await databases.listDocuments(
           DATABASE_ID,
           TABLES.MESSAGES,
-          [Query.equal("ticketId", ticketId), Query.orderAsc("createdAt")],
+          [Query.equal("ticketId", ticketId), Query.orderAsc("$createdAt")],
         );
         return response.documents;
       } catch (error) {
@@ -379,14 +380,13 @@ export const databaseService = {
         return await databases.createDocument(
           DATABASE_ID,
           TABLES.MESSAGES,
-          ID.unique(),
+          generateId(),
           {
             ticketId,
             message,
             senderId,
             senderName, // Added
             isAdmin,
-            createdAt: new Date().toISOString(),
           },
         );
       } catch (error) {
@@ -462,8 +462,8 @@ export const databaseService = {
         return await databases.createDocument(
           DATABASE_ID,
           TABLES.BANNERS,
-          ID.unique(),
-          { ...data, createdAt: new Date().toISOString() },
+          generateId(),
+          { ...data },
         );
       } catch (error) {
         console.error("Create banner error:", error);

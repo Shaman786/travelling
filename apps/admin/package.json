@@ -28,6 +28,7 @@
     "date-fns": "^4.1.0",
     "dotenv": "^17.2.3",
     "flatpickr": "^4.6.13",
+    "nanoid": "^3.3.11",
     "next": "16.0.10",
     "react": "^19.2.0",
     "react-apexcharts": "^1.8.0",
@@ -37,7 +38,8 @@
     "react-dropzone": "^14.3.8",
     "react-icons": "^5.5.0",
     "swiper": "^11.2.10",
-    "tailwind-merge": "^2.6.0"
+    "tailwind-merge": "^2.6.0",
+    "ulidx": "^2.4.1"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",

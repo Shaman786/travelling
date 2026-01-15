@@ -254,7 +254,7 @@ export default function MyTripsScreen() {
   );
 
   const renderTripItem = ({ item: trip }: { item: BookedTrip }) => {
-    // Determine visual status color and text
+    // VISUAL STATUS HELPERS
     let statusColor = theme.colors.primary;
     let statusText = trip.status
       .split("_")
@@ -264,83 +264,147 @@ export default function MyTripsScreen() {
     if (trip.status === "processing") {
       if (trip.paymentStatus === "paid") {
         statusText = "Paid - Processing";
-        statusColor = "#4CAF50"; // Green for paid
+        statusColor = "#4CAF50";
       } else {
         statusText = "Awaiting Confirmation";
-        statusColor = "#FF9800"; // Orange
+        statusColor = "#FF9800";
       }
     } else if (
       trip.status === "visa_approved" ||
-      trip.status === "ready_to_fly"
+      trip.status === "ready_to_fly" ||
+      trip.status === "completed"
     ) {
-      statusColor = "#4CAF50"; // Green
-    } else if (trip.status === "cancelled") {
+      statusColor = "#4CAF50";
+    } else if (
+      (trip.status as string) === "cancelled" ||
+      (trip.status as string) === "refunded" ||
+      (trip.status as string) === "failed"
+    ) {
+      statusText =
+        (trip.status as string) === "refunded" ? "Refunded" : "Cancelled";
       statusColor = theme.colors.error;
     } else if (trip.status === "visa_submitted") {
       statusText = "Visa Submitted";
       statusColor = "#2196F3";
     }
 
+    // DATE HELPER
+    const displayDate = (() => {
+      try {
+        const date = trip.departureDate
+          ? new Date(trip.departureDate)
+          : new Date();
+        return isNaN(date.getTime())
+          ? "Date TBD"
+          : format(date, "MMM dd, yyyy");
+      } catch {
+        return "Date TBD";
+      }
+    })();
+
+    // === COMPACT CARD (For Completed / Cancelled) ===
+    if (activeSegment !== "upcoming") {
+      return (
+        <Pressable
+          onPress={() => handleViewDetails(trip.id)}
+          style={({ pressed }) => [{ opacity: pressed ? 0.9 : 1 }]}
+        >
+          <View
+            style={[
+              styles.compactCard,
+              { borderLeftColor: statusColor, borderLeftWidth: 4 },
+            ]}
+          >
+            <View style={{ flex: 1 }}>
+              <Text variant="titleSmall" style={{ fontWeight: "bold" }}>
+                {trip.packageTitle}
+              </Text>
+              <Text variant="bodySmall" style={{ color: theme.colors.outline }}>
+                {displayDate} • {trip.destination}
+              </Text>
+            </View>
+
+            <View style={{ alignItems: "flex-end" }}>
+              <Chip
+                textStyle={{
+                  fontSize: 10,
+                  color: statusColor,
+                  lineHeight: 12,
+                }}
+                style={{
+                  backgroundColor: statusColor + "15",
+                  height: 24,
+                  marginBottom: 4,
+                }}
+                compact
+              >
+                {statusText}
+              </Chip>
+              {activeSegment === "completed" && (
+                <Pressable
+                  onPress={() => handleBookAgain(trip.packageId)}
+                  hitSlop={8}
+                >
+                  <Text
+                    variant="labelSmall"
+                    style={{ color: theme.colors.primary, fontWeight: "bold" }}
+                  >
+                    Book Again
+                  </Text>
+                </Pressable>
+              )}
+            </View>
+          </View>
+        </Pressable>
+      );
+    }
+
+    // === FULL CARD (For Upcoming / Ongoing) ===
     return (
       <Pressable
         onPress={() => handleViewDetails(trip.id)}
-        style={({ pressed }) => [{ opacity: pressed ? 0.8 : 1 }]}
+        style={({ pressed }) => [{ opacity: pressed ? 0.95 : 1 }]}
       >
         <Card style={styles.card} mode="elevated">
-          <View style={styles.cardHeader}>
-            {/* Image Section */}
+          {/* Header Image Background Style */}
+          <View style={{ position: "relative" }}>
             {trip.packageImageUrl && (
               <Image
                 source={{ uri: trip.packageImageUrl }}
-                style={styles.cardImage}
+                style={styles.cardHeroImage}
                 contentFit="cover"
               />
             )}
-            <View style={styles.cardHeaderTextContainer}>
-              <View style={styles.cardTitleRow}>
-                <Text
-                  variant="titleMedium"
-                  style={styles.cardTitle}
-                  numberOfLines={1}
-                >
-                  {trip.packageTitle}
-                </Text>
+            <View style={styles.cardOverlay}>
+              <View style={styles.statusBadgeRow}>
                 <Chip
                   icon="information"
-                  style={{ backgroundColor: statusColor + "20", height: 28 }}
-                  textStyle={{
-                    color: statusColor,
-                    fontSize: 10,
-                    lineHeight: 10,
-                  }}
-                  compact
+                  style={{ backgroundColor: "#ffffff" }}
+                  textStyle={{ color: statusColor, fontWeight: "bold" }}
                 >
                   {statusText}
                 </Chip>
               </View>
-              <Text variant="bodySmall" style={{ color: theme.colors.outline }}>
-                {(() => {
-                  try {
-                    const date = trip.departureDate
-                      ? new Date(trip.departureDate)
-                      : new Date();
-                    return isNaN(date.getTime())
-                      ? "Date TBD"
-                      : format(date, "MMM dd, yyyy");
-                  } catch {
-                    return "Date TBD";
-                  }
-                })()}{" "}
-                • {trip.destination}
-              </Text>
             </View>
           </View>
 
           <Card.Content style={{ paddingTop: 16 }}>
-            {/* Use StepTracker for visual progress */}
+            <View style={{ marginBottom: 16 }}>
+              <Text variant="headlineSmall" style={{ fontWeight: "bold" }}>
+                {trip.packageTitle}
+              </Text>
+              <Text
+                variant="bodyMedium"
+                style={{ color: theme.colors.secondary }}
+              >
+                {displayDate} • {trip.destination}
+              </Text>
+            </View>
+
+            {/* Step Tracker */}
             <StepTracker currentStatus={trip.status} />
 
-            <Divider style={{ marginVertical: 12 }} />
+            <Divider style={{ marginVertical: 16 }} />
 
             <View style={styles.actions}>
               <View>
@@ -348,7 +412,7 @@ export default function MyTripsScreen() {
                   variant="bodySmall"
                   style={{ color: theme.colors.outline }}
                 >
-                  Total Paid
+                  Amount Paid
                 </Text>
                 <Text
                   variant="titleMedium"
@@ -358,94 +422,43 @@ export default function MyTripsScreen() {
                 </Text>
               </View>
 
-              {/* Actions based on status */}
-              {trip.status === "pending_payment" ? (
-                <View style={{ flexDirection: "row", gap: 8 }}>
+              {/* Action Buttons */}
+              <View style={{ flexDirection: "row", gap: 8 }}>
+                {trip.status === "pending_payment" ? (
+                  <>
+                    <Button
+                      mode="outlined"
+                      compact
+                      textColor={theme.colors.error}
+                      style={{ borderColor: theme.colors.errorContainer }}
+                      onPress={() =>
+                        handleCancelTrip(trip.id, trip.packageTitle)
+                      }
+                      disabled={isProcessing}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      mode="contained"
+                      compact
+                      loading={isProcessing && payingTripId === trip.id}
+                      disabled={isProcessing}
+                      onPress={() => handlePayNow(trip)}
+                    >
+                      Pay Now
+                    </Button>
+                  </>
+                ) : (
                   <Button
-                    mode="outlined"
+                    mode="contained-tonal"
                     compact
-                    textColor={theme.colors.error}
-                    style={{ borderColor: theme.colors.errorContainer }}
-                    onPress={() => handleCancelTrip(trip.id, trip.packageTitle)}
-                    disabled={isProcessing}
+                    icon="eye"
+                    onPress={() => handleViewDetails(trip.id)}
                   >
-                    Cancel
+                    Manage
                   </Button>
-                  <Button
-                    mode="contained"
-                    compact
-                    loading={isProcessing && payingTripId === trip.id}
-                    disabled={isProcessing}
-                    onPress={() => handlePayNow(trip)}
-                  >
-                    Pay Now
-                  </Button>
-                </View>
-              ) : trip.status === "completed" ||
-                trip.status === "ready_to_fly" ? (
-                <View
-                  style={{ flexDirection: "row", gap: 8, flexWrap: "wrap" }}
-                >
-                  <Button
-                    mode="contained"
-                    compact
-                    buttonColor={theme.colors.secondary}
-                    onPress={() => handleOpenReview(trip)}
-                    icon="star"
-                  >
-                    Review
-                  </Button>
-                  <Button
-                    mode="outlined"
-                    compact
-                    icon="share-variant"
-                    onPress={() => handleShareTrip(trip)}
-                  >
-                    Share
-                  </Button>
-                  <Button
-                    mode="text"
-                    compact
-                    onPress={() => handleBookAgain(trip.packageId)}
-                  >
-                    Book Again
-                  </Button>
-                </View>
-              ) : trip.status === "processing" &&
-                trip.paymentStatus === "paid" ? (
-                <Button
-                  mode="outlined"
-                  compact
-                  icon="headphones"
-                  onPress={() => router.push("/support")}
-                >
-                  Contact Support
-                </Button>
-              ) : /* Hide Cancel for advanced stages to prevent issues */
-              [
-                  "visa_submitted",
-                  "visa_approved",
-                  "documents_verified",
-                ].includes(trip.status) ? (
-                <Button
-                  mode="outlined"
-                  compact
-                  icon="eye"
-                  onPress={() => handleViewDetails(trip.id)}
-                >
-                  View Details
-                </Button>
-              ) : (
-                <Button
-                  mode="outlined"
-                  compact
-                  textColor={theme.colors.error}
-                  style={{ borderColor: theme.colors.errorContainer }}
-                  onPress={() => handleCancelTrip(trip.id, trip.packageTitle)}
-                >
-                  Cancel
-                </Button>
-              )}
+                )}
+              </View>
             </View>
           </Card.Content>
         </Card>
@@ -655,5 +668,32 @@ const styles = StyleSheet.create({
     margin: 16,
     right: 0,
     bottom: 0,
+  },
+  // New Styles for Refactored Cards
+  compactCard: {
+    backgroundColor: "#fff",
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    elevation: 2,
+    borderLeftWidth: 4, // Make sure to override in style prop if needed
+  },
+  cardHeroImage: {
+    width: "100%",
+    height: 180,
+    backgroundColor: "#eee",
+  },
+  cardOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    padding: 16,
+  },
+  statusBadgeRow: {
+    alignSelf: "flex-end",
   },
 });

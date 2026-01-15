@@ -227,12 +227,23 @@ const COLLECTIONS: any = {
       { key: "specialRequests", type: "string", size: 1000, required: false }, // Added
       { key: "assignedTo", type: "string", size: 36, required: false }, // Added
       { key: "adminNotes", type: "string", size: 1000, required: false }, // Added
+      { key: "bookingRef", type: "string", size: 20, required: false }, // New user-facing ID
       // Business Trip attributes
       { key: "isWorkTrip", type: "boolean", required: false, default: false },
       { key: "companyName", type: "string", size: 128, required: false },
       { key: "taxId", type: "string", size: 64, required: false },
     ],
-    indexes: [{ key: "user_index", type: "key", attributes: ["userId"] }],
+    indexes: [
+      { key: "user_index", type: "key", attributes: ["userId"] },
+      {
+        key: "package_name_idx",
+        type: "fulltext",
+        attributes: ["packageName"],
+      },
+      { key: "payment_id_idx", type: "key", attributes: ["paymentId"] },
+      { key: "status_idx", type: "key", attributes: ["status"] },
+      { key: "booking_ref_idx", type: "unique", attributes: ["bookingRef"] },
+    ],
   },
   reviews: {
     name: "Reviews",
@@ -749,7 +760,33 @@ async function init() {
     console.log(`Processing table '${colId}'...`);
     try {
       await tableService.getTable(DATABASE_ID, colId);
-      console.log(`   ✅ Exists. Updating permissions...`);
+      await tableService.getTable(DATABASE_ID, colId);
+      console.log(`   ✅ Exists. Checking indices...`);
+
+      // Check and create missing indices
+      if (colConfig.indexes && colConfig.indexes.length > 0) {
+        for (const idx of colConfig.indexes) {
+          try {
+            await tableService.createIndex(
+              DATABASE_ID,
+              colId,
+              idx.key,
+              idx.type, // key, unique, fulltext
+              idx.attributes,
+              undefined, // orders (optional)
+            );
+            console.log(`      + Index created: ${idx.key}`);
+          } catch (err: any) {
+            if (err.code === 409) {
+              // Index already exists, ignore
+            } else {
+              console.log(
+                `      ⚠️ Error creating index ${idx.key}: ${err.message}`,
+              );
+            }
+          }
+        }
+      }
       // Update logic...
     } catch (err: any) {
       if (err.code === 404) {

@@ -12,8 +12,14 @@
  */
 
 import dotenv from "dotenv";
+import { customAlphabet } from "nanoid";
 import { Client, ID, TablesDB } from "node-appwrite";
 import path from "path";
+import { ulid } from "ulidx";
+
+const generateId = () => ulid();
+const generateBookingRef = () =>
+  `TRP-${customAlphabet("23456789ABCDEFGHJKLMNPQRSTUVWXYZ", 8)()}`;
 
 // Load environment variables
 dotenv.config({ path: path.resolve(process.cwd(), ".env.local") });
@@ -352,10 +358,11 @@ async function seedDemoData() {
         { name: "Companion", age: 28, gender: "Female" },
       ]),
       contactName: sampleUsers[userIdx]?.name || "Guest",
+      bookingRef: generateBookingRef(),
     };
 
     try {
-      await tables.createRow(DATABASE_ID, "bookings", ID.unique(), booking);
+      await tables.createRow(DATABASE_ID, "bookings", generateId(), booking);
       console.log(
         `  ✅ Booking for ${booking.packageTitle} (${booking.status})`
       );
