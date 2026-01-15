@@ -103,6 +103,10 @@ const COLLECTIONS: any = {
         default: "user",
       },
     ],
+    indexes: [
+      { key: "name_search", type: "fulltext", attributes: ["name"] },
+      { key: "email_idx", type: "key", attributes: ["email"] },
+    ],
     // Admin Role is no longer needed in users table if we have admins table, but we can keep it as legacy or for simple auth checks
   },
   admins: {

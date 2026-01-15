@@ -41,6 +41,10 @@ async function fixSecurity(tableId: string, name: string) {
 
     const permissions = [
       Permission.create(Role.users()),
+      // Allow admins to read all profiles for dashboard listing
+      Permission.read(Role.team("admin")),
+      Permission.update(Role.team("admin")),
+      Permission.delete(Role.team("admin")),
       // NO read/update/delete for generic 'users' role.
       // Owner gets implicit full rights via documentSecurity: true
     ];

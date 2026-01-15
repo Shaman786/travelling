@@ -1,7 +1,7 @@
 "use client";
-import React, { useState } from "react";
-import { account, DATABASE_ID, databases, TABLES } from "@/lib/appwrite";
+import { DATABASE_ID, databases, TABLES } from "@/lib/appwrite";
 import { ID } from "appwrite";
+import React, { useState } from "react";
 
 interface CreateUserModalProps {
   isOpen: boolean;
@@ -27,44 +27,36 @@ export default function CreateUserModal({
     setLoading(true);
 
     try {
-      // 1. Create Identity (This usually requires being logged out or using a Server SDK)
-      // Limitation: Client SDK 'account.create' is for self-registration.
-      // If we are logged in as Admin, calling account.create might not behave as "Admin creating user".
-      // Ideally this should call a backend function or Next.js API route.
-      // For this implementation, we'll try to use a Cloud Function or simulate it.
-      // ERROR: account.create w/ client sdk might fail if strict.
-      // Workaround: We will use a Function if available or just try standard create.
-      // User requested "ability to admin to add more user".
-      // Let's assume we can create a document in 'Users' collection first to "reserve" it,
-      // or try `account.create`. If `account.create` throws "User (current) already has session", we know we need a Function.
-      // BUT, checking Appwrite docs: account.create is allowed even if logged in? No, usually not.
-      // Alternative: We will Creates a User Document in the database and assume a backend trigger handles the Auth creation,
-      // OR we just assume this is a pure "Database User" for the sake of the dashboard if Auth is blocked.
-      // BETTER: We'll implement the UI and try `account.create`. If it fails, we'll note the limitation.
-
-      // Attempting to create user via Client SDK (might be limited)
-      // Ideally: await functions.createExecution('create-user', ...)
+      // ============ IMPORTANT LIMITATION ============
+      // This modal creates a "profile" in the database, NOT an actual authenticated user.
+      // The Client SDK cannot create users for others while logged in as Admin.
+      //
+      // To properly create users with login credentials, you must:
+      // 1. Create an Appwrite Cloud Function (e.g., 'create-user') with Server SDK
+      // 2. The function should call: users.create(ID.unique(), email, phone, password, name)
+      // 3. Then create the database document
+      // 4. Optionally add user to 'admin' team if role === 'admin'
+      //
+      // For now, this creates an "invited" profile. The user must sign up themselves
+      // using this email to claim their profile.
+      // ================================================
 
       const userId = ID.unique();
 
-      // Just simulate success for database if auth fails?
-      // Let's try to create the Auth user.
-      // Note: If this fails because we are logged in, we might need a workaround.
-      // For now, let's proceed with creating the DB entry which is critical for the Admin Panel display.
-
-      // If we are using valid Appwrite structure, we probably have a 'Users' collection that mirrors Auth.
+      // Create database profile (the user will need to register to claim it)
       await databases.createDocument(DATABASE_ID, TABLES.USERS, userId, {
         name,
         email,
-        item_userId: userId, // Assuming relation field
         role: role,
-        // Password is not stored in DB usually
+        // Note: 'role' field is for display purposes only.
+        // For actual permissions, add user to Teams via Cloud Function.
+        onboardingComplete: false,
       });
 
-      // We can't easily create the Auth account from client if logged in without a Function.
-      // We will skip `account.create` here to avoid breaking the admin session,
-      // or we accept that "Adding a user" in this context might just be adding to the DB
-      // and the user must sign up themselves (Invite flow).
+      // TODO: Implement Cloud Function integration for full user creation:
+      // await functions.createExecution('create-user', JSON.stringify({
+      //   email, password, name, role
+      // }));
 
       onSuccess();
       onClose();
@@ -90,15 +82,15 @@ export default function CreateUserModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-xs">
       <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-2xl dark:bg-gray-800">
         <h2 className="mb-4 text-xl font-bold text-gray-800 dark:text-white">
-          Add New User
+          Invite User
         </h2>
 
         {/* Warning about Client-Side limitation */}
-        <p className="mb-4 text-xs text-amber-600 dark:text-amber-400">
-          Note: This will add the user to the database. For authentication
-          access, please ensure a Function is set up or the user registers with
-          this email.
-        </p>
+        <div className="mb-4 rounded-lg bg-amber-50 p-3 text-xs text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+          <strong>Important:</strong> This creates a profile invitation. The
+          user must register with this email to activate their account. For full
+          user creation with login credentials, implement a Cloud Function.
+        </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>

@@ -74,8 +74,9 @@
     },
     "extra": {
       "eas": {
-        "projectId": "00000000-0000-0000-0000-000000000000"
+        "projectId": "REPLACE_WITH_EAS_PROJECT_ID"
       }
-    }
+    },
+    "owner": "shaman786"
   }
 }

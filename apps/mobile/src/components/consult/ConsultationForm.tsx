@@ -129,7 +129,7 @@ export default function ConsultationForm({
         attachmentName,
       });
 
-      Toast.success("Request Recieved! We'll contact you shortly.");
+      Toast.success("Request Received! We'll contact you shortly.");
       router.back();
     } catch (error: any) {
       Toast.error(error.message || "Failed to submit request.");

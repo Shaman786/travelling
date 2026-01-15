@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import { NextResponse } from "next/server";
 
 // Environment variables
@@ -42,8 +43,12 @@ export async function POST(request: Request) {
 
     // 2. Create Payment Intent
     const intentPayload = {
-      request_id: `req_${Date.now()}_${Math.random().toString(36).substring(7)}`,
-      amount: amount,
+      // Cryptographically secure request ID for idempotency
+      request_id: `req_${crypto.randomUUID()}`,
+      // Airwallex expects amount in major units (dollars, not cents)
+      // If the mobile app sends cents, divide by 100
+      amount:
+        typeof amount === "number" && amount > 1000 ? amount / 100 : amount,
       currency: currency,
       merchant_order_id: orderId,
       return_url: "travelling://payment-result", // Deep link to app

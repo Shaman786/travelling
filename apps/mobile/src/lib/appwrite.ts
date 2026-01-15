@@ -48,11 +48,10 @@ export const BUCKETS = {
   CONSULTATION_ATTACHMENTS: "consultation_attachments",
 };
 
-// Function IDs
+// Function IDs (must be configured in environment)
 export const FUNCTIONS = {
   CREATE_PAYMENT_INTENT:
-    process.env.EXPO_PUBLIC_APPWRITE_FUNCTION_ID_PAYMENT ||
-    "6964e88fd3c103ddf216",
+    process.env.EXPO_PUBLIC_APPWRITE_FUNCTION_ID_PAYMENT || "",
 };
 
 // Initialize Client
