@@ -175,7 +175,7 @@ export default function SearchScreen() {
       filters,
     });
     performSearch();
-  }, [performSearch]);
+  }, [performSearch, debouncedQuery, filters]);
 
   const activeFilterCount = Object.keys(filters).filter(
     (k) => filters[k as keyof PackageFilters] !== undefined
