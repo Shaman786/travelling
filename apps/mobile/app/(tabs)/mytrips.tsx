@@ -9,8 +9,13 @@ import {
   Button,
   Card,
   Chip,
+  Dialog,
   Divider,
+  FAB,
+  Portal,
+  SegmentedButtons,
   Text,
+  TextInput,
   useTheme,
 } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -25,9 +30,20 @@ export default function MyTripsScreen() {
   const theme = useTheme();
   const router = useRouter();
   const bookedTrips = useStore((state) => state.bookedTrips);
-  const removeBookedTrip = useStore((state) => state.removeBookedTrip);
+  const updateBookedTrip = useStore((state) => state.updateBookedTrip);
   const setBookedTrips = useStore((state) => state.setBookedTrips);
+  const addBookedTrip = useStore((state) => state.addBookedTrip);
   const user = useStore.getState().user; // Get user ID
+
+  // --- State for Filtering ---
+  const [activeSegment, setActiveSegment] = useState<
+    "upcoming" | "completed" | "cancelled"
+  >("upcoming");
+
+  // --- State for Adding Trip ---
+  const [isAddTripVisible, setIsAddTripVisible] = useState(false);
+  const [addTripId, setAddTripId] = useState("");
+  const [isAddingTrip, setIsAddingTrip] = useState(false);
 
   // Auto-refresh to ensure payment status is up to date
   useFocusEffect(
@@ -62,6 +78,55 @@ export default function MyTripsScreen() {
 
   const { startPayment, isProcessing } = usePayment();
   const [payingTripId, setPayingTripId] = useState<string | null>(null);
+
+  // --- Filtered Trips Logic ---
+  const filteredTrips = bookedTrips
+    .filter((trip) => {
+      if (activeSegment === "upcoming") {
+        return [
+          "processing",
+          "visa_submitted",
+          "visa_approved",
+          "ready_to_fly",
+          "pending_payment",
+        ].includes(trip.status);
+      } else if (activeSegment === "completed") {
+        return trip.status === "completed";
+      } else if (activeSegment === "cancelled") {
+        return ["cancelled", "refunded", "failed"].includes(trip.status);
+      }
+      return false;
+    })
+    .sort(
+      (a, b) =>
+        new Date(b.bookingDate).getTime() - new Date(a.bookingDate).getTime()
+    );
+
+  // --- Handlers ---
+  const handleAddTrip = async () => {
+    if (!addTripId.trim()) {
+      Toast.warn("Please enter a Booking ID");
+      return;
+    }
+
+    setIsAddingTrip(true);
+    try {
+      const booking = await bookingService.getBookingById(addTripId.trim());
+      if (booking) {
+        addBookedTrip(booking);
+        Toast.success("Trip added successfully!");
+        setIsAddTripVisible(false);
+        setAddTripId("");
+      } else {
+        Toast.error("Booking not found");
+      }
+    } catch (error: any) {
+      console.error("Add trip error:", error);
+      Toast.error("Failed to add trip: " + error.message);
+    } finally {
+      setIsAddingTrip(false);
+    }
+  };
 
   const handleOpenReview = (trip: BookedTrip) => {
     setCurrentReviewTrip(trip);
@@ -121,8 +186,8 @@ export default function MyTripsScreen() {
                 "Cancelled by user via app"
               );
 
-              // 2. Update Local Store (Restored logic as requested)
-              removeBookedTrip(tripId);
+              // 2. Update Local Store
+              updateBookedTrip(tripId, { status: "cancelled" });
 
               Toast.success("Trip cancelled successfully");
             } catch (error: any) {
@@ -396,6 +461,40 @@ export default function MyTripsScreen() {
     currentReviewTrip?.id
   );
 
+  // --- Dynamic Segments Logic ---
+  const hasUpcoming = bookedTrips.some((t) =>
+    [
+      "processing",
+      "visa_submitted",
+      "visa_approved",
+      "ready_to_fly",
+      "pending_payment",
+    ].includes(t.status)
+  );
+  const hasCompleted = bookedTrips.some((t) => t.status === "completed");
+  const hasCancelled = bookedTrips.some((t) =>
+    ["cancelled", "refunded", "failed"].includes(t.status)
+  );
+
+  const segments = React.useMemo(
+    () => [
+      ...(hasUpcoming || (!hasCompleted && !hasCancelled)
+        ? [{ value: "upcoming", label: "Upcoming" }]
+        : []),
+      ...(hasCompleted ? [{ value: "completed", label: "Completed" }] : []),
+      ...(hasCancelled ? [{ value: "cancelled", label: "Cancelled" }] : []),
+    ],
+    [hasUpcoming, hasCompleted, hasCancelled]
+  );
+
+  // Effect to ensure activeSegment is valid
+  React.useEffect(() => {
+    const isValid = segments.some((s) => s.value === activeSegment);
+    if (!isValid && segments.length > 0) {
+      setActiveSegment(segments[0].value as any);
+    }
+  }, [segments, activeSegment]);
+
   return (
     <SafeAreaView
       style={[styles.container, { backgroundColor: theme.colors.background }]}
@@ -404,20 +503,68 @@ export default function MyTripsScreen() {
         <Text variant="headlineMedium" style={styles.title}>
           My Trips
         </Text>
+        {segments.length > 1 && (
+          <SegmentedButtons
+            value={activeSegment}
+            onValueChange={(val) => setActiveSegment(val as any)}
+            buttons={segments}
+            style={{ marginTop: 16 }}
+            density="medium"
+          />
+        )}
       </View>
 
       <FlashList
-        data={[...bookedTrips].reverse()}
+        data={filteredTrips}
         keyExtractor={(item) => item.id}
         renderItem={renderTripItem}
         contentContainerStyle={
-          bookedTrips.length === 0
+          filteredTrips.length === 0
             ? { flexGrow: 1, justifyContent: "center" }
             : styles.listContent
         }
         ListEmptyComponent={renderEmptyState}
         showsVerticalScrollIndicator={false}
       />
+
+      <FAB
+        icon="plus"
+        label="Add Trip"
+        style={[styles.fab, { backgroundColor: theme.colors.primaryContainer }]}
+        color={theme.colors.onPrimaryContainer}
+        onPress={() => setIsAddTripVisible(true)}
+      />
+
+      <Portal>
+        <Dialog
+          visible={isAddTripVisible}
+          onDismiss={() => setIsAddTripVisible(false)}
+        >
+          <Dialog.Title>Add Trip by ID</Dialog.Title>
+          <Dialog.Content>
+            <Text variant="bodyMedium" style={{ marginBottom: 12 }}>
+              Enter the Booking ID provided to you to add it to your list.
+            </Text>
+            <TextInput
+              label="Booking ID"
+              value={addTripId}
+              onChangeText={setAddTripId}
+              mode="outlined"
+              autoCapitalize="none"
+            />
+          </Dialog.Content>
+          <Dialog.Actions>
+            <Button onPress={() => setIsAddTripVisible(false)}>Cancel</Button>
+            <Button
+              onPress={handleAddTrip}
+              loading={isAddingTrip}
+              disabled={isAddingTrip || !addTripId}
+            >
+              Add
+            </Button>
+          </Dialog.Actions>
+        </Dialog>
+      </Portal>
 
       {currentReviewTrip && (
         <ReviewModal
@@ -502,5 +649,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     flexWrap: "wrap",
     gap: 12,
+  },
+  fab: {
+    position: "absolute",
+    margin: 16,
+    right: 0,
+    bottom: 0,
   },
 });

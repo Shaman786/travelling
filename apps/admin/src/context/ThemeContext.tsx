@@ -15,23 +15,23 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const [theme, setTheme] = useState<Theme>("light");
-  const [isInitialized, setIsInitialized] = useState(false);
+  // Initialize state lazily to avoid hydration mismatch/sync update issues
+  const [theme, setTheme] = useState<Theme>(() => {
+    if (typeof window !== "undefined") {
+      return (localStorage.getItem("theme") as Theme) || "light";
+    }
+    return "light";
+  });
+  // Hydration mismatch fix: only render theme-dependent UI after mount
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    // This code will only run on the client side
-    const savedTheme = localStorage.getItem("theme") as Theme | null;
-    const initialTheme = savedTheme || "light"; // Default to light theme
-
-    if (savedTheme && savedTheme !== "light") {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setTheme(savedTheme);
-    }
-    setIsInitialized(true);
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Approved pattern for hydration mismatch fix
+    setMounted(true);
   }, []);
 
   useEffect(() => {
-    if (isInitialized) {
+    if (mounted) {
       localStorage.setItem("theme", theme);
       if (theme === "dark") {
         document.documentElement.classList.add("dark");
@@ -39,7 +39,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
         document.documentElement.classList.remove("dark");
       }
     }
-  }, [theme, isInitialized]);
+  }, [theme, mounted]);
 
   const toggleTheme = () => {
     setTheme((prevTheme) => (prevTheme === "light" ? "dark" : "light"));

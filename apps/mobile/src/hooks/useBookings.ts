@@ -1,6 +1,6 @@
 /**
  * useBookings Hook
- * 
+ *
  * React hook for managing user bookings.
  * Syncs between Appwrite and local Zustand cache.
  */
@@ -16,7 +16,11 @@ interface UseBookingsReturn {
   isLoading: boolean;
   error: string | null;
   refresh: () => Promise<void>;
-  updateStatus: (bookingId: string, status: BookingStatus, note?: string) => Promise<boolean>;
+  updateStatus: (
+    bookingId: string,
+    status: BookingStatus,
+    note?: string
+  ) => Promise<boolean>;
   cancelBooking: (bookingId: string, reason?: string) => Promise<boolean>;
 }
 
@@ -33,12 +37,11 @@ interface UseBookingReturn {
 export function useBookings(): UseBookingsReturn {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
+
   const user = useStore((state) => state.user);
   const bookedTrips = useStore((state) => state.bookedTrips);
   const setBookedTrips = useStore((state) => state.setBookedTrips);
   const updateBookedTrip = useStore((state) => state.updateBookedTrip);
-  const removeBookedTrip = useStore((state) => state.removeBookedTrip);
 
   // Convert BookedTrips to Booking format for return
   const bookings = useMemo<Booking[]>(() => {
@@ -97,34 +100,41 @@ export function useBookings(): UseBookingsReturn {
     fetchBookings();
   }, [fetchBookings]);
 
-  const updateStatus = useCallback(async (
-    bookingId: string,
-    status: BookingStatus,
-    note?: string
-  ): Promise<boolean> => {
-    try {
-      const updated = await bookingService.updateBookingStatus(bookingId, status, note);
-      updateBookedTrip(bookingId, updated);
-      return true;
-    } catch (err: any) {
-      setError(err.message);
-      return false;
-    }
-  }, [updateBookedTrip]);
+  const updateStatus = useCallback(
+    async (
+      bookingId: string,
+      status: BookingStatus,
+      note?: string
+    ): Promise<boolean> => {
+      try {
+        const updated = await bookingService.updateBookingStatus(
+          bookingId,
+          status,
+          note
+        );
+        updateBookedTrip(bookingId, updated);
+        return true;
+      } catch (err: any) {
+        setError(err.message);
+        return false;
+      }
+    },
+    [updateBookedTrip]
+  );
 
-  const cancelBooking = useCallback(async (
-    bookingId: string,
-    reason?: string
-  ): Promise<boolean> => {
-    try {
-      await bookingService.cancelBooking(bookingId, reason);
-      removeBookedTrip(bookingId);
-      return true;
-    } catch (err: any) {
-      setError(err.message);
-      return false;
-    }
-  }, [removeBookedTrip]);
+  const cancelBooking = useCallback(
+    async (bookingId: string, reason?: string): Promise<boolean> => {
+      try {
+        const updated = await bookingService.cancelBooking(bookingId, reason);
+        updateBookedTrip(bookingId, updated);
+        return true;
+      } catch (err: any) {
+        setError(err.message);
+        return false;
+      }
+    },
+    [updateBookedTrip]
+  );
 
   return {
     bookings,
@@ -145,9 +155,9 @@ export function useBooking(bookingId: string): UseBookingReturn {
   const [error, setError] = useState<string | null>(null);
 
   const user = useStore((state) => state.user);
-  
+
   // Check local cache first
-  const cachedTrip = useStore((state) => 
+  const cachedTrip = useStore((state) =>
     state.bookedTrips.find((b) => b.id === bookingId)
   );
 
@@ -169,9 +179,12 @@ export function useBooking(bookingId: string): UseBookingReturn {
       departureDate: cachedTrip.departureDate.toISOString(),
       returnDate: cachedTrip.returnDate.toISOString(),
       travelers: cachedTrip.travelers,
-      adultsCount: cachedTrip.travelers.filter((t) => t.type === "adult").length,
-      childrenCount: cachedTrip.travelers.filter((t) => t.type === "child").length,
-      infantsCount: cachedTrip.travelers.filter((t) => t.type === "infant").length,
+      adultsCount: cachedTrip.travelers.filter((t) => t.type === "adult")
+        .length,
+      childrenCount: cachedTrip.travelers.filter((t) => t.type === "child")
+        .length,
+      infantsCount: cachedTrip.travelers.filter((t) => t.type === "infant")
+        .length,
       totalPrice: cachedTrip.totalPrice,
       status: cachedTrip.status as BookingStatus,
       statusHistory: cachedTrip.statusHistory.map((h) => ({
@@ -220,4 +233,3 @@ export function useBooking(bookingId: string): UseBookingReturn {
 }
 
 export default useBookings;
-

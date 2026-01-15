@@ -160,9 +160,7 @@ export default function CatalogScreen() {
           <Text variant="titleLarge" style={styles.sectionTitle}>
             Curated Packages
           </Text>
-          <Pressable
-            onPress={() => setIsLoading(true) /* Trigger refresh or nav */}
-          >
+          <Pressable onPress={() => router.push("/curated" as any)}>
             <Text
               variant="labelLarge"
               style={{ color: theme.colors.primary, fontWeight: "bold" }}

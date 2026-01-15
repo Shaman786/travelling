@@ -1,4 +1,5 @@
 "use client";
+import EditBookingModal from "@/components/bookings/EditBookingModal";
 import Button from "@/components/ui/button/Button";
 import { DATABASE_ID, databases, TABLES } from "@/lib/appwrite";
 import { useParams, useRouter } from "next/navigation";
@@ -13,6 +14,7 @@ export default function BookingDetailPage() {
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState("");
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   const fetchBooking = useCallback(async () => {
     try {
@@ -55,6 +57,15 @@ export default function BookingDetailPage() {
     } finally {
       setUpdating(false);
     }
+  };
+
+  const handleNotifyUser = async () => {
+    const message = prompt("Enter notification message for user:");
+    if (!message) return;
+
+    // Mock sending notification
+    console.log(`Sending notification to user ${booking.userId}: ${message}`);
+    alert("Notification sent (Mock)!");
   };
 
   if (loading) {
@@ -111,6 +122,12 @@ export default function BookingDetailPage() {
             disabled={updating || selectedStatus === booking.status}
           >
             {updating ? "Updating..." : "Update Status"}
+          </Button>
+          <Button variant="outline" onClick={() => setIsEditModalOpen(true)}>
+            Edit
+          </Button>
+          <Button variant="outline" onClick={handleNotifyUser}>
+            Notify
           </Button>
         </div>
       </div>
@@ -236,6 +253,13 @@ export default function BookingDetailPage() {
           </table>
         </div>
       </div>
+
+      <EditBookingModal
+        booking={booking}
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        onRefresh={fetchBooking}
+      />
     </div>
   );
 }

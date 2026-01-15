@@ -40,7 +40,7 @@ async function createCollection(id, name, attributes) {
       name,
       [
         Permission.read(Role.any()),
-        Permission.write(Role.any()), // Simplified permissions for dev; restrict in prod
+        Permission.write(Role.users()), // Restricted to authenticated users
         Permission.read(Role.users()),
         Permission.write(Role.users()),
       ]

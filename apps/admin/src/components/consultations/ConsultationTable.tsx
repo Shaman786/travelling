@@ -132,6 +132,12 @@ export default function ConsultationTable({
                       </a>
                     </div>
                   )}
+                  {/* Notes Field */}
+                  {(consultation as any).notes && (
+                    <div className="mt-2 rounded border border-gray-100 bg-gray-50 p-2 text-xs whitespace-pre-wrap text-gray-600 dark:border-gray-700 dark:bg-white/5 dark:text-gray-400">
+                      {(consultation as any).notes}
+                    </div>
+                  )}
                 </td>
                 <td className="px-6 py-4 text-sm whitespace-nowrap text-gray-500 dark:text-gray-400">
                   {new Date(consultation.$createdAt).toLocaleDateString()}

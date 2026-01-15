@@ -12,6 +12,7 @@ import type {
   Addon,
   Booking,
   BookingStatus,
+  Message,
   PackageFilters,
   PaginatedResponse,
   Payment,
@@ -1422,6 +1423,73 @@ export const consultationService = {
   },
 };
 
+// ============ Chat Service ============
+
+export const chatService = {
+  /**
+   * Send a message
+   */
+  async sendMessage(
+    conversationId: string,
+    senderId: string,
+    content: string,
+    senderName?: string
+  ): Promise<Message> {
+    try {
+      const row = (await tables.createRow({
+        databaseId: DATABASE_ID,
+        tableId: TABLES.CHAT_MESSAGES,
+        rowId: ID.unique(),
+        data: {
+          conversationId,
+          senderId,
+          content,
+          senderName,
+          read: false,
+        },
+      })) as any;
+
+      return {
+        ...row,
+        createdAt: row.$createdAt,
+      } as Message;
+    } catch (error: any) {
+      console.error("Send message error:", error);
+      throw new Error(error.message || "Failed to send message");
+    }
+  },
+
+  /**
+   * Get messages for a conversation
+   */
+  async getMessages(
+    conversationId: string,
+    limit = 50,
+    offset = 0
+  ): Promise<Message[]> {
+    try {
+      const response = await tables.listRows({
+        databaseId: DATABASE_ID,
+        tableId: TABLES.CHAT_MESSAGES,
+        queries: [
+          Query.equal("conversationId", conversationId),
+          Query.orderDesc("$createdAt"), // Latest first for UI
+          Query.limit(limit),
+          Query.offset(offset),
+        ],
+      });
+
+      return response.rows.map((msg: any) => ({
+        ...msg,
+        createdAt: msg.$createdAt,
+      })) as Message[];
+    } catch (error: any) {
+      console.error("Get messages error:", error);
+      return [];
+    }
+  },
+};
+
 export default {
   packages: packageService,
   bookings: bookingService,
@@ -1433,4 +1501,5 @@ export default {
   addons: addonService,
   banners: bannerService,
   consultations: consultationService,
+  chat: chatService,
 };

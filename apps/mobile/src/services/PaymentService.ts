@@ -2,7 +2,7 @@ import { functions, FUNCTIONS } from "../lib/appwrite";
 
 export const paymentService = {
   async createPaymentIntent(params: {
-    amount: number;
+    amountCents: number;
     currency: string;
     orderId: string;
     customerId?: string;
@@ -11,16 +11,9 @@ export const paymentService = {
     try {
       console.log(`Creating Payment Intent via Appwrite Function...`);
 
-      // Amount is expected in CENTS by the function (based on legacy code amount/100)
-      // If frontend passes dollars (e.g. 150), we send 15000 cents.
-      // Wait, backend code does: amount = amount / 100.
-      // So if we send 15000 cents, it becomes 150.00.
-      // If we send 150 dollars, it becomes 1.50.
-      // Airwallex expects Major units (Dollars) usually?
-      // Docs say: "amount: Order amount. For example, 3.50".
-      // So backend logic "amount / 100" means it expects CENTS as input.
-      // So we multiply by 100 here.
-      const centsAmount = Math.round(params.amount * 100);
+      // Amount is expected in CENTS.
+      // We removed ambiguity by enforcing 'amountCents' in the parameter.
+      const centsAmount = Math.round(params.amountCents);
 
       const execution = await functions.createExecution(
         FUNCTIONS.CREATE_PAYMENT_INTENT,
@@ -47,7 +40,7 @@ export const paymentService = {
         intentId: response.paymentIntentId,
         clientSecret: response.clientSecret,
         currency: params.currency,
-        amount: params.amount,
+        amount: params.amountCents,
       };
     } catch (error: any) {
       console.error("Payment Service Error:", error);

@@ -33,7 +33,11 @@ import databaseService from "../../src/lib/databaseService";
 import { PackageFilters, TravelPackage } from "../../src/types";
 
 // Public Token for Mapbox (Client-side)
-Mapbox.setAccessToken(process.env.EXPO_PUBLIC_MAPBOX_PUBLIC_KEY || "");
+const mapboxToken = process.env.EXPO_PUBLIC_MAPBOX_PUBLIC_KEY || "";
+if (!mapboxToken) {
+  console.warn("Mapbox Public Key is missing! Maps may crash or not render.");
+}
+Mapbox.setAccessToken(mapboxToken);
 
 // Simple Debounce Hook
 function useDebounce<T>(value: T, delay: number): T {
@@ -253,31 +257,38 @@ export default function SearchScreen() {
               zoomLevel={2}
               centerCoordinate={[78.9629, 20.5937]} // Default to India center
             />
-            {results.map((pkg) => (
-              <Mapbox.PointAnnotation
-                key={pkg.$id}
-                id={pkg.$id}
-                coordinate={[pkg.longitude || 78.9629, pkg.latitude || 20.5937]}
-                onSelected={() =>
-                  router.push(
-                    `/package/${pkg.$id}` as `/package/${string}` as any
-                  )
-                }
-              >
-                <View
-                  style={{
-                    backgroundColor: "white",
-                    padding: 4,
-                    borderRadius: 8,
-                    elevation: 4,
-                  }}
+            {results.map((pkg) => {
+              const lat = Number(pkg.latitude);
+              const lng = Number(pkg.longitude);
+              const validLat = !isNaN(lat) ? lat : 20.5937;
+              const validLng = !isNaN(lng) ? lng : 78.9629;
+
+              return (
+                <Mapbox.PointAnnotation
+                  key={pkg.$id}
+                  id={pkg.$id}
+                  coordinate={[validLng, validLat]}
+                  onSelected={() =>
+                    router.push(
+                      `/package/${pkg.$id}` as `/package/${string}` as any
+                    )
+                  }
                 >
-                  <Text variant="labelSmall" style={{ fontWeight: "bold" }}>
-                    ${pkg.price}
-                  </Text>
-                </View>
-              </Mapbox.PointAnnotation>
-            ))}
+                  <View
+                    style={{
+                      backgroundColor: "white",
+                      padding: 4,
+                      borderRadius: 8,
+                      elevation: 4,
+                    }}
+                  >
+                    <Text variant="labelSmall" style={{ fontWeight: "bold" }}>
+                      ${pkg.price}
+                    </Text>
+                  </View>
+                </Mapbox.PointAnnotation>
+              );
+            })}
           </Mapbox.MapView>
         </View>
       ) : isLoading && results.length === 0 ? (

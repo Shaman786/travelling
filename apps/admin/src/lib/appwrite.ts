@@ -24,6 +24,7 @@ export const TABLES = {
   PAYMENTS: "payments",
   SYSTEM_CONFIG: "system_config",
   MESSAGES: "ticket_messages",
+  CHAT_MESSAGES: "messages",
   ADDONS: "addons",
   CONSULTATIONS: "consultations",
   BANNERS: "banners",

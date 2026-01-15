@@ -31,7 +31,7 @@ export const authService = {
   ): Promise<AuthUser> {
     try {
       // Create the account
-      const newaccount = await account.create({
+      const newAccount = await account.create({
         userId: ID.unique(),
         email,
         password,
@@ -48,7 +48,7 @@ export const authService = {
       await databases.createDocument({
         databaseId: DATABASE_ID,
         collectionId: TABLES.USERS,
-        documentId: newaccount.$id,
+        documentId: newAccount.$id,
         data: {
           name,
           email,
@@ -65,7 +65,7 @@ export const authService = {
         // Verification email is optional - silently ignore failure
       }
 
-      return newaccount as unknown as AuthUser;
+      return newAccount as unknown as AuthUser;
     } catch (error: any) {
       console.error("Registration error:", error);
       throw new Error(error.message || "Failed to create account");
@@ -252,10 +252,12 @@ export const authService = {
   /**
    * Delete account (GDPR compliance)
    */
-  async deleteaccount(): Promise<void> {
+  async deleteAccount(): Promise<void> {
     try {
-      // Note: This requires special permissions in Appwrite
-      await account.updateStatus();
+      // NOTE: Client SDK cannot delete users directly.
+      // We invalidating sessions as a makeshift "logout/deactivate" from client side.
+      // For true deletion, this should call an Appwrite Cloud Function.
+      await account.deleteSessions();
     } catch (error: any) {
       console.error("Delete account error:", error);
       throw new Error(error.message || "Failed to delete account");
@@ -346,9 +348,10 @@ export const authService = {
   async initiateMagicLinkLogin(email: string): Promise<string> {
     try {
       // Magic Links require the redirect URL hostname to be a registered Web Platform
-      // Using HTTP URL with server IP:8081 - the server will redirect to the app's deep link
-      // Server redirect page: http://192.142.24.54:8081/login-callback.html → travelling://login-callback
-      const redirectUrl = "http://192.142.24.54:8081/login-callback.html";
+      // Using environment variable for redirect URL
+      const redirectUrl =
+        process.env.EXPO_PUBLIC_MAGIC_LINK_REDIRECT ||
+        "https://travelling-admin.vercel.app/login-callback";
       console.log("➡️ Using Redirect URL:", redirectUrl);
 
       const token = await account.createMagicURLToken(

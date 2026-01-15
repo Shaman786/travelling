@@ -16,7 +16,7 @@ import path from "path";
 // Load environment variables from .env
 // Load environment variables from .env or .env.local
 dotenv.config({ path: path.resolve(process.cwd(), ".env.local") });
-dotenv.config({ path: path.resolve(process.cwd(), ".env") }); // Fallback to .env
+dotenv.config({ path: path.resolve(process.cwd(), "apps/mobile/.env") }); // Try mobile .env too
 
 // 1. Environment Configuration
 const ENDPOINT =
@@ -221,6 +221,8 @@ const COLLECTIONS: any = {
       { key: "paymentId", type: "string", size: 128, required: false },
       { key: "statusHistory", type: "string", size: 5000, required: false },
       { key: "specialRequests", type: "string", size: 1000, required: false }, // Added
+      { key: "assignedTo", type: "string", size: 36, required: false }, // Added
+      { key: "adminNotes", type: "string", size: 2000, required: false }, // Added
       // Business Trip attributes
       { key: "isWorkTrip", type: "boolean", required: false, default: false },
       { key: "companyName", type: "string", size: 128, required: false },
@@ -466,6 +468,27 @@ const COLLECTIONS: any = {
       { key: "uploadedAt", type: "string", size: 32, required: true },
     ],
     indexes: [{ key: "user_idx", type: "key", attributes: ["userId"] }],
+  },
+  messages: {
+    name: "Messages",
+    documentSecurity: true,
+    permissions: [
+      Permission.create(Role.users()),
+      Permission.read(Role.users()),
+      Permission.read(Role.team(TEAM_NAME)),
+      Permission.write(Role.team(TEAM_NAME)),
+    ],
+    attributes: [
+      { key: "conversationId", type: "string", size: 100, required: true },
+      { key: "senderId", type: "string", size: 100, required: true },
+      { key: "content", type: "string", size: 1000, required: true },
+      { key: "read", type: "boolean", required: false, default: false },
+      { key: "senderName", type: "string", size: 128, required: false },
+    ],
+    indexes: [
+      { key: "conversation_idx", type: "key", attributes: ["conversationId"] },
+      { key: "read_idx", type: "key", attributes: ["read"] },
+    ],
   },
 };
 

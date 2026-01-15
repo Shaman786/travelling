@@ -148,6 +148,19 @@ export const databaseService = {
         throw error;
       }
     },
+    async update(id: string, data: any) {
+      try {
+        return await databases.updateDocument(
+          DATABASE_ID,
+          TABLES.BOOKINGS,
+          id,
+          data,
+        );
+      } catch (error) {
+        console.error("Update booking error:", error);
+        throw error;
+      }
+    },
   },
 
   // ============ ADDONS ============

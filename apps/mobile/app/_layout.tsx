@@ -13,8 +13,8 @@ import ToastManager from "toastify-react-native";
 import { ErrorBoundary } from "../src/components/ErrorBoundary";
 import OfflineNotice from "../src/components/OfflineNotice";
 import { useAuth } from "../src/hooks/useAuth";
+import { usePushToken } from "../src/hooks/usePushToken";
 import "../src/i18n"; // Init i18n
-import { registerForPushNotificationsAsync } from "../src/lib/notifications";
 import { theme } from "../src/theme";
 
 function AuthHandler() {
@@ -52,15 +52,20 @@ function AuthHandler() {
   return null;
 }
 
+function PushTokenHandler() {
+  usePushToken();
+  return null;
+}
+
 export default function RootLayout() {
   const notificationListener = useRef<Notifications.Subscription | null>(null);
   const responseListener = useRef<Notifications.Subscription | null>(null);
 
   useEffect(() => {
     // Register for push notifications
-    registerForPushNotificationsAsync().then((token) => {
-      if (token) console.log("Push Token:", token);
-    });
+    // registerForPushNotificationsAsync().then((token) => {
+    //   if (token) console.log("Push Token:", token);
+    // });
 
     // This listener is fired whenever a notification is received while the app is foregrounded
     notificationListener.current =
@@ -88,6 +93,7 @@ export default function RootLayout() {
         <PaperProvider theme={theme}>
           <OfflineNotice />
           <AuthHandler />
+          <PushTokenHandler />
           <Stack screenOptions={{ headerShown: false }}>
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
             <Stack.Screen name="(auth)" options={{ headerShown: false }} />

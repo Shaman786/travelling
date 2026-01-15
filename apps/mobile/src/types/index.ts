@@ -195,6 +195,27 @@ export interface Review extends Models.Document {
   createdAt: string;
 }
 
+// ============ Chat & Support ============
+
+export interface Message extends Models.Document {
+  conversationId: string;
+  senderId: string;
+  senderName?: string;
+  content: string;
+  read: boolean;
+  createdAt?: string; // Appwrite adds this
+}
+
+export interface ChatConversation {
+  id: string; // conversationId
+  userId: string;
+  userName: string;
+  userAvatar?: string;
+  lastMessage: string;
+  unreadCount: number;
+  updatedAt: string;
+}
+
 // ============ Payment Types ============
 export type GatewayProvider =
   | "razorpay"
