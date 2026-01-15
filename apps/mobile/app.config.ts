@@ -9,10 +9,14 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   icon: "./assets/images/icon.png",
   scheme: "travelling",
   userInterfaceStyle: "automatic",
-  newArchEnabled: true,
+  newArchEnabled: false,
   ios: {
     supportsTablet: true,
     bundleIdentifier: "com.travels.travelling",
+    infoPlist: {
+      NSLocationWhenInUseUsageDescription:
+        "Allow $(PRODUCT_NAME) to access your location to show packages near you.",
+    },
   },
   android: {
     package: "com.travels.travelling",
@@ -23,6 +27,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       backgroundImage: "./assets/images/android-icon-background.png",
       monochromeImage: "./assets/images/android-icon-monochrome.png",
     },
+    permissions: ["ACCESS_COARSE_LOCATION", "ACCESS_FINE_LOCATION"],
     edgeToEdgeEnabled: true,
     predictiveBackGestureEnabled: false,
   },
