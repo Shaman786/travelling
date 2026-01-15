@@ -1,0 +1,9 @@
+{
+  "name": "create-user",
+  "version": "1.0.0",
+  "description": "Appwrite Cloud Function to create users with authentication",
+  "main": "index.js",
+  "dependencies": {
+    "node-appwrite": "^12.0.0"
+  }
+}
