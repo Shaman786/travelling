@@ -105,10 +105,9 @@ export default function CreateUserModal({
         </h2>
 
         {/* Warning about Client-Side limitation */}
-        <div className="mb-4 rounded-lg bg-amber-50 p-3 text-xs text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
-          <strong>Important:</strong> This creates a profile invitation. The
-          user must register with this email to activate their account. For full
-          user creation with login credentials, implement a Cloud Function.
+        <div className="mb-4 rounded-lg bg-blue-50 p-3 text-xs text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
+          <strong>Info:</strong> This creates a new user account with the
+          provided credentials via Cloud Function.
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -133,6 +132,19 @@ export default function CreateUserModal({
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              className="focus:border-brand-500 focus:ring-brand-500 w-full rounded-lg border border-gray-300 bg-transparent px-3 py-2 text-gray-800 outline-hidden focus:ring-1 dark:border-gray-700 dark:text-white"
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+              Password
+            </label>
+            <input
+              type="password"
+              required
+              minLength={8}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               className="focus:border-brand-500 focus:ring-brand-500 w-full rounded-lg border border-gray-300 bg-transparent px-3 py-2 text-gray-800 outline-hidden focus:ring-1 dark:border-gray-700 dark:text-white"
             />
           </div>

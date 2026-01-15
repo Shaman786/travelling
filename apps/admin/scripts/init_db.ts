@@ -177,7 +177,7 @@ const COLLECTIONS: any = {
         required: false,
         array: true,
       },
-      { key: "itinerary", type: "string", size: 5000, required: false }, // Reduced size
+      { key: "itinerary", type: "string", size: 4000, required: false }, // Reduced size
       { key: "isActive", type: "boolean", required: false, default: true },
       { key: "latitude", type: "double", required: false },
       { key: "longitude", type: "double", required: false },
@@ -214,7 +214,7 @@ const COLLECTIONS: any = {
         required: false,
         default: "pending",
       },
-      { key: "travelers", type: "string", size: 5000, required: false },
+      { key: "travelers", type: "string", size: 2500, required: false },
       {
         key: "paymentStatus",
         type: "string",
@@ -223,10 +223,10 @@ const COLLECTIONS: any = {
         default: "pending",
       },
       { key: "paymentId", type: "string", size: 128, required: false },
-      { key: "statusHistory", type: "string", size: 5000, required: false },
+      { key: "statusHistory", type: "string", size: 2500, required: false },
       { key: "specialRequests", type: "string", size: 1000, required: false }, // Added
       { key: "assignedTo", type: "string", size: 36, required: false }, // Added
-      { key: "adminNotes", type: "string", size: 2000, required: false }, // Added
+      { key: "adminNotes", type: "string", size: 1000, required: false }, // Added
       // Business Trip attributes
       { key: "isWorkTrip", type: "boolean", required: false, default: false },
       { key: "companyName", type: "string", size: 128, required: false },
@@ -322,7 +322,7 @@ const COLLECTIONS: any = {
     attributes: [
       { key: "userId", type: "string", size: 36, required: true },
       { key: "subject", type: "string", size: 255, required: true },
-      { key: "message", type: "string", size: 5000, required: true },
+      { key: "message", type: "string", size: 3000, required: true },
       { key: "category", type: "string", size: 64, required: true },
       {
         key: "status",
@@ -356,11 +356,10 @@ const COLLECTIONS: any = {
     ],
     attributes: [
       { key: "ticketId", type: "string", size: 36, required: true },
-      { key: "message", type: "string", size: 5000, required: true },
+      { key: "message", type: "string", size: 3000, required: true },
       { key: "senderId", type: "string", size: 36, required: true },
       { key: "senderName", type: "string", size: 128, required: false }, // Added
       { key: "isAdmin", type: "boolean", required: true },
-      { key: "createdAt", type: "string", size: 64, required: true },
       // Future Proofing
       { key: "senderType", type: "string", size: 32, required: false },
       { key: "attachmentId", type: "string", size: 128, required: false },
@@ -395,7 +394,8 @@ const COLLECTIONS: any = {
     ],
     attributes: [
       { key: "key", type: "string", size: 128, required: true },
-      { key: "value", type: "string", size: 5000, required: true }, // Reduced size
+      { key: "value", type: "string", size: 4000, required: true }, // Reduced size
+
       { key: "description", type: "string", size: 255, required: false },
     ],
     indexes: [{ key: "config_key", type: "unique", attributes: ["key"] }],

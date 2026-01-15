@@ -352,8 +352,6 @@ async function seedDemoData() {
         { name: "Companion", age: 28, gender: "Female" },
       ]),
       contactName: sampleUsers[userIdx]?.name || "Guest",
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
     };
 
     try {

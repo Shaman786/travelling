@@ -374,8 +374,6 @@ export const bookingService = {
     >
   ): Promise<Booking> {
     try {
-      const now = new Date().toISOString();
-
       // Destructure to remove fields that don't exist in Appwrite schema
       // We keep packageTitle as it seems to be required by Appwrite schema
       const { packageImageUrl, ...cleanedData } = bookingData as any;
@@ -387,8 +385,6 @@ export const bookingService = {
         // Stringify complex objects for TablesDB
         travelers: JSON.stringify(bookingData.travelers),
         statusHistory: JSON.stringify(bookingData.statusHistory),
-        createdAt: now,
-        updatedAt: now,
       };
 
       const row = (await tables.createRow({
@@ -486,8 +482,6 @@ export const bookingService = {
       rowId: ID.unique(),
       data: {
         ...paymentData,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
       },
     });
     return response;
@@ -620,7 +614,6 @@ export const bookingService = {
         data: {
           status,
           statusHistory: JSON.stringify(updatedHistory),
-          updatedAt: new Date().toISOString(),
         },
       })) as any;
 
@@ -659,7 +652,6 @@ export const bookingService = {
         data: {
           paymentStatus,
           paymentId,
-          updatedAt: new Date().toISOString(),
         },
       })) as any;
       return {

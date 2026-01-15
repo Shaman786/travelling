@@ -46,9 +46,8 @@ export async function POST(request: Request) {
       // Cryptographically secure request ID for idempotency
       request_id: `req_${crypto.randomUUID()}`,
       // Airwallex expects amount in major units (dollars, not cents)
-      // If the mobile app sends cents, divide by 100
-      amount:
-        typeof amount === "number" && amount > 1000 ? amount / 100 : amount,
+      // The mobile app sends cents. We must divide by 100.
+      amount: typeof amount === "number" ? amount / 100 : amount,
       currency: currency,
       merchant_order_id: orderId,
       return_url: "travelling://payment-result", // Deep link to app

@@ -1,4 +1,5 @@
 const https = require('https');
+const crypto = require('crypto');
 
 /**
  * Helper to make HTTPS requests
@@ -114,7 +115,7 @@ module.exports = async function (context) {
       amount: parseFloat(decimalAmount),
       currency: currency.toUpperCase(),
       merchant_order_id: bookingId || `order_${Date.now()}`,
-      request_id: `req_${Date.now()}_${Math.random().toString(36).substring(7)}`,
+      request_id: 'req_' + crypto.randomUUID(),
       return_url: "travelling://payment-result",
       metadata: {
          userId: userId || 'anonymous'
