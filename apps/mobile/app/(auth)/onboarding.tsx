@@ -135,10 +135,25 @@ export default function OnboardingScreen() {
     }
   };
 
-  const handleSkip = () => {
-    // CRITICAL: Update store to prevent loop
-    updateUser({ onboardingComplete: true });
-    router.replace("/(tabs)");
+  const handleSkip = async () => {
+    setIsLoading(true);
+    try {
+      if (user?.$id) {
+        await authService.updateUserProfile(user.$id, {
+          onboardingComplete: true,
+        });
+      }
+      // Update local store
+      updateUser({ onboardingComplete: true });
+      router.replace("/(tabs)");
+    } catch (error) {
+      console.error("Skip onboarding error:", error);
+      // Fallback: update local state anyway
+      updateUser({ onboardingComplete: true });
+      router.replace("/(tabs)");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const onSelectCountry = (country: Country) => {

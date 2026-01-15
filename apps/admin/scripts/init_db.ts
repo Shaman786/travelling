@@ -440,8 +440,8 @@ const COLLECTIONS: any = {
     ],
     attributes: [
       { key: "userId", type: "string", size: 36, required: false },
-      { key: "userName", type: "string", size: 128, required: true },
-      { key: "userPhone", type: "string", size: 32, required: true },
+      { key: "userName", type: "string", size: 128, required: false },
+      { key: "userPhone", type: "string", size: 32, required: false },
       { key: "userEmail", type: "string", size: 128, required: false },
       { key: "type", type: "string", size: 32, required: true }, // plan_trip, expert, visa, etc.
       { key: "destination", type: "string", size: 128, required: false },

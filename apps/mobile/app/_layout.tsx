@@ -35,16 +35,17 @@ function AuthHandler() {
     const inAuthGroup = segments[0] === "(auth)";
 
     if (!isLoggedIn && !inAuthGroup) {
+      // Not logged in -> go to login
       router.replace("/(auth)/login" as any);
-    } else if (isLoggedIn) {
-      if (!user?.onboardingComplete) {
-        // Redirect to onboarding if not complete and not already there
-        // Assuming onboarding is at /(auth)/onboarding
+    } else if (isLoggedIn && user) {
+      // Logged in
+      if (!user.onboardingComplete) {
+        // Not onboarded -> go to onboarding
         if (segments[1] !== "onboarding") {
           router.replace("/(auth)/onboarding" as any);
         }
       } else if (inAuthGroup) {
-        // If logged in and onboarding complete, but in auth group, go to tabs
+        // Onboarded but in auth group -> go to home
         router.replace("/(tabs)" as any);
       }
     }
