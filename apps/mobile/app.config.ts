@@ -82,7 +82,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       "@rnmapbox/maps",
       {
         RNMapboxMapsImpl: "mapbox",
-        RNMapboxMapsVersion: "10.19.1",
+        RNMapboxMapsVersion: "11.16.2",
         downloadToken: process.env.RNMAPBOX_MAPS_DOWNLOAD_TOKEN,
       },
     ],
