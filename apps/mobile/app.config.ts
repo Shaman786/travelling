@@ -55,7 +55,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       {
         android: {
           usesCleartextTraffic: true,
-          kotlinVersion: "1.9.24",
+          kotlinVersion: "2.1.10",
           compileSdkVersion: 34,
           targetSdkVersion: 34,
           minSdkVersion: 24,
