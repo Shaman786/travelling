@@ -1,7 +1,11 @@
 "use client";
-import { DATABASE_ID, databases, TABLES } from "@/lib/appwrite";
+import { DATABASE_ID, databases, functions, TABLES } from "@/lib/appwrite";
 import { ID } from "appwrite";
 import React, { useState } from "react";
+
+// Environment variable for the Cloud Function ID
+const CREATE_USER_FUNCTION_ID =
+  process.env.NEXT_PUBLIC_CREATE_USER_FUNCTION_ID || "create-user";
 
 interface CreateUserModalProps {
   isOpen: boolean;
@@ -20,6 +24,7 @@ export default function CreateUserModal({
   const [role, setRole] = useState("user"); // user or admin
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [useCloudFunction, setUseCloudFunction] = useState(true);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,36 +32,50 @@ export default function CreateUserModal({
     setLoading(true);
 
     try {
-      // ============ IMPORTANT LIMITATION ============
-      // This modal creates a "profile" in the database, NOT an actual authenticated user.
-      // The Client SDK cannot create users for others while logged in as Admin.
-      //
-      // To properly create users with login credentials, you must:
-      // 1. Create an Appwrite Cloud Function (e.g., 'create-user') with Server SDK
-      // 2. The function should call: users.create(ID.unique(), email, phone, password, name)
-      // 3. Then create the database document
-      // 4. Optionally add user to 'admin' team if role === 'admin'
-      //
-      // For now, this creates an "invited" profile. The user must sign up themselves
-      // using this email to claim their profile.
-      // ================================================
+      if (useCloudFunction) {
+        // ============ CLOUD FUNCTION APPROACH ============
+        // This calls the 'create-user' Cloud Function which uses Server SDK
+        // to properly create users with authentication credentials
 
-      const userId = ID.unique();
+        if (password.length < 8) {
+          throw new Error("Password must be at least 8 characters");
+        }
 
-      // Create database profile (the user will need to register to claim it)
-      await databases.createDocument(DATABASE_ID, TABLES.USERS, userId, {
-        name,
-        email,
-        role: role,
-        // Note: 'role' field is for display purposes only.
-        // For actual permissions, add user to Teams via Cloud Function.
-        onboardingComplete: false,
-      });
+        const execution = await functions.createExecution(
+          CREATE_USER_FUNCTION_ID,
+          JSON.stringify({
+            email,
+            password,
+            name,
+            role,
+          }),
+          false, // async = false (wait for response)
+          "/", // path
+          "POST", // method
+        );
 
-      // TODO: Implement Cloud Function integration for full user creation:
-      // await functions.createExecution('create-user', JSON.stringify({
-      //   email, password, name, role
-      // }));
+        if (execution.status !== "completed") {
+          throw new Error(
+            `Function execution failed: ${execution.responseBody}`,
+          );
+        }
+
+        const result = JSON.parse(execution.responseBody);
+
+        if (!result.success) {
+          throw new Error(result.error || "Failed to create user");
+        }
+      } else {
+        // ============ FALLBACK: Database-only approach ============
+        // Creates a profile without auth credentials (user must register themselves)
+        const userId = ID.unique();
+        await databases.createDocument(DATABASE_ID, TABLES.USERS, userId, {
+          name,
+          email,
+          role: role,
+          onboardingComplete: false,
+        });
+      }
 
       onSuccess();
       onClose();

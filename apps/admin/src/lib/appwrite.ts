@@ -48,6 +48,7 @@ if (endpoint && projectId) {
 export const account = new Account(client);
 export const storage = new Storage(client);
 export const databases = new Databases(client);
+export const functions = new Functions(client);
 
 // Check if Appwrite is configured
 export const isAppwriteConfigured = (): boolean => {
