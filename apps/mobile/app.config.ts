@@ -69,6 +69,12 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     ],
     "./plugins/withAirwallex",
     [
+      "expo-location",
+      {
+        locationWhenInUsePermission: "Show current location on map.",
+      },
+    ],
+    [
       "@rnmapbox/maps",
       {
         RNMapboxMapsImpl: "mapbox",
