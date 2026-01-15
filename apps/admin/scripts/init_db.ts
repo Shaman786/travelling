@@ -16,15 +16,23 @@ import path from "path";
 // Load environment variables from .env
 // Load environment variables from .env or .env.local
 dotenv.config({ path: path.resolve(process.cwd(), ".env.local") });
+dotenv.config({ path: path.resolve(process.cwd(), ".env") }); // Fallback to .env
 
 // 1. Environment Configuration
 const ENDPOINT =
-  process.env.EXPO_PUBLIC_APPWRITE_ENDPOINT || "https://cloud.appwrite.io/v1";
-const PROJECT_ID =
+  process.env.EXPO_PUBLIC_APPWRITE_ENDPOINT ||
+  process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT ||
+  "https://cloud.appwrite.io/v1";
+const PROJECT_ID = (
   process.env.EXPO_PUBLIC_APPWRITE_PROJECT_ID ||
-  process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID;
-const API_KEY =
-  process.env.APPWRITE_API_KEY || process.env.NEXT_PUBLIC_APPWRITE_API_KEY;
+  process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID ||
+  ""
+).trim();
+const API_KEY = (
+  process.env.APPWRITE_API_KEY ||
+  process.env.NEXT_PUBLIC_APPWRITE_API_KEY ||
+  ""
+).trim();
 const DATABASE_ID =
   process.env.EXPO_PUBLIC_APPWRITE_DATABASE_ID || "travelling_db";
 
@@ -109,7 +117,7 @@ const COLLECTIONS: any = {
       { key: "name", type: "string", size: 128, required: true },
       { key: "email", type: "string", size: 128, required: true },
       { key: "role", type: "string", size: 32, required: true },
-      { key: "isActive", type: "boolean", required: true, default: true },
+      { key: "isActive", type: "boolean", required: false, default: true },
     ],
     indexes: [
       { key: "email_idx", type: "unique", attributes: ["email"] },
@@ -183,10 +191,10 @@ const COLLECTIONS: any = {
     name: "Bookings",
     documentSecurity: true,
     permissions: [
-      Permission.create(Role.users()),
-      Permission.read(Role.users()),
-      Permission.update(Role.users()),
-      Permission.delete(Role.users()),
+      Permission.create(Role.users()), // Users can create
+      Permission.read(Role.team(TEAM_NAME)), // Admins can read all
+      Permission.update(Role.team(TEAM_NAME)), // Admins can update all
+      Permission.delete(Role.team(TEAM_NAME)), // Admins can delete all
     ],
     attributes: [
       { key: "userId", type: "string", size: 36, required: true },
@@ -440,6 +448,25 @@ const COLLECTIONS: any = {
       { key: "status_idx", type: "key", attributes: ["status"] },
     ],
   },
+  documents: {
+    name: "Documents",
+    documentSecurity: true,
+    permissions: [
+      Permission.create(Role.users()),
+      Permission.read(Role.users()),
+      Permission.delete(Role.users()),
+    ],
+    attributes: [
+      { key: "userId", type: "string", size: 36, required: true },
+      { key: "fileName", type: "string", size: 128, required: true },
+      { key: "fileId", type: "string", size: 64, required: true },
+      { key: "fileUrl", type: "string", size: 500, required: true },
+      { key: "fileType", type: "string", size: 32, required: true },
+      { key: "fileSize", type: "integer", required: true },
+      { key: "uploadedAt", type: "string", size: 32, required: true },
+    ],
+    indexes: [{ key: "user_idx", type: "key", attributes: ["userId"] }],
+  },
 };
 
 const BUCKETS = [
@@ -476,6 +503,17 @@ const BUCKETS = [
       Permission.create(Role.users()), // Authenticated users can upload
       Permission.create(Role.any()), // Allow Guests to upload too?
       Permission.delete(Role.team(TEAM_NAME)),
+    ],
+  },
+  {
+    id: "travel_documents",
+    name: "Travel Documents",
+    fileSecurity: true,
+    permissions: [
+      Permission.create(Role.users()),
+      Permission.read(Role.users()),
+      Permission.update(Role.users()),
+      Permission.delete(Role.users()),
     ],
   },
 ];
@@ -547,7 +585,10 @@ async function getAdminTeamId(): Promise<string | null> {
   }
 }
 
-async function setupAdmin() {
+async function setupAdmin(): Promise<{
+  teamId: string | null;
+  userId: string | null;
+}> {
   console.log("🚀 Setting up Admin User & Team...");
   const teamId = await getAdminTeamId();
 
@@ -596,46 +637,39 @@ async function setupAdmin() {
     } catch (err: any) {
       // Ignroe conflict
     }
-
-    // 4. Create/Update Admin User Row in Table
-    try {
-      console.log("Ensuring admin profile exists in 'admins' collection...");
-      // Check if exists
-      const adminList = await databases
-        .listDocuments(
-          DATABASE_ID,
-          "admins", // We need to ensure we use the ID if we knew it, or name
-          [Query.equal("userId", userId)],
-        )
-        .catch(() => ({ documents: [] }));
-
-      if (adminList.documents.length === 0) {
-        // Create
-        await databases.createDocument(DATABASE_ID, "admins", ID.unique(), {
-          userId: userId,
-          name: ADMIN_NAME,
-          email: ADMIN_EMAIL,
-          role: "super_admin",
-          isActive: true,
-        });
-        console.log("✅ Admin profile created in 'admins' collection.");
-      } else {
-        console.log("✅ Admin profile already exists.");
-      }
-    } catch (err: any) {
-      console.warn(
-        "⚠️ Could not create admin profile (table might not exist yet):",
-        err.message,
-      );
-    }
   }
-  return teamId;
+  return { teamId, userId };
+}
+
+async function seedAdminProfile(userId: string) {
+  if (!userId) return;
+  try {
+    console.log("Ensuring admin profile exists in 'admins' collection...");
+    const adminList = await databases
+      .listDocuments(DATABASE_ID, "admins", [Query.equal("userId", userId)])
+      .catch(() => ({ documents: [] }));
+
+    if (adminList.documents.length === 0) {
+      await databases.createDocument(DATABASE_ID, "admins", ID.unique(), {
+        userId: userId,
+        name: ADMIN_NAME,
+        email: ADMIN_EMAIL,
+        role: "super_admin",
+        isActive: true,
+      });
+      console.log("✅ Admin profile created in 'admins' collection.");
+    } else {
+      console.log("✅ Admin profile already exists.");
+    }
+  } catch (err: any) {
+    console.warn("⚠️ Could not create admin profile:", err.message);
+  }
 }
 
 async function init() {
   console.log("🚀 Starting Appwrite Database Init...");
 
-  const adminTeamId = await setupAdmin();
+  const { teamId: adminTeamId, userId: adminUserId } = await setupAdmin();
 
   // Replace permissions with dynamic ID if possible or use 'team:admin' if mapped ideally?
   // For this script, we assume 'admin' ID or use name lookup.
@@ -693,26 +727,62 @@ async function init() {
     } catch (err: any) {
       if (err.code === 404) {
         console.log(`   Creating...`);
-        await tableService.createTable(
-          DATABASE_ID,
-          colId,
-          colConfig.name,
-          colConfig.permissions,
-          colConfig.documentSecurity,
-        );
+
+        // Map attributes to columns definition
+        const columns = colConfig.attributes.map((attr: any) => {
+          // Base column config
+          const col: any = {
+            key: attr.key,
+            type: attr.type,
+            required: attr.required,
+            array: attr.array,
+            default: attr.default,
+          };
+
+          // Add type-specific properties
+          if (attr.type === "string") {
+            col.size = attr.size || 255;
+          } else if (attr.type === "double" || attr.type === "integer") {
+            if (attr.min !== undefined) col.min = attr.min;
+            if (attr.max !== undefined) col.max = attr.max;
+          }
+
+          return col;
+        });
+
+        // Map indexes to index definition
+        const indexes =
+          colConfig.indexes?.map((idx: any) => ({
+            key: idx.key,
+            type: idx.type,
+            attributes: idx.attributes,
+          })) || [];
+
+        await tableService.createTable({
+          databaseId: DATABASE_ID,
+          tableId: colId,
+          name: colConfig.name,
+          permissions: colConfig.permissions,
+          rowSecurity: colConfig.documentSecurity,
+          columns: columns,
+          indexes: indexes,
+        });
+        continue; // Skip individual column creation for new tables
       }
     }
 
-    // Columns
-    console.log(`   Syncing columns...`);
+    // Columns (Only run for existing tables to ensure they are up to date)
+    console.log(`   Syncing columns (for existing table)...`);
     for (const attr of colConfig.attributes) {
       await createColumnWithRetry(DATABASE_ID, colId, attr);
     }
 
-    // Indexes
+    // Indexes (Only run for existing tables)
     if (colConfig.indexes) {
       for (const idx of colConfig.indexes) {
         try {
+          // Note: createIndex doesn't support "if not exists" easily without listing.
+          // We'll catch conflict (409) errors which is standard.
           await tableService.createIndex(
             DATABASE_ID,
             colId,
@@ -744,6 +814,10 @@ async function init() {
         );
       }
     }
+  }
+
+  if (adminUserId) {
+    await seedAdminProfile(adminUserId);
   }
 
   console.log("\n🎉 Database Init Complete!");

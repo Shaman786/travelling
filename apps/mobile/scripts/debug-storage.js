@@ -1,11 +1,12 @@
+const { Client, Databases, Storage } = require('node-appwrite');
+const path = require('path');
+require('dotenv').config({ path: path.resolve(process.cwd(), '.env.local') });
+require('dotenv').config({ path: path.resolve(process.cwd(), '.env') });
 
-const { Client, Databases, Storage, Query } = require('node-appwrite');
-require('dotenv').config();
-
-const ENDPOINT = process.env.APPWRITE_ENDPOINT || 'https://cloud.appwrite.io/v1';
-const PROJECT_ID = process.env.APPWRITE_PROJECT_ID;
+const ENDPOINT = process.env.EXPO_PUBLIC_APPWRITE_ENDPOINT || 'https://cloud.appwrite.io/v1';
+const PROJECT_ID = process.env.EXPO_PUBLIC_APPWRITE_PROJECT_ID;
 const API_KEY = process.env.APPWRITE_API_KEY;
-const DATABASE_ID = process.env.APPWRITE_DATABASE_ID || 'travelling_db';
+const DATABASE_ID = process.env.EXPO_PUBLIC_APPWRITE_DATABASE_ID || 'travelling_db';
 const BUCKET_ID = 'travel_documents';
 
 if (!API_KEY) { console.error("Missing API Key"); process.exit(1); }

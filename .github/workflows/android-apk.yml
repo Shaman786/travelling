@@ -36,36 +36,41 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Setup PNPM
+        uses: pnpm/action-setup@v2
+        with:
+          version: 9
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
+          cache: 'pnpm'
 
       - name: Install dependencies
-        run: npm install
+        run: pnpm install
 
       - name: Expo prebuild (Android)
         env:
           APP_VARIANT: preview
+        working-directory: apps/mobile
         run: npx expo prebuild --platform android --clean
 
       - name: Configure Android SDK
+        working-directory: apps/mobile
         run: |
           echo "sdk.dir=$ANDROID_HOME" > android/local.properties
           chmod +x android/gradlew
 
       - name: Configure Release to use Debug Keystore (Hack)
+        working-directory: apps/mobile
         run: |
           # Replace signingConfig signingConfigs.release with signingConfigs.debug in build.gradle
-          # This forces 'release' build type to use the 'debug' key
           sed -i 's/signingConfig signingConfigs.release/signingConfig signingConfigs.debug/g' android/app/build.gradle || true
-          # Also ensure it is using debug config if release config is not strictly defined yet
-          # For Expo projects, usually release block exists.
           
       - name: Build APK (Release)
+        working-directory: apps/mobile/android
         run: |
-          cd android
           ./gradlew assembleRelease --no-daemon
 
       - name: Upload APK to R2 & Notify Telegram
@@ -75,7 +80,7 @@ jobs:
           
           # 1. Move to Artifacts Folder
           mkdir -p ~/build-station/artifacts
-          mv android/app/build/outputs/apk/release/app-release.apk ~/build-station/artifacts/$APK_NAME
+          mv apps/mobile/android/app/build/outputs/apk/release/app-release.apk ~/build-station/artifacts/$APK_NAME
           
           echo "🚀 Uploading $APK_NAME to R2..."
           
@@ -99,5 +104,5 @@ jobs:
       - name: Cleanup
         if: always()
         run: |
-          rm -rf android/
+          rm -rf apps/mobile/android/
           rm -rf node_modules/

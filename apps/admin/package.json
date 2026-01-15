@@ -6,7 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "db:init": "npx ts-node ./scripts/init_db.ts",
+    "db:verify": "npx ts-node ./scripts/verify_schema.ts",
+    "db:seed": "npx ts-node ../mobile/scripts/seed-packages.ts"
   },
   "dependencies": {
     "@fullcalendar/core": "^6.1.19",
