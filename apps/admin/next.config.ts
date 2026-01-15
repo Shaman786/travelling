@@ -1,4 +1,4 @@
-import type { NextConfig } from "next";
+import path from "path";
 
 const nextConfig: NextConfig = {
   /* config options here */
@@ -11,7 +11,8 @@ const nextConfig: NextConfig = {
   },
 
   turbopack: {
-    root: process.cwd(),
+    // Monorepo root resolution
+    root: path.join(process.cwd(), "../../"),
     rules: {
       "*.svg": {
         loaders: ["@svgr/webpack"],
