@@ -6,6 +6,7 @@
  */
 
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import * as Location from "expo-location";
 import { useRouter } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
 import { FlatList, StyleSheet, View } from "react-native";
@@ -99,6 +100,16 @@ export default function SearchScreen() {
     },
     [setOpenDate, setRange]
   );
+
+  // Request Location Permissions
+  useEffect(() => {
+    (async () => {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") {
+        console.warn("Permission to access location was denied");
+      }
+    })();
+  }, []);
 
   // Ref for addToHistory to avoid dependency cycles
   const addToHistoryRef = React.useRef(addToHistory);
@@ -252,10 +263,18 @@ export default function SearchScreen() {
       {/* Results */}
       {isMapView ? (
         <View style={{ flex: 1 }}>
-          <Mapbox.MapView style={{ flex: 1 }}>
+          <Mapbox.MapView
+            style={{ flex: 1 }}
+            styleURL={Mapbox.StyleURL.Light}
+            logoEnabled={false}
+          >
             <Mapbox.Camera
               zoomLevel={2}
               centerCoordinate={[78.9629, 20.5937]} // Default to India center
+            />
+            <Mapbox.UserLocation
+              visible={true}
+              renderMode={Mapbox.UserLocationRenderMode.Native}
             />
             {results.map((pkg) => {
               const lat = Number(pkg.latitude);

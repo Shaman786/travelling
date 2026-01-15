@@ -28,6 +28,7 @@ jobs:
       
       # Mapbox Token (Required for Build)
       RNMAPBOX_MAPS_DOWNLOAD_TOKEN: ${{ secrets.RNMAPBOX_MAPS_DOWNLOAD_TOKEN }}
+      EXPO_PUBLIC_MAPBOX_PUBLIC_KEY: ${{ secrets.EXPO_PUBLIC_MAPBOX_PUBLIC_KEY }}
 
       # ✅ FIX 1: Put the Public Domain Here
       DOWNLOAD_DOMAIN: "https://pub-1d4d217c0080414481b5a0f03becdb89.r2.dev"
