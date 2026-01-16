@@ -5,6 +5,7 @@ import { Image } from "expo-image"; // Added Image import
 import { useFocusEffect, useNavigation, useRouter } from "expo-router";
 import React, { useState } from "react";
 import { Alert, Pressable, Share, StyleSheet, View } from "react-native";
+import { useNavigationMode } from "react-native-navigation-mode";
 import {
   Button,
   Card,
@@ -32,6 +33,10 @@ import { borderRadius, shadows } from "../../src/theme";
 export default function MyTripsScreen() {
   const theme = useTheme();
   const insets = useSafeAreaInsets(); // Fix: Define insets
+  const { navigationMode } = useNavigationMode();
+  const bottomPadding =
+    120 + (navigationMode?.navigationBarHeight ?? insets.bottom);
+
   const router = useRouter();
   const bookedTrips = useStore((state) => state.bookedTrips);
   const updateBookedTrip = useStore((state) => state.updateBookedTrip);
@@ -591,7 +596,7 @@ export default function MyTripsScreen() {
           filteredTrips.length === 0
             ? { flexGrow: 1, justifyContent: "center" }
             : styles.listContent,
-          { paddingBottom: 120 + insets.bottom }, // Increased padding for Safety
+          { paddingBottom: bottomPadding },
         ]}
         ListEmptyComponent={renderEmptyState}
         showsVerticalScrollIndicator={false}

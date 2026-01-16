@@ -88,6 +88,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       },
     ],
     "expo-system-ui", // Added System UI plugin
+    "react-native-navigation-mode",
   ],
   experiments: {
     typedRoutes: true,

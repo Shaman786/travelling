@@ -62,13 +62,6 @@ export default function LoginScreen() {
           <View style={styles.contentContainer}>
             {/* Logo/Header */}
             <View style={styles.header}>
-              <View style={styles.iconContainer}>
-                <Image
-                  source={require("../../assets/images/login-hero.png")}
-                  style={{ width: 120, height: 120 }}
-                  contentFit="contain"
-                />
-              </View>
               <Text
                 variant="displaySmall"
                 style={[styles.title, { color: "#fff" }]}

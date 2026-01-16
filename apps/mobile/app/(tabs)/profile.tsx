@@ -1,9 +1,9 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import * as DocumentPicker from "expo-document-picker";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Linking, ScrollView, StyleSheet, View } from "react-native";
+import { ScrollView, StyleSheet, View } from "react-native";
+import { useNavigationMode } from "react-native-navigation-mode";
 import {
   Avatar,
   Button,
@@ -14,8 +14,10 @@ import {
   Text,
   useTheme,
 } from "react-native-paper";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { Toast } from "toastify-react-native";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import { GlassSurface } from "../../src/components/ui/GlassSurface";
 import { useAuth } from "../../src/hooks/useAuth";
 import { useStore } from "../../src/store/useStore";
@@ -35,20 +37,27 @@ export default function ProfileScreen() {
   const { logout } = useAuth();
   const [documents, setDocuments] = useState<UploadedFile[]>([]);
 
+  // Safe Area & Navigation Mode
+  const insets = useSafeAreaInsets();
+  const { navigationMode } = useNavigationMode();
+  // Base padding 80 + navigation bar height (or safe area bottom as fallback)
+  const bottomPadding =
+    80 + (navigationMode?.navigationBarHeight ?? insets.bottom);
+
   const toggleLanguage = () => {
     const current = i18n.language;
     const next = current === "en" ? "hi" : current === "hi" ? "ar" : "en";
     i18n.changeLanguage(next);
   };
-
-  // ... (keep handleLogout, handleUpload, openWhatsApp)
+  /*
+   * Actions
+   */
   const handleLogout = async () => {
     await logout();
     router.replace("/(auth)/login");
   };
 
   const handleUpload = async () => {
-    // ... implementation unchanged
     try {
       const result = await DocumentPicker.getDocumentAsync({
         type: ["application/pdf", "image/*"],
@@ -68,6 +77,7 @@ export default function ProfileScreen() {
   };
 
   const openWhatsApp = () => {
+    // Read from env or config
     const supportNumber = process.env.EXPO_PUBLIC_SUPPORT_PHONE || "";
     if (!supportNumber) {
       Toast.info(
@@ -83,14 +93,14 @@ export default function ProfileScreen() {
       Toast.error("WhatsApp is not installed on this device.");
     });
   };
-
   return (
     <SafeAreaView
       style={[styles.container, { backgroundColor: theme.colors.background }]}
+      edges={["top", "left", "right"]}
     >
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 140 }}
+        contentContainerStyle={{ paddingBottom: bottomPadding }}
       >
         <GlassSurface style={styles.header} intensity={40}>
           {user?.avatar ? (
