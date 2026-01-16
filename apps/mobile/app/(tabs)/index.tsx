@@ -147,8 +147,10 @@ export default function CatalogScreen() {
 
   // ... (Header code remains mostly same, just ensuring correct context)
 
-  const ListHeader = useCallback(
-    () => (
+  // Memoize the ListHeaderComponent
+  // We return a Component function that returns the JSX
+  const HeaderComponent = React.useMemo(() => {
+    return () => (
       <View>
         {/* Header (UserInfo) */}
         <GlassSurface style={styles.header} intensity={60}>
@@ -175,7 +177,7 @@ export default function CatalogScreen() {
           </Pressable>
         </GlassSurface>
 
-        {/* Search Bar - Navigates to dedicated Search Screen */}
+        {/* Search Bar */}
         <Pressable
           style={[styles.searchContainer, { marginBottom: 24 }]}
           onPress={() => router.push("/search" as any)}
@@ -227,9 +229,8 @@ export default function CatalogScreen() {
           </View>
         </View>
       </View>
-    ),
-    [theme.colors, user, router, isGridView]
-  );
+    );
+  }, [theme.colors, user, router, isGridView]);
 
   const ListEmptyComponent = useCallback(() => {
     if (isLoading) {
@@ -263,7 +264,7 @@ export default function CatalogScreen() {
         data={packages}
         renderItem={renderItem}
         keyExtractor={(item) => item.$id}
-        ListHeaderComponent={ListHeader}
+        ListHeaderComponent={HeaderComponent}
         ListEmptyComponent={ListEmptyComponent}
         contentContainerStyle={{
           paddingBottom: 100 + insets.bottom, // Dynamic bottom padding for gesture nav

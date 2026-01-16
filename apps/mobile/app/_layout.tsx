@@ -10,7 +10,10 @@ import * as SystemUI from "expo-system-ui";
 import { useEffect, useRef } from "react";
 import "react-native-get-random-values";
 import { PaperProvider } from "react-native-paper";
-import { SafeAreaProvider } from "react-native-safe-area-context";
+import {
+  SafeAreaProvider,
+  enableEdgeToEdge,
+} from "react-native-safe-area-context";
 import ToastManager from "toastify-react-native";
 import { ErrorBoundary } from "../src/components/ErrorBoundary";
 import OfflineNotice from "../src/components/OfflineNotice";
@@ -60,6 +63,9 @@ function PushTokenHandler() {
   usePushToken();
   return null;
 }
+
+// Enable Edge-to-Edge globally
+enableEdgeToEdge();
 
 export default function RootLayout() {
   const notificationListener = useRef<Notifications.Subscription | null>(null);

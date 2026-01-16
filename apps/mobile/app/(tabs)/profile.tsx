@@ -1,4 +1,6 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import * as DocumentPicker from "expo-document-picker";
+import * as Linking from "expo-linking";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -18,6 +20,7 @@ import {
   SafeAreaView,
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
+import { Toast } from "toastify-react-native";
 import { GlassSurface } from "../../src/components/ui/GlassSurface";
 import { useAuth } from "../../src/hooks/useAuth";
 import { useStore } from "../../src/store/useStore";
@@ -40,9 +43,8 @@ export default function ProfileScreen() {
   // Safe Area & Navigation Mode
   const insets = useSafeAreaInsets();
   const { navigationMode } = useNavigationMode();
-  // Base padding 80 + navigation bar height (or safe area bottom as fallback)
-  const bottomPadding =
-    80 + (navigationMode?.navigationBarHeight ?? insets.bottom);
+  // Base padding 20 + insets.bottom (Tab bar height is handled by Tabs, but extra space avoids cutoff)
+  const bottomPadding = 20 + insets.bottom;
 
   const toggleLanguage = () => {
     const current = i18n.language;

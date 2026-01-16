@@ -2,7 +2,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { FlashList } from "@shopify/flash-list";
 import { format } from "date-fns";
 import { Image } from "expo-image"; // Added Image import
-import { useFocusEffect, useNavigation, useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import React, { useState } from "react";
 import { Alert, Pressable, Share, StyleSheet, View } from "react-native";
 import { useNavigationMode } from "react-native-navigation-mode";
@@ -536,26 +536,6 @@ export default function MyTripsScreen() {
     [hasUpcoming, hasCompleted, hasCancelled]
   );
 
-  // Set Header Button dynamically
-  const navigation = useNavigation();
-  React.useEffect(() => {
-    navigation.setOptions({
-      headerRight: () => (
-        <Pressable
-          onPress={() => setIsAddTripVisible(true)}
-          hitSlop={10}
-          style={{ marginRight: 16 }}
-        >
-          <MaterialCommunityIcons
-            name="plus-circle"
-            size={28}
-            color={theme.colors.primary}
-          />
-        </Pressable>
-      ),
-    });
-  }, [navigation, theme.colors.primary]);
-
   // Effect to ensure activeSegment is valid
   React.useEffect(() => {
     const isValid = segments.some((s) => s.value === activeSegment);
@@ -571,18 +551,37 @@ export default function MyTripsScreen() {
     >
       {/* Search Bar Removed from here as it's in Header now */}
 
-      {/* Segmented Buttons if Needed */}
+      {/* Custom Header */}
       <View style={styles.header}>
-        {/* Title hidden if using Tab Header title "My Trips" */}
-        {/* But if we keep this inline header, we might have double headers. */}
-        {/* Assuming default Tab Header is shown: */}
-        {/* Adjust layout if Tab Header is present */}
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: 12,
+          }}
+        >
+          <Text
+            variant="headlineMedium"
+            style={{ fontWeight: "bold", color: theme.colors.onSurface }}
+          >
+            My Trips
+          </Text>
+          <Button
+            mode="contained-tonal"
+            onPress={() => setIsAddTripVisible(true)}
+            icon="plus"
+            compact
+          >
+            Add Booking
+          </Button>
+        </View>
+
         {segments.length > 1 && (
           <SegmentedButtons
             value={activeSegment}
             onValueChange={(val) => setActiveSegment(val as any)}
             buttons={segments}
-            // style={{ marginTop: 16 }} // Removed margin top as title is likely handled by Tab Header
             density="medium"
           />
         )}

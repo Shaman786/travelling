@@ -163,7 +163,7 @@ const PackageCard = ({
           <Text
             variant={isGrid ? "titleSmall" : "titleMedium"}
             style={styles.title}
-            numberOfLines={isGrid ? 1 : 2}
+            numberOfLines={isGrid ? 2 : 2}
           >
             {item.title}
           </Text>
