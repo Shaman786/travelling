@@ -23,7 +23,7 @@ const SHOWCASE_ITEMS = [
     title: "Best Price",
     subtitle: "Guaranteed deals",
     icon: "tag-heart",
-    color: "#E91E63",
+    color: "#009688", // Teal - Safe color
   },
   {
     id: "4",
@@ -80,13 +80,20 @@ export default function ExpertiseShowcase() {
                   style={{ backgroundColor: "transparent" }}
                 />
               </View>
-              <View style={{ flex: 1 }}>
-                <Text variant="titleSmall" style={{ fontWeight: "bold" }}>
+              <View style={{ flex: 1, minWidth: 0 }}>
+                <Text
+                  variant="titleSmall"
+                  style={{ fontWeight: "bold" }}
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
+                >
                   {item.title}
                 </Text>
                 <Text
                   variant="bodySmall"
                   style={{ color: theme.colors.onSurfaceVariant }}
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
                 >
                   {item.subtitle}
                 </Text>
@@ -115,7 +122,7 @@ const styles = StyleSheet.create({
     paddingRight: 8,
   },
   card: {
-    width: 200,
+    width: 210, // Slightly wider to prevent cutting
     marginRight: 12,
   },
   cardContent: {

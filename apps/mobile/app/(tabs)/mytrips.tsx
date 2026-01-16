@@ -2,7 +2,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { FlashList } from "@shopify/flash-list";
 import { format } from "date-fns";
 import { Image } from "expo-image"; // Added Image import
-import { Stack, useFocusEffect, useRouter } from "expo-router";
+import { useFocusEffect, useNavigation, useRouter } from "expo-router";
 import React, { useState } from "react";
 import { Alert, Pressable, Share, StyleSheet, View } from "react-native";
 import {
@@ -17,7 +17,10 @@ import {
   TextInput,
   useTheme,
 } from "react-native-paper";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import { Toast } from "toastify-react-native";
 import ReviewModal from "../../src/components/ReviewModal";
 import StepTracker from "../../src/components/StepTracker";
@@ -28,6 +31,7 @@ import { borderRadius, shadows } from "../../src/theme";
 
 export default function MyTripsScreen() {
   const theme = useTheme();
+  const insets = useSafeAreaInsets(); // Fix: Define insets
   const router = useRouter();
   const bookedTrips = useStore((state) => state.bookedTrips);
   const updateBookedTrip = useStore((state) => state.updateBookedTrip);
@@ -527,6 +531,26 @@ export default function MyTripsScreen() {
     [hasUpcoming, hasCompleted, hasCancelled]
   );
 
+  // Set Header Button dynamically
+  const navigation = useNavigation();
+  React.useEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <Pressable
+          onPress={() => setIsAddTripVisible(true)}
+          hitSlop={10}
+          style={{ marginRight: 16 }}
+        >
+          <MaterialCommunityIcons
+            name="plus-circle"
+            size={28}
+            color={theme.colors.primary}
+          />
+        </Pressable>
+      ),
+    });
+  }, [navigation, theme.colors.primary]);
+
   // Effect to ensure activeSegment is valid
   React.useEffect(() => {
     const isValid = segments.some((s) => s.value === activeSegment);
@@ -538,17 +562,22 @@ export default function MyTripsScreen() {
   return (
     <SafeAreaView
       style={[styles.container, { backgroundColor: theme.colors.background }]}
+      edges={["top", "left", "right"]}
     >
+      {/* Search Bar Removed from here as it's in Header now */}
+
+      {/* Segmented Buttons if Needed */}
       <View style={styles.header}>
-        <Text variant="headlineMedium" style={styles.title}>
-          My Trips
-        </Text>
+        {/* Title hidden if using Tab Header title "My Trips" */}
+        {/* But if we keep this inline header, we might have double headers. */}
+        {/* Assuming default Tab Header is shown: */}
+        {/* Adjust layout if Tab Header is present */}
         {segments.length > 1 && (
           <SegmentedButtons
             value={activeSegment}
             onValueChange={(val) => setActiveSegment(val as any)}
             buttons={segments}
-            style={{ marginTop: 16 }}
+            // style={{ marginTop: 16 }} // Removed margin top as title is likely handled by Tab Header
             density="medium"
           />
         )}
@@ -558,28 +587,14 @@ export default function MyTripsScreen() {
         data={filteredTrips}
         keyExtractor={(item) => item.id}
         renderItem={renderTripItem}
-        contentContainerStyle={
+        contentContainerStyle={[
           filteredTrips.length === 0
             ? { flexGrow: 1, justifyContent: "center" }
-            : styles.listContent
-        }
+            : styles.listContent,
+          { paddingBottom: 120 + insets.bottom }, // Increased padding for Safety
+        ]}
         ListEmptyComponent={renderEmptyState}
         showsVerticalScrollIndicator={false}
-      />
-
-      <Stack.Screen
-        options={{
-          headerRight: () => (
-            <Pressable onPress={() => setIsAddTripVisible(true)} hitSlop={10}>
-              <MaterialCommunityIcons
-                name="plus-circle"
-                size={28}
-                color={theme.colors.primary}
-                style={{ marginRight: 10 }}
-              />
-            </Pressable>
-          ),
-        }}
       />
 
       <Portal>

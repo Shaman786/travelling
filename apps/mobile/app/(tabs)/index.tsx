@@ -4,7 +4,10 @@ import { useRouter } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { Avatar, Button, Searchbar, Text, useTheme } from "react-native-paper";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import PackageCard from "../../src/components/PackageCard";
 import { PackageCardSkeleton } from "../../src/components/Skeleton";
 import ConsultingGrid from "../../src/components/home/ConsultingGrid";
@@ -100,7 +103,7 @@ export default function CatalogScreen() {
   // But since I am editing the file, I will add them in a separate step or try to add them here if possible.
 
   // Scroll restoration for Grid Toggle
-  const listRef = React.useRef<FlashList<TravelPackage>>(null);
+  const listRef = React.useRef<any>(null);
   const scrollOffset = React.useRef(0);
 
   const handleScroll = useCallback((event: any) => {
@@ -247,9 +250,13 @@ export default function CatalogScreen() {
     );
   }, [isLoading, theme.colors.outline]);
 
+  // Move safe area hook to top (already imported)
+  const insets = useSafeAreaInsets();
+
   return (
     <SafeAreaView
       style={[styles.container, { backgroundColor: theme.colors.background }]}
+      edges={["top", "left", "right"]} // Move bottom padding to contentContainer
     >
       <FlashList
         ref={listRef}
@@ -259,15 +266,16 @@ export default function CatalogScreen() {
         ListHeaderComponent={ListHeader}
         ListEmptyComponent={ListEmptyComponent}
         contentContainerStyle={{
-          paddingBottom: 140, // Increased padding for Nav Bar
+          paddingBottom: 100 + insets.bottom, // Dynamic bottom padding for gesture nav
           paddingHorizontal: isGridView ? 8 : 0,
         }}
         refreshing={refreshing}
         onRefresh={onRefresh}
-        onScroll={handleScroll} // Track scroll
+        onScroll={handleScroll}
         scrollEventThrottle={16}
         numColumns={isGridView ? 2 : 1}
-        key={isGridView ? "grid" : "list"}
+        // Removed `key` prop to prevent full re-render/scroll reset
+        // @ts-ignore: estimatedItemSize exists in FlashList but TS is complaining
         estimatedItemSize={280}
       />
 

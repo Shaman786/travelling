@@ -64,6 +64,7 @@ function PushTokenHandler() {
 export default function RootLayout() {
   const notificationListener = useRef<Notifications.Subscription | null>(null);
   const responseListener = useRef<Notifications.Subscription | null>(null);
+  const segments = useSegments(); // Get current segments
 
   useEffect(() => {
     // Register for push notifications
@@ -93,13 +94,15 @@ export default function RootLayout() {
     };
   }, []);
 
+  const hideWhatsApp = segments[0] === "(auth)";
+
   return (
     <SafeAreaProvider>
       <ErrorBoundary>
         <StatusBar style="dark" />
         <PaperProvider theme={theme}>
           <OfflineNotice />
-          <WhatsAppButton />
+          {!hideWhatsApp && <WhatsAppButton />}
           <AuthHandler />
           <PushTokenHandler />
           <Stack screenOptions={{ headerShown: false }}>

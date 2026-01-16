@@ -81,7 +81,7 @@ export default function LoginScreen() {
             </View>
 
             {/* Glass Form */}
-            <GlassSurface intensity={30} style={styles.glassForm}>
+            <GlassSurface intensity={20} style={styles.glassForm}>
               <View style={styles.form}>
                 <TextInput
                   label="Email"
@@ -97,7 +97,7 @@ export default function LoginScreen() {
                   autoCapitalize="none"
                   keyboardType="email-address"
                   left={<TextInput.Icon icon="email-outline" color="#555" />}
-                  contentStyle={{ backgroundColor: "#f5f5f5" }}
+                  contentStyle={{ backgroundColor: "rgba(255, 255, 255, 0.5)" }} // Translucent input
                 />
 
                 <TextInput
@@ -121,7 +121,7 @@ export default function LoginScreen() {
                       color="#555"
                     />
                   }
-                  contentStyle={{ backgroundColor: "#f5f5f5" }}
+                  contentStyle={{ backgroundColor: "rgba(255, 255, 255, 0.5)" }} // Translucent input
                 />
 
                 {error ? (
@@ -145,6 +145,7 @@ export default function LoginScreen() {
                   style={styles.button}
                   contentStyle={{ height: 52 }}
                   labelStyle={{ fontSize: 16, fontWeight: "bold" }}
+                  buttonColor={theme.colors.primary}
                 >
                   Sign In
                 </Button>
@@ -162,7 +163,7 @@ export default function LoginScreen() {
 
             {/* Footer Action */}
             <View style={styles.footer}>
-              <Text style={{ color: "#eee" }}>Don't have an account?</Text>
+              <Text style={{ color: "#eee" }}>Don&apos;t have an account?</Text>
               <Button
                 mode="contained-tonal"
                 onPress={() => router.push("/(auth)/signup" as any)}
@@ -197,13 +198,8 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
   iconContainer: {
-    padding: 0, // Removed padding for cleaner icon look
-    borderRadius: 20,
+    // Removed background and padding to fix "white box" issue
     marginBottom: 16,
-    // shadowColor: "#000",
-    // shadowOffset: { width: 0, height: 8 },
-    // shadowOpacity: 0.3,
-    // shadowRadius: 12,
   },
   title: {
     fontWeight: "bold",
@@ -223,14 +219,16 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     padding: 24,
     overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.2)",
   },
   form: {
     gap: 16,
   },
   input: {
-    backgroundColor: "#f5f5f5", // Light bg for inputs so text is legible
+    backgroundColor: "transparent", // Let container handle bg or contentStyle
     borderRadius: 12,
-    borderTopLeftRadius: 12,
+    borderTopLeftRadius: 12, // Material design override
     borderTopRightRadius: 12,
     height: 56,
     overflow: "hidden",
@@ -238,7 +236,7 @@ const styles = StyleSheet.create({
   button: {
     borderRadius: 12,
     marginTop: 8,
-    backgroundColor: "#0056D2",
+    // Gradient or solid color handled by props
   },
   footer: {
     flexDirection: "row",

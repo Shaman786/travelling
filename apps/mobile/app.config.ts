@@ -4,7 +4,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
   name: "Host-Palace",
   slug: "travelling",
-  version: "1.2.2",
+  version: "1.2.3",
   orientation: "portrait",
   icon: "./assets/images/icon.png",
   scheme: "travelling",

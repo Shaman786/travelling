@@ -12,18 +12,16 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Toast } from "toastify-react-native";
 import { useAuth } from "../../src/hooks/useAuth";
-import { authService } from "../../src/lib/authService";
 // Explicit require for GlassSurface
-const { GlassSurface } = require("../../src/components/ui/GlassSurface");
 
-type Step = "register" | "verify";
+const { GlassSurface } = require("../../src/components/ui/GlassSurface");
 
 export default function SignupScreen() {
   const theme = useTheme();
   const router = useRouter();
   const { signup } = useAuth();
 
-  const [step, setStep] = useState<Step>("register");
+  // const [step, setStep] = useState<Step>("register");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -59,20 +57,6 @@ export default function SignupScreen() {
     }
   };
 
-  const handleResendCode = async () => {
-    setLoading(true);
-    setError("");
-    try {
-      await authService.sendVerificationEmail();
-      setError(""); // Clear error
-      Toast.success("Verification email resent! Check your inbox.");
-    } catch (err: any) {
-      setError(err.message || "Failed to resend email");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   // Background Image Component (reused)
   const BackgroundLayer = () => (
     <>
@@ -89,77 +73,6 @@ export default function SignupScreen() {
       />
     </>
   );
-
-  if (step === "verify") {
-    return (
-      <View style={styles.container}>
-        <BackgroundLayer />
-        <SafeAreaView
-          style={{ flex: 1, justifyContent: "center", padding: 24 }}
-        >
-          <GlassSurface intensity={40} style={styles.glassContainer}>
-            <View style={styles.header}>
-              <Text
-                variant="headlineMedium"
-                style={[styles.title, { color: "#fff" }]}
-              >
-                Verify Your Email
-              </Text>
-              <Text variant="bodyMedium" style={styles.subtitle}>
-                We sent a verification link to:
-              </Text>
-              <Text
-                variant="bodyLarge"
-                style={[styles.email, { color: theme.colors.primaryContainer }]}
-              >
-                {email}
-              </Text>
-            </View>
-
-            <View style={styles.verifyContent}>
-              <Text variant="bodyMedium" style={styles.instructions}>
-                Please check your email and click the verification link to
-                complete your registration.
-              </Text>
-
-              {error ? (
-                <HelperText
-                  type="error"
-                  visible={!!error}
-                  style={{
-                    backgroundColor: "rgba(255,255,255,0.9)",
-                    borderRadius: 4,
-                  }}
-                >
-                  {error}
-                </HelperText>
-              ) : null}
-
-              <Button
-                mode="contained"
-                onPress={() => router.replace("/(auth)/login")}
-                style={styles.button}
-                contentStyle={{ height: 50 }}
-              >
-                Go to Login
-              </Button>
-
-              <Button
-                mode="outlined"
-                onPress={handleResendCode}
-                loading={loading}
-                style={styles.button}
-                textColor="#fff"
-                icon="email-sync"
-              >
-                Resend Email
-              </Button>
-            </View>
-          </GlassSurface>
-        </SafeAreaView>
-      </View>
-    );
-  }
 
   return (
     <View style={styles.container}>
@@ -182,7 +95,7 @@ export default function SignupScreen() {
               </Text>
             </View>
 
-            <GlassSurface intensity={30} style={styles.glassContainer}>
+            <GlassSurface intensity={20} style={styles.glassContainer}>
               <View style={styles.form}>
                 <TextInput
                   label="Full Name"
@@ -193,6 +106,7 @@ export default function SignupScreen() {
                   underlineColor="transparent"
                   activeUnderlineColor={theme.colors.primary}
                   left={<TextInput.Icon icon="account" color="#555" />}
+                  contentStyle={{ backgroundColor: "rgba(255, 255, 255, 0.5)" }}
                 />
                 <TextInput
                   label="Email"
@@ -205,6 +119,7 @@ export default function SignupScreen() {
                   autoCapitalize="none"
                   keyboardType="email-address"
                   left={<TextInput.Icon icon="email-outline" color="#555" />}
+                  contentStyle={{ backgroundColor: "rgba(255, 255, 255, 0.5)" }}
                 />
                 <TextInput
                   label="Password"
@@ -216,6 +131,7 @@ export default function SignupScreen() {
                   activeUnderlineColor={theme.colors.primary}
                   secureTextEntry
                   left={<TextInput.Icon icon="lock-outline" color="#555" />}
+                  contentStyle={{ backgroundColor: "rgba(255, 255, 255, 0.5)" }}
                 />
 
                 {error ? (
@@ -239,6 +155,7 @@ export default function SignupScreen() {
                   style={styles.button}
                   contentStyle={{ height: 52 }}
                   labelStyle={{ fontSize: 16, fontWeight: "bold" }}
+                  buttonColor={theme.colors.primary}
                 >
                   Create Account
                 </Button>
@@ -279,6 +196,9 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     padding: 24,
     marginBottom: 16,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.2)",
+    overflow: "hidden",
   },
   header: {
     alignItems: "center",
@@ -314,7 +234,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   input: {
-    backgroundColor: "#f5f5f5",
+    backgroundColor: "transparent",
     borderRadius: 12,
     borderTopLeftRadius: 12,
     borderTopRightRadius: 12,
