@@ -2,7 +2,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { FlashList } from "@shopify/flash-list";
 import { format } from "date-fns";
 import { Image } from "expo-image"; // Added Image import
-import { useFocusEffect, useRouter } from "expo-router";
+import { Stack, useFocusEffect, useRouter } from "expo-router";
 import React, { useState } from "react";
 import { Alert, Pressable, Share, StyleSheet, View } from "react-native";
 import {
@@ -11,7 +11,6 @@ import {
   Chip,
   Dialog,
   Divider,
-  FAB,
   Portal,
   SegmentedButtons,
   Text,
@@ -25,6 +24,7 @@ import StepTracker from "../../src/components/StepTracker";
 import { usePayment } from "../../src/hooks/usePayment";
 import { bookingService } from "../../src/lib/databaseService";
 import { BookedTrip, useStore } from "../../src/store/useStore";
+import { borderRadius, shadows } from "../../src/theme";
 
 export default function MyTripsScreen() {
   const theme = useTheme();
@@ -206,7 +206,7 @@ export default function MyTripsScreen() {
 
   const handleShareTrip = async (trip: BookedTrip) => {
     try {
-      const message = `Check out my trip to ${trip.destination || trip.packageTitle}! I booked it on Travelling App.`;
+      const message = `Check out my trip to ${trip.destination || trip.packageTitle}! I booked it on Host-Palace App.`;
       await Share.share({
         message,
       });
@@ -567,12 +567,19 @@ export default function MyTripsScreen() {
         showsVerticalScrollIndicator={false}
       />
 
-      <FAB
-        icon="plus"
-        label="Add Trip"
-        style={[styles.fab, { backgroundColor: theme.colors.primaryContainer }]}
-        color={theme.colors.onPrimaryContainer}
-        onPress={() => setIsAddTripVisible(true)}
+      <Stack.Screen
+        options={{
+          headerRight: () => (
+            <Pressable onPress={() => setIsAddTripVisible(true)} hitSlop={10}>
+              <MaterialCommunityIcons
+                name="plus-circle"
+                size={28}
+                color={theme.colors.primary}
+                style={{ marginRight: 10 }}
+              />
+            </Pressable>
+          ),
+        }}
       />
 
       <Portal>
@@ -637,9 +644,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 16,
     backgroundColor: "#fff",
-    elevation: 2,
     borderBottomWidth: 1,
     borderBottomColor: "#f0f0f0",
+    ...shadows.sm,
   },
   title: {
     fontWeight: "bold",
@@ -652,8 +659,9 @@ const styles = StyleSheet.create({
   card: {
     marginBottom: 16,
     backgroundColor: "#fff",
-    borderRadius: 12,
+    borderRadius: borderRadius.md,
     overflow: "hidden",
+    ...shadows.md,
   },
   cardHeader: {
     flexDirection: "row",
@@ -699,18 +707,18 @@ const styles = StyleSheet.create({
   // New Styles for Refactored Cards
   compactCard: {
     backgroundColor: "#fff",
-    borderRadius: 8,
+    borderRadius: borderRadius.sm,
     padding: 12,
     marginBottom: 12,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    elevation: 2,
+    ...shadows.sm,
     borderLeftWidth: 4, // Make sure to override in style prop if needed
   },
   cardHeroImage: {
     width: "100%",
-    height: 180,
+    aspectRatio: 16 / 9,
     backgroundColor: "#eee",
   },
   cardOverlay: {

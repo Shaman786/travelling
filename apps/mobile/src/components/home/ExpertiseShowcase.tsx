@@ -1,6 +1,7 @@
 import React from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { Avatar, Card, Text, useTheme } from "react-native-paper";
+import { borderRadius, shadows } from "../../theme";
 
 const SHOWCASE_ITEMS = [
   {
@@ -59,9 +60,11 @@ export default function ExpertiseShowcase() {
               {
                 backgroundColor: theme.colors.surface,
                 borderColor: theme.colors.outlineVariant,
+                borderRadius: borderRadius.md,
+                ...shadows.sm,
               },
             ]}
-            mode="outlined"
+            mode="contained"
           >
             <Card.Content style={styles.cardContent}>
               <View
@@ -122,7 +125,7 @@ const styles = StyleSheet.create({
     padding: 12,
   },
   iconContainer: {
-    borderRadius: 8,
+    borderRadius: borderRadius.sm,
     padding: 4,
   },
 });

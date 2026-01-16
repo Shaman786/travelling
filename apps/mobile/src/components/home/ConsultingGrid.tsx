@@ -2,6 +2,7 @@ import { useRouter } from "expo-router";
 import React from "react";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
 import { Avatar, Text, useTheme } from "react-native-paper";
+import { borderRadius } from "../../theme";
 
 const GRID_ITEMS = [
   {
@@ -114,7 +115,7 @@ const styles = StyleSheet.create({
   iconContainer: {
     width: 56,
     height: 56,
-    borderRadius: 20,
+    borderRadius: borderRadius.lg,
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 8,

@@ -165,7 +165,7 @@ export default function OnboardingScreen() {
     <View style={styles.stepContainer}>
       <Text style={styles.emoji}>🌍</Text>
       <Text variant="headlineLarge" style={styles.title}>
-        Welcome to Travelling!
+        Welcome to Host-Palace!
       </Text>
       <Text variant="bodyLarge" style={styles.subtitle}>
         Let&apos;s personalize your experience in just a few steps.

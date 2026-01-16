@@ -1,7 +1,7 @@
 {
-  "name": "travelling",
+  "name": "host-palace",
   "main": "expo-router/entry",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "scripts": {
     "start": "expo start",
     "db:init": "npx ts-node ../admin/scripts/init_db.ts",
@@ -25,6 +25,7 @@
     "airwallex-payment-react-native": "^0.1.5",
     "date-fns": "^4.1.0",
     "expo": "~54.0.30",
+    "expo-blur": "~15.0.8",
     "expo-build-properties": "~1.0.10",
     "expo-constants": "~18.0.13",
     "expo-dev-client": "~6.0.20",

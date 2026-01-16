@@ -31,6 +31,7 @@ import TravelerSelector from "../../src/components/search/TravelerSelector";
 import SortSheet from "../../src/components/SortSheet";
 import { useSearch } from "../../src/hooks/useSearch";
 import databaseService from "../../src/lib/databaseService";
+import { borderRadius, shadows } from "../../src/theme";
 import { PackageFilters, TravelPackage } from "../../src/types";
 
 // Public Token for Mapbox (Client-side)
@@ -297,8 +298,8 @@ export default function SearchScreen() {
                     style={{
                       backgroundColor: "white",
                       padding: 4,
-                      borderRadius: 8,
-                      elevation: 4,
+                      borderRadius: borderRadius.sm,
+                      ...shadows.md,
                     }}
                   >
                     <Text variant="labelSmall" style={{ fontWeight: "bold" }}>
@@ -484,7 +485,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingRight: 8,
     backgroundColor: "#fff",
-    elevation: 2,
+    ...shadows.sm,
   },
   searchBar: {
     flex: 1,

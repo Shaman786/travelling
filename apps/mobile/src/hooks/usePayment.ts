@@ -100,7 +100,7 @@ export const usePayment = () => {
         // Create Payment Intent via Backend
         const { clientSecret, intentId } =
           await paymentService.createPaymentIntent({
-            amount,
+            amountCents: Math.round(amount * 100), // Convert to cents
             currency,
             orderId: bookingId,
             customerId,

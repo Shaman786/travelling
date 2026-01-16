@@ -11,10 +11,13 @@ import ConsultingGrid from "../../src/components/home/ConsultingGrid";
 import ExpertiseShowcase from "../../src/components/home/ExpertiseShowcase";
 import HeroCarousel from "../../src/components/home/HeroCarousel";
 import PromotionalBanner from "../../src/components/home/PromotionalBanner";
+import { GlassSurface } from "../../src/components/ui/GlassSurface";
 
 import databaseService from "../../src/lib/databaseService";
 import { useStore } from "../../src/store/useStore";
 import type { TravelPackage } from "../../src/types";
+
+import { shadows } from "../../src/theme";
 
 // DESTINATION_CATEGORIES removed - fetched dynamically
 
@@ -111,10 +114,7 @@ export default function CatalogScreen() {
             : {},
         ]}
       >
-        <PackageCard
-          item={item}
-          style={isGridView ? { height: 280 } : undefined}
-        />
+        <PackageCard item={item} />
       </View>
     ),
     [isGridView]
@@ -124,7 +124,7 @@ export default function CatalogScreen() {
     () => (
       <View>
         {/* Header (UserInfo) */}
-        <View style={styles.header}>
+        <GlassSurface style={styles.header} intensity={60}>
           <View>
             <Text
               variant="titleSmall"
@@ -146,7 +146,7 @@ export default function CatalogScreen() {
               />
             )}
           </Pressable>
-        </View>
+        </GlassSurface>
 
         {/* Search Bar - Navigates to dedicated Search Screen */}
         <Pressable
@@ -299,8 +299,9 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     paddingHorizontal: 20,
-    marginTop: 10,
+    paddingVertical: 16,
     marginBottom: 20,
+    borderRadius: 24, // Consistent radius for the glass container
   },
   userName: {
     fontWeight: "bold",
@@ -313,6 +314,7 @@ const styles = StyleSheet.create({
   searchbar: {
     backgroundColor: "#fff",
     borderRadius: 12,
+    ...shadows.sm, // Platform Adaptive Shadow
   },
   historyContainer: {
     marginTop: 12,

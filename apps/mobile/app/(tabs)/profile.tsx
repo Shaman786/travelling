@@ -16,8 +16,10 @@ import {
 } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Toast } from "toastify-react-native";
+import { GlassSurface } from "../../src/components/ui/GlassSurface";
 import { useAuth } from "../../src/hooks/useAuth";
 import { useStore } from "../../src/store/useStore";
+import { borderRadius, shadows } from "../../src/theme";
 
 interface UploadedFile {
   name: string;
@@ -87,7 +89,7 @@ export default function ProfileScreen() {
       style={[styles.container, { backgroundColor: theme.colors.background }]}
     >
       <ScrollView showsVerticalScrollIndicator={false}>
-        <View style={styles.header}>
+        <GlassSurface style={styles.header} intensity={40}>
           {user?.avatar ? (
             <Avatar.Image size={100} source={{ uri: user.avatar }} />
           ) : (
@@ -100,9 +102,9 @@ export default function ProfileScreen() {
             {user?.name || "Guest"}
           </Text>
           <Text variant="bodyMedium" style={styles.email}>
-            {user?.email || "guest@travelling.app"}
+            {user?.email || "guest@host-palace.app"}
           </Text>
-        </View>
+        </GlassSurface>
 
         <View style={styles.sectionContainer}>
           {/* Travel Vault */}
@@ -267,8 +269,8 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     borderBottomLeftRadius: 30,
     borderBottomRightRadius: 30,
-    elevation: 2,
     marginBottom: 20,
+    ...shadows.sm,
   },
   name: {
     fontWeight: "bold",
@@ -284,9 +286,10 @@ const styles = StyleSheet.create({
   },
   card: {
     backgroundColor: "#fff",
-    borderRadius: 16,
+    borderRadius: borderRadius.md,
     overflow: "hidden",
     padding: 16,
+    ...shadows.sm,
   },
   cardHeader: {
     flexDirection: "row",

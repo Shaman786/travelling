@@ -46,7 +46,7 @@ export default function SignupScreen() {
       const success = await signup(email, password, name);
       if (success) {
         // Account created and auto-logged in
-        Toast.success("Welcome to Travelling!");
+        Toast.success("Welcome to Host-Palace!");
         router.replace("/(tabs)");
       }
     } catch (err: any) {

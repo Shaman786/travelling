@@ -2,12 +2,13 @@ import { ConfigContext, ExpoConfig } from "expo/config";
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
-  name: "travelling",
+  name: "Host-Palace",
   slug: "travelling",
-  version: "1.1.0",
+  version: "1.2.1",
   orientation: "portrait",
   icon: "./assets/images/icon.png",
   scheme: "travelling",
+  backgroundColor: "#F5F7FA", // Match app theme background
   userInterfaceStyle: "automatic",
   newArchEnabled: true,
   ios: {
@@ -86,6 +87,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         downloadToken: process.env.RNMAPBOX_MAPS_DOWNLOAD_TOKEN,
       },
     ],
+    "expo-system-ui", // Added System UI plugin
   ],
   experiments: {
     typedRoutes: true,

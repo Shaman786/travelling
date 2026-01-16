@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import { Button, Text, useTheme } from "react-native-paper";
 import { remoteConfig } from "../../services/RemoteConfigService";
+import { shadows } from "../../theme";
 import { BannerConfig } from "../../types/banner";
 
 const PromotionalBanner = () => {
@@ -141,6 +142,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     marginBottom: 24,
     height: 200,
+    ...shadows.md,
   },
   imageBackground: {
     width: "100%",

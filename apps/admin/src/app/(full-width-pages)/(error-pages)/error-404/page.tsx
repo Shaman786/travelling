@@ -2,11 +2,10 @@ import GridShape from "@/components/common/GridShape";
 import { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import React from "react";
 
 export const metadata: Metadata = {
-  title: "Next.js Error 404 | Travelling Admin Dashboard",
-  description: "This is Next.js Error 404 page for Travelling Admin Dashboard",
+  title: "Next.js Error 404 | Host-Palace Admin Dashboard",
+  description: "This is Next.js Error 404 page for Host-Palace Admin Dashboard",
 };
 
 export default function Error404() {
@@ -46,7 +45,7 @@ export default function Error404() {
       </div>
       {/* <!-- Footer --> */}
       <p className="absolute bottom-6 left-1/2 -translate-x-1/2 text-center text-sm text-gray-500 dark:text-gray-400">
-        &copy; {new Date().getFullYear()} - Travelling Admin
+        &copy; {new Date().getFullYear()} - Host-Palace Admin
       </p>
     </div>
   );

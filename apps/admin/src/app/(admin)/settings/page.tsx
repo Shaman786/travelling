@@ -13,7 +13,7 @@ export default function SettingsPage() {
   const [maintenanceMode, setMaintenanceMode] = useState(false);
   const [bookingFee, setBookingFee] = useState("5");
   const [currency, setCurrency] = useState("USD");
-  const [supportEmail, setSupportEmail] = useState("support@travelling.com");
+  const [supportEmail, setSupportEmail] = useState("support@host-palace.app");
 
   // Integrations State
   const [dbConnected, setDbConnected] = useState(false);

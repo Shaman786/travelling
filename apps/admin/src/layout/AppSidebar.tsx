@@ -323,7 +323,7 @@ const AppSidebar: React.FC = () => {
                   <GridIcon className="h-5 w-5" />
                 </div>
                 <span className="text-xl font-bold text-gray-800 dark:text-white">
-                  Travelling
+                  Host-Palace
                 </span>
               </div>
             </>

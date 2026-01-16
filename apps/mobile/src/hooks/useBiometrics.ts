@@ -44,7 +44,7 @@ export function useBiometrics() {
   const authenticate = useCallback(async () => {
     try {
       const result = await LocalAuthentication.authenticateAsync({
-        promptMessage: "Login to Travelling",
+        promptMessage: "Login to Host-Palace",
         fallbackLabel: "Use Password",
       });
       return result.success;

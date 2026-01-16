@@ -51,8 +51,8 @@ export async function POST(request: Request) {
       currency: currency,
       merchant_order_id: orderId,
       return_url: "travelling://payment-result", // Deep link to app
+      descriptor: "Host-Palace Booking",
       customer_id: customerId,
-      descriptor: "Travelling App Booking",
       metadata: {
         orderId: orderId,
       },

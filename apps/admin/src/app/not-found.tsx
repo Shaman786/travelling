@@ -1,7 +1,6 @@
 import GridShape from "@/components/common/GridShape";
 import Image from "next/image";
 import Link from "next/link";
-import React from "react";
 
 export default function NotFound() {
   return (
@@ -40,7 +39,7 @@ export default function NotFound() {
       </div>
       {/* <!-- Footer --> */}
       <p className="absolute bottom-6 left-1/2 -translate-x-1/2 text-center text-sm text-gray-500 dark:text-gray-400">
-        &copy; {new Date().getFullYear()} - Travelling Admin
+        &copy; {new Date().getFullYear()} - Host-Palace Admin
       </p>
     </div>
   );

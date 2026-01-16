@@ -36,9 +36,13 @@ export default function TermsScreen() {
             1. Acceptance of Terms
           </Text>
           <Text variant="bodyMedium" style={styles.paragraph}>
-            By accessing and using the Travelling app, you accept and agree to
-            be bound by the terms and provisions of this agreement. If you do
-            not agree to abide by these terms, please do not use this service.
+            By accessing and using the Host-Palace app, you accept and agree to
+            Host-Palace acts as an intermediary between users and travel service
+            providers. If you have questions, please contact us at
+            support@host-palace.app or through our in-app support feature. You
+            agree to be bound by the terms and provisions of this agreement. If
+            you do not agree to abide by these terms, please do not use this
+            service.
           </Text>
         </View>
 

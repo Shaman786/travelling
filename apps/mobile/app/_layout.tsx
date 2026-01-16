@@ -6,6 +6,7 @@ import {
   useSegments,
 } from "expo-router";
 import { StatusBar } from "expo-status-bar";
+import * as SystemUI from "expo-system-ui";
 import { useEffect, useRef } from "react";
 import "react-native-get-random-values";
 import { PaperProvider } from "react-native-paper";
@@ -69,6 +70,9 @@ export default function RootLayout() {
     // registerForPushNotificationsAsync().then((token) => {
     //   if (token) console.log("Push Token:", token);
     // });
+
+    // Set System UI Background Color (Runtime)
+    SystemUI.setBackgroundColorAsync("#F5F7FA");
 
     // This listener is fired whenever a notification is received while the app is foregrounded
     notificationListener.current =

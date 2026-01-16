@@ -56,7 +56,7 @@ const users = new Users(client);
 const teams = new Teams(client);
 
 // Admin Config
-const ADMIN_EMAIL = "admin@travelling.app";
+const ADMIN_EMAIL = "admin@host-palace.app";
 const ADMIN_PASS = "password123"; // Initial password
 const ADMIN_NAME = "Super Admin";
 const TEAM_NAME = "admin";

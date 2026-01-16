@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { Button, Text, useTheme } from "react-native-paper";
 import { useBanners } from "../../hooks/useBanners";
+import { shadows } from "../../theme";
 
 const { width } = Dimensions.get("window");
 
@@ -164,6 +165,7 @@ const styles = StyleSheet.create({
   cardContainer: {
     width: width,
     paddingHorizontal: 20,
+    ...shadows.md,
   },
   imageBackground: {
     height: 200,

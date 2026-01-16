@@ -56,7 +56,7 @@ export default function LoginScreen() {
             variant="displaySmall"
             style={[styles.title, { color: theme.colors.primary }]}
           >
-            Travelling
+            Host-Palace
           </Text>
           <Text variant="bodyLarge" style={styles.subtitle}>
             Your premium travel consultancy

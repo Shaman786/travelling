@@ -6,6 +6,7 @@ import React from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { Card, Chip, Text, useTheme } from "react-native-paper";
 import { useStore } from "../store/useStore";
+import { borderRadius, shadows } from "../theme";
 import type { TravelPackage } from "../types";
 
 interface PackageCardProps {
@@ -155,20 +156,16 @@ const PackageCard = ({ item, style, searchParams }: PackageCardProps) => {
 const styles = StyleSheet.create({
   card: {
     marginBottom: 16,
-    borderRadius: 16,
+    borderRadius: borderRadius.md,
     overflow: "hidden",
     backgroundColor: "#fff",
-    elevation: 8,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.2,
-    shadowRadius: 16,
+    ...shadows.lg,
     borderWidth: 0.5,
     borderColor: "rgba(0,0,0,0.05)",
   },
   imageContainer: {
-    height: 200,
     width: "100%",
+    aspectRatio: 4 / 3, // Standard Aspect Ratio
     position: "relative",
   },
   image: {
@@ -226,8 +223,8 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 12,
     left: 12,
-    backgroundColor: "rgba(255,255,255,0.25)",
-    backdropFilter: "blur(10px)",
+    backgroundColor: "rgba(0,0,0,0.6)",
+    backdropFilter: "blur(4px)",
   },
   chipText: {
     color: "#fff",
