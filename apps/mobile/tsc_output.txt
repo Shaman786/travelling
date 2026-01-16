@@ -1,0 +1,73 @@
+app/_layout.tsx(15,3): error TS2305: Module '"react-native-safe-area-context"' has no exported member 'enableEdgeToEdge'.
+src/components/WhatsAppButton.tsx(29,56): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: ImageProps): Image', gave the following error.
+    Type '{ source: any; style: { width: number; height: number; resizeMode: "contain"; }; contentFit: string; }' is not assignable to type 'IntrinsicAttributes & IntrinsicClassAttributes<Image> & Readonly<ImageProps>'.
+      Property 'contentFit' does not exist on type 'IntrinsicAttributes & IntrinsicClassAttributes<Image> & Readonly<ImageProps>'.
+  Overload 2 of 2, '(props: ImageProps, context: any): Image', gave the following error.
+    Type '{ source: any; style: { width: number; height: number; resizeMode: "contain"; }; contentFit: string; }' is not assignable to type 'IntrinsicAttributes & IntrinsicClassAttributes<Image> & Readonly<ImageProps>'.
+      Property 'contentFit' does not exist on type 'IntrinsicAttributes & IntrinsicClassAttributes<Image> & Readonly<ImageProps>'.
+../../node_modules/react-native-gifted-chat/src/Bubble/index.tsx(344,8): error TS2769: No overload matches this call.
+  Overload 2 of 2, '(props: ViewProps, context: any): View', gave the following error.
+    Type 'false | "" | ViewStyle | RegisteredStyle<ViewStyle> | RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>> | ... 4 more ... | undefined' is not assignable to type 'ViewStyle | Falsy | RegisteredStyle<ViewStyle> | RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>> | readonly (ViewStyle | ... 1 more ... | RegisteredStyle<...>)[]'.
+      Type 'TextStyle' is not assignable to type 'ViewStyle | Falsy | RegisteredStyle<ViewStyle> | RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>> | readonly (ViewStyle | ... 1 more ... | RegisteredStyle<...>)[]'.
+        Type 'TextStyle' is not assignable to type 'ViewStyle'.
+          Types of property 'cursor' are incompatible.
+            Type 'string | undefined' is not assignable to type 'CursorValue | undefined'.
+              Type 'string' is not assignable to type 'CursorValue | undefined'.
+  Overload 2 of 2, '(props: ViewProps, context: any): View', gave the following error.
+    Type '(StyleProp<ViewStyle> | TextStyle | RegisteredStyle<TextStyle> | RecursiveArray<Falsy | TextStyle | RegisteredStyle<...>>)[] | null' is not assignable to type 'ViewStyle | Falsy | RegisteredStyle<ViewStyle> | RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>> | readonly (ViewStyle | ... 1 more ... | RegisteredStyle<...>)[]'.
+      Type '(StyleProp<ViewStyle> | TextStyle | RegisteredStyle<TextStyle> | RecursiveArray<Falsy | TextStyle | RegisteredStyle<...>>)[]' is not assignable to type 'ViewStyle | Falsy | RegisteredStyle<ViewStyle> | RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>> | readonly (ViewStyle | ... 1 more ... | RegisteredStyle<...>)[]'.
+        Type '(StyleProp<ViewStyle> | TextStyle | RegisteredStyle<TextStyle> | RecursiveArray<Falsy | TextStyle | RegisteredStyle<...>>)[]' is not assignable to type 'RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>>'.
+          The types returned by 'pop()' are incompatible between these types.
+            Type 'StyleProp<ViewStyle> | TextStyle | RegisteredStyle<TextStyle> | RecursiveArray<Falsy | TextStyle | RegisteredStyle<...>>' is not assignable to type 'ViewStyle | Falsy | RegisteredStyle<ViewStyle> | RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>> | readonly (ViewStyle | ... 1 more ... | RegisteredStyle<...>)[]'.
+              Type 'TextStyle' is not assignable to type 'ViewStyle | Falsy | RegisteredStyle<ViewStyle> | RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>> | readonly (ViewStyle | ... 1 more ... | RegisteredStyle<...>)[]'.
+                Type 'TextStyle' is not assignable to type 'ViewStyle'.
+                  Types of property 'cursor' are incompatible.
+                    Type 'string | undefined' is not assignable to type 'CursorValue | undefined'.
+                      Type 'string' is not assignable to type 'CursorValue | undefined'.
+  Overload 2 of 2, '(props: ViewProps, context: any): View', gave the following error.
+    Type '(StyleProp<ViewStyle> | TextStyle | RegisteredStyle<TextStyle> | RecursiveArray<Falsy | TextStyle | RegisteredStyle<...>>)[] | null' is not assignable to type 'ViewStyle | Falsy | RegisteredStyle<ViewStyle> | RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>> | readonly (ViewStyle | ... 1 more ... | RegisteredStyle<...>)[]'.
+      Type '(StyleProp<ViewStyle> | TextStyle | RegisteredStyle<TextStyle> | RecursiveArray<Falsy | TextStyle | RegisteredStyle<...>>)[]' is not assignable to type 'ViewStyle | Falsy | RegisteredStyle<ViewStyle> | RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>> | readonly (ViewStyle | ... 1 more ... | RegisteredStyle<...>)[]'.
+        Type '(StyleProp<ViewStyle> | TextStyle | RegisteredStyle<TextStyle> | RecursiveArray<Falsy | TextStyle | RegisteredStyle<...>>)[]' is not assignable to type 'RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>>'.
+          The types returned by 'pop()' are incompatible between these types.
+            Type 'StyleProp<ViewStyle> | TextStyle | RegisteredStyle<TextStyle> | RecursiveArray<Falsy | TextStyle | RegisteredStyle<...>>' is not assignable to type 'ViewStyle | Falsy | RegisteredStyle<ViewStyle> | RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>> | readonly (ViewStyle | ... 1 more ... | RegisteredStyle<...>)[]'.
+              Type 'TextStyle' is not assignable to type 'ViewStyle | Falsy | RegisteredStyle<ViewStyle> | RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>> | readonly (ViewStyle | ... 1 more ... | RegisteredStyle<...>)[]'.
+                Type 'TextStyle' is not assignable to type 'ViewStyle'.
+                  Types of property 'cursor' are incompatible.
+                    Type 'string | undefined' is not assignable to type 'CursorValue | undefined'.
+                      Type 'string' is not assignable to type 'CursorValue | undefined'.
+../../node_modules/react-native-gifted-chat/src/Composer.tsx(76,72): error TS2322: Type 'ViewStyle | TextStyle | ImageStyle' is not assignable to type 'Falsy | TextStyle | RegisteredStyle<TextStyle> | RecursiveArray<Falsy | TextStyle | RegisteredStyle<TextStyle>> | readonly (Falsy | ... 1 more ... | RegisteredStyle<...>)[]'.
+  Type 'ViewStyle' is not assignable to type 'Falsy | TextStyle | RegisteredStyle<TextStyle> | RecursiveArray<Falsy | TextStyle | RegisteredStyle<TextStyle>> | readonly (Falsy | ... 1 more ... | RegisteredStyle<...>)[]'.
+    Type 'ViewStyle' is not assignable to type 'TextStyle'.
+      Types of property 'userSelect' are incompatible.
+        Type 'string | undefined' is not assignable to type '"contain" | "all" | "none" | "auto" | "text" | undefined'.
+          Type 'string' is not assignable to type '"contain" | "all" | "none" | "auto" | "text" | undefined'.
+../../node_modules/react-native-gifted-chat/src/Message/index.tsx(100,15): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: ViewProps): View', gave the following error.
+    Type 'false | "" | ViewStyle | RegisteredStyle<ViewStyle> | RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>> | ... 4 more ... | undefined' is not assignable to type 'ViewStyle | Falsy | RegisteredStyle<ViewStyle> | RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>> | readonly (ViewStyle | ... 1 more ... | RegisteredStyle<...>)[]'.
+      Type 'TextStyle' is not assignable to type 'ViewStyle | Falsy | RegisteredStyle<ViewStyle> | RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>> | readonly (ViewStyle | ... 1 more ... | RegisteredStyle<...>)[]'.
+        Type 'TextStyle' is not assignable to type 'ViewStyle'.
+          Types of property 'cursor' are incompatible.
+            Type 'string | undefined' is not assignable to type 'CursorValue | undefined'.
+              Type 'string' is not assignable to type 'CursorValue | undefined'.
+  Overload 2 of 2, '(props: ViewProps, context: any): View', gave the following error.
+    Type 'false | "" | ViewStyle | RegisteredStyle<ViewStyle> | RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>> | ... 4 more ... | undefined' is not assignable to type 'ViewStyle | Falsy | RegisteredStyle<ViewStyle> | RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>> | readonly (ViewStyle | ... 1 more ... | RegisteredStyle<...>)[]'.
+      Type 'TextStyle' is not assignable to type 'ViewStyle | Falsy | RegisteredStyle<ViewStyle> | RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>> | readonly (ViewStyle | ... 1 more ... | RegisteredStyle<...>)[]'.
+        Type 'TextStyle' is not assignable to type 'ViewStyle'.
+          Types of property 'cursor' are incompatible.
+            Type 'string | undefined' is not assignable to type 'CursorValue | undefined'.
+              Type 'string' is not assignable to type 'CursorValue | undefined'.
+../../node_modules/react-native-gifted-chat/src/MessagesContainer/index.tsx(279,16): error TS2349: This expression is not callable.
+  Not all constituents of type '((event: LayoutChangeEvent) => void) | SharedValue<((event: LayoutChangeEvent) => void) | undefined>' are callable.
+    Type 'SharedValue<((event: LayoutChangeEvent) => void) | undefined>' has no call signatures.
+../../node_modules/react-native-gifted-chat/src/MessagesContainer/index.tsx(400,9): error TS2322: Type 'string | number | bigint | boolean | Iterable<ReactNode> | Promise<AwaitedReactNode> | Element | null | undefined' is not assignable to type 'ReactElement<unknown, string | JSXElementConstructor<any>> | ComponentType<any> | SharedValue<ReactElement<unknown, string | JSXElementConstructor<any>> | ComponentType<...> | null | undefined> | null | undefined'.
+  Type 'string' is not assignable to type 'ReactElement<unknown, string | JSXElementConstructor<any>> | ComponentType<any> | SharedValue<ReactElement<unknown, string | JSXElementConstructor<any>> | ComponentType<...> | null | undefined> | null | undefined'.
+../../node_modules/react-native-gifted-chat/src/MessagesContainer/index.tsx(403,9): error TS2322: Type 'string | number | bigint | boolean | Iterable<ReactNode> | Promise<AwaitedReactNode> | Element | null | undefined' is not assignable to type 'ReactElement<unknown, string | JSXElementConstructor<any>> | ComponentType<any> | SharedValue<ReactElement<unknown, string | JSXElementConstructor<any>> | ComponentType<...> | null | undefined> | null | undefined'.
+  Type 'string' is not assignable to type 'ReactElement<unknown, string | JSXElementConstructor<any>> | ComponentType<any> | SharedValue<ReactElement<unknown, string | JSXElementConstructor<any>> | ComponentType<...> | null | undefined> | null | undefined'.
+../../node_modules/react-native-gifted-chat/src/MessagesContainer/index.tsx(414,9): error TS2322: Type '(props: CellRendererProps<unknown>) => React.JSX.Element' is not assignable to type 'undefined'.
+../../node_modules/react-native-gifted-chat/src/Time.tsx(56,11): error TS2322: Type 'false | "" | ViewStyle | RegisteredStyle<ViewStyle> | RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>> | ... 4 more ... | undefined' is not assignable to type 'Falsy | TextStyle | RegisteredStyle<TextStyle> | RecursiveArray<Falsy | TextStyle | RegisteredStyle<TextStyle>> | readonly (Falsy | ... 1 more ... | RegisteredStyle<...>)[]'.
+  Type 'ViewStyle' is not assignable to type 'Falsy | TextStyle | RegisteredStyle<TextStyle> | RecursiveArray<Falsy | TextStyle | RegisteredStyle<TextStyle>> | readonly (Falsy | ... 1 more ... | RegisteredStyle<...>)[]'.
+    Type 'ViewStyle' is not assignable to type 'TextStyle'.
+      Types of property 'userSelect' are incompatible.
+        Type 'string | undefined' is not assignable to type '"contain" | "all" | "none" | "auto" | "text" | undefined'.
+          Type 'string' is not assignable to type '"contain" | "all" | "none" | "auto" | "text" | undefined'.

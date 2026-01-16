@@ -14,7 +14,7 @@ import { Toast } from "toastify-react-native";
 import { useAuth } from "../../src/hooks/useAuth";
 // Explicit require for GlassSurface
 
-const { GlassSurface } = require("../../src/components/ui/GlassSurface");
+import { GlassSurface } from "../../src/components/ui/GlassSurface";
 
 export default function SignupScreen() {
   const theme = useTheme();

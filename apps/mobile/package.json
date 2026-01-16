@@ -1,7 +1,7 @@
 {
   "name": "host-palace",
   "main": "expo-router/entry",
-  "version": "1.2.3",
+  "version": "1.2.4",
   "scripts": {
     "start": "expo start",
     "db:init": "npx ts-node ../admin/scripts/init_db.ts",
