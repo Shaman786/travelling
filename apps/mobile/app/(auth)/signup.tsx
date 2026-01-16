@@ -1,3 +1,4 @@
+import { Image } from "expo-image"; // Updated import
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import { KeyboardAvoidingView, Platform, StyleSheet, View } from "react-native";
@@ -12,6 +13,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Toast } from "toastify-react-native";
 import { useAuth } from "../../src/hooks/useAuth";
 import { authService } from "../../src/lib/authService";
+// Explicit require for GlassSurface
+const { GlassSurface } = require("../../src/components/ui/GlassSurface");
 
 type Step = "register" | "verify";
 
@@ -70,168 +73,229 @@ export default function SignupScreen() {
     }
   };
 
-  // handleSkipVerification removed as confusing
+  // Background Image Component (reused)
+  const BackgroundLayer = () => (
+    <>
+      <Image
+        source={require("../../assets/images/auth-background.jpg")}
+        style={StyleSheet.absoluteFill}
+        contentFit="cover"
+      />
+      <View
+        style={[
+          StyleSheet.absoluteFill,
+          { backgroundColor: "rgba(0,0,0,0.5)" },
+        ]}
+      />
+    </>
+  );
 
   if (step === "verify") {
     return (
-      <SafeAreaView
-        style={[styles.container, { backgroundColor: theme.colors.background }]}
-      >
-        <View style={styles.header}>
-          <Text
-            variant="headlineMedium"
-            style={[styles.title, { color: theme.colors.primary }]}
-          >
-            Verify Your Email
-          </Text>
-          <Text variant="bodyMedium" style={styles.subtitle}>
-            We sent a verification link to:
-          </Text>
-          <Text
-            variant="bodyLarge"
-            style={[styles.email, { color: theme.colors.primary }]}
-          >
-            {email}
-          </Text>
-        </View>
+      <View style={styles.container}>
+        <BackgroundLayer />
+        <SafeAreaView
+          style={{ flex: 1, justifyContent: "center", padding: 24 }}
+        >
+          <GlassSurface intensity={40} style={styles.glassContainer}>
+            <View style={styles.header}>
+              <Text
+                variant="headlineMedium"
+                style={[styles.title, { color: "#fff" }]}
+              >
+                Verify Your Email
+              </Text>
+              <Text variant="bodyMedium" style={styles.subtitle}>
+                We sent a verification link to:
+              </Text>
+              <Text
+                variant="bodyLarge"
+                style={[styles.email, { color: theme.colors.primaryContainer }]}
+              >
+                {email}
+              </Text>
+            </View>
 
-        <View style={styles.verifyContent}>
-          <Text variant="bodyMedium" style={styles.instructions}>
-            Please check your email and click the verification link to complete
-            your registration.
-          </Text>
+            <View style={styles.verifyContent}>
+              <Text variant="bodyMedium" style={styles.instructions}>
+                Please check your email and click the verification link to
+                complete your registration.
+              </Text>
 
-          {error ? (
-            <HelperText type="error" visible={!!error}>
-              {error}
-            </HelperText>
-          ) : null}
+              {error ? (
+                <HelperText
+                  type="error"
+                  visible={!!error}
+                  style={{
+                    backgroundColor: "rgba(255,255,255,0.9)",
+                    borderRadius: 4,
+                  }}
+                >
+                  {error}
+                </HelperText>
+              ) : null}
 
-          <Button
-            mode="contained"
-            onPress={() => router.replace("/(auth)/login")}
-            style={styles.button}
-            contentStyle={{ height: 50 }}
-          >
-            Go to Login
-          </Button>
+              <Button
+                mode="contained"
+                onPress={() => router.replace("/(auth)/login")}
+                style={styles.button}
+                contentStyle={{ height: 50 }}
+              >
+                Go to Login
+              </Button>
 
-          <Button
-            mode="outlined"
-            onPress={handleResendCode}
-            loading={loading}
-            style={styles.button}
-          >
-            Resend Verification Email
-          </Button>
-
-          <Button
-            mode="text"
-            onPress={() => setStep("register")}
-            style={styles.textButton}
-          >
-            Use a different email
-          </Button>
-        </View>
-      </SafeAreaView>
+              <Button
+                mode="outlined"
+                onPress={handleResendCode}
+                loading={loading}
+                style={styles.button}
+                textColor="#fff"
+                icon="email-sync"
+              >
+                Resend Email
+              </Button>
+            </View>
+          </GlassSurface>
+        </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView
-      style={[styles.container, { backgroundColor: theme.colors.background }]}
-    >
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={styles.keyboardView}
-      >
-        <View style={styles.header}>
-          <Text
-            variant="headlineMedium"
-            style={[styles.title, { color: theme.colors.primary }]}
-          >
-            Join Travelling
-          </Text>
-          <Text variant="bodyMedium" style={styles.subtitle}>
-            Start your journey with us
-          </Text>
-        </View>
+    <View style={styles.container}>
+      <BackgroundLayer />
+      <SafeAreaView style={{ flex: 1 }}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={styles.keyboardView}
+        >
+          <View style={styles.contentContainer}>
+            <View style={styles.header}>
+              <Text
+                variant="displaySmall"
+                style={[styles.title, { color: "#fff" }]}
+              >
+                Join Us
+              </Text>
+              <Text variant="bodyLarge" style={styles.subtitle}>
+                Start your dream journey
+              </Text>
+            </View>
 
-        <View style={styles.form}>
-          <TextInput
-            label="Full Name"
-            value={name}
-            onChangeText={setName}
-            mode="outlined"
-            style={styles.input}
-          />
-          <TextInput
-            label="Email"
-            value={email}
-            onChangeText={setEmail}
-            mode="outlined"
-            style={styles.input}
-            autoCapitalize="none"
-            keyboardType="email-address"
-          />
-          <TextInput
-            label="Password"
-            value={password}
-            onChangeText={setPassword}
-            mode="outlined"
-            secureTextEntry
-            style={styles.input}
-          />
+            <GlassSurface intensity={30} style={styles.glassContainer}>
+              <View style={styles.form}>
+                <TextInput
+                  label="Full Name"
+                  value={name}
+                  onChangeText={setName}
+                  mode="flat"
+                  style={styles.input}
+                  underlineColor="transparent"
+                  activeUnderlineColor={theme.colors.primary}
+                  left={<TextInput.Icon icon="account" color="#555" />}
+                />
+                <TextInput
+                  label="Email"
+                  value={email}
+                  onChangeText={setEmail}
+                  mode="flat"
+                  style={styles.input}
+                  underlineColor="transparent"
+                  activeUnderlineColor={theme.colors.primary}
+                  autoCapitalize="none"
+                  keyboardType="email-address"
+                  left={<TextInput.Icon icon="email-outline" color="#555" />}
+                />
+                <TextInput
+                  label="Password"
+                  value={password}
+                  onChangeText={setPassword}
+                  mode="flat"
+                  style={styles.input}
+                  underlineColor="transparent"
+                  activeUnderlineColor={theme.colors.primary}
+                  secureTextEntry
+                  left={<TextInput.Icon icon="lock-outline" color="#555" />}
+                />
 
-          {error ? (
-            <HelperText type="error" visible={!!error}>
-              {error}
-            </HelperText>
-          ) : null}
+                {error ? (
+                  <HelperText
+                    type="error"
+                    visible={!!error}
+                    style={{
+                      backgroundColor: "rgba(255,255,255,0.8)",
+                      borderRadius: 4,
+                    }}
+                  >
+                    {error}
+                  </HelperText>
+                ) : null}
 
-          <Button
-            mode="contained"
-            onPress={handleSignup}
-            loading={loading}
-            disabled={loading}
-            style={styles.button}
-            contentStyle={{ height: 50 }}
-          >
-            Create Account
-          </Button>
+                <Button
+                  mode="contained"
+                  onPress={handleSignup}
+                  loading={loading}
+                  disabled={loading}
+                  style={styles.button}
+                  contentStyle={{ height: 52 }}
+                  labelStyle={{ fontSize: 16, fontWeight: "bold" }}
+                >
+                  Create Account
+                </Button>
+              </View>
+            </GlassSurface>
 
-          <Button
-            mode="text"
-            onPress={() => router.back()}
-            style={styles.textButton}
-          >
-            Already have an account? Sign In
-          </Button>
-        </View>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+            <View style={styles.footer}>
+              <Text style={{ color: "#eee" }}>Already have an account?</Text>
+              <Button
+                mode="text"
+                onPress={() => router.back()}
+                textColor={theme.colors.primaryContainer}
+              >
+                Sign In
+              </Button>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 24,
   },
   keyboardView: {
     flex: 1,
     justifyContent: "center",
   },
+  contentContainer: {
+    flex: 1,
+    justifyContent: "center",
+    padding: 24,
+  },
+  glassContainer: {
+    borderRadius: 24,
+    padding: 24,
+    marginBottom: 16,
+  },
   header: {
     alignItems: "center",
-    marginBottom: 48,
+    marginBottom: 32,
   },
   title: {
     fontWeight: "bold",
+    textShadowColor: "rgba(0, 0, 0, 0.5)",
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
   },
   subtitle: {
-    color: "#666",
+    color: "#e0e0e0",
     marginTop: 8,
+    textShadowColor: "rgba(0, 0, 0, 0.5)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
   email: {
     fontWeight: "600",
@@ -246,18 +310,25 @@ const styles = StyleSheet.create({
   },
   instructions: {
     textAlign: "center",
-    color: "#666",
+    color: "#eee",
     marginBottom: 16,
   },
   input: {
-    backgroundColor: "#fff",
+    backgroundColor: "#f5f5f5",
+    borderRadius: 12,
+    borderTopLeftRadius: 12,
+    borderTopRightRadius: 12,
+    height: 56,
+    overflow: "hidden",
   },
   button: {
-    marginTop: 8,
-    borderRadius: 8,
+    borderRadius: 12,
     width: "100%",
   },
-  textButton: {
-    marginTop: 8,
+  footer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 16,
   },
 });

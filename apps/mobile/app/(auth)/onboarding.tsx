@@ -5,6 +5,7 @@
  * Collects: Name, Phone, Travel Style, Budget, Destinations
  */
 
+import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
@@ -163,7 +164,11 @@ export default function OnboardingScreen() {
   // Step 0: Welcome
   const renderWelcome = () => (
     <View style={styles.stepContainer}>
-      <Text style={styles.emoji}>🌍</Text>
+      <Image
+        source={require("../../assets/images/onboarding-welcome.png")}
+        style={{ width: 250, height: 250, marginBottom: 20 }}
+        contentFit="contain"
+      />
       <Text variant="headlineLarge" style={styles.title}>
         Welcome to Host-Palace!
       </Text>

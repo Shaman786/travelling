@@ -88,7 +88,10 @@ export default function ProfileScreen() {
     <SafeAreaView
       style={[styles.container, { backgroundColor: theme.colors.background }]}
     >
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 140 }}
+      >
         <GlassSurface style={styles.header} intensity={40}>
           {user?.avatar ? (
             <Avatar.Image size={100} source={{ uri: user.avatar }} />

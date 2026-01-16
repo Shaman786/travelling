@@ -22,16 +22,15 @@ export default function LoginScreen() {
   const theme = useTheme();
   const router = useRouter();
   const { login, isLoading, error, clearError } = useAuth();
+  // Using explicit relative path as per project structure
+  const { GlassSurface } = require("../../src/components/ui/GlassSurface");
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
   const handleLogin = async () => {
-    if (!email || !password) {
-      return;
-    }
-
+    if (!email || !password) return;
     clearError();
     const success = await login(email.trim().toLowerCase(), password);
     if (success) {
@@ -40,161 +39,216 @@ export default function LoginScreen() {
   };
 
   return (
-    <SafeAreaView
-      style={[styles.container, { backgroundColor: theme.colors.background }]}
-    >
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={styles.keyboardView}
-      >
-        <View style={styles.header}>
-          <Image
-            source={require("../../assets/images/icon.png")}
-            style={{ width: 80, height: 80, borderRadius: 16 }}
-          />
-          <Text
-            variant="displaySmall"
-            style={[styles.title, { color: theme.colors.primary }]}
-          >
-            Host-Palace
-          </Text>
-          <Text variant="bodyLarge" style={styles.subtitle}>
-            Your premium travel consultancy
-          </Text>
-        </View>
+    <View style={styles.container}>
+      {/* Background Image */}
+      <Image
+        source={require("../../assets/images/auth-background.jpg")}
+        style={StyleSheet.absoluteFill}
+        contentFit="cover"
+      />
+      {/* Dark Overlay */}
+      <View
+        style={[
+          StyleSheet.absoluteFill,
+          { backgroundColor: "rgba(0,0,0,0.4)" },
+        ]}
+      />
 
-        <View style={styles.form}>
-          <TextInput
-            label="Email"
-            value={email}
-            onChangeText={(text) => {
-              setEmail(text);
-              clearError();
-            }}
-            mode="outlined"
-            style={styles.input}
-            autoCapitalize="none"
-            keyboardType="email-address"
-            autoComplete="email"
-            left={<TextInput.Icon icon="email-outline" />}
-          />
+      <SafeAreaView style={{ flex: 1 }}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={styles.keyboardView}
+        >
+          <View style={styles.contentContainer}>
+            {/* Logo/Header */}
+            <View style={styles.header}>
+              <View style={styles.iconContainer}>
+                <Image
+                  source={require("../../assets/images/login-hero.png")}
+                  style={{ width: 120, height: 120 }}
+                  contentFit="contain"
+                />
+              </View>
+              <Text
+                variant="displaySmall"
+                style={[styles.title, { color: "#fff" }]}
+              >
+                Host-Palace
+              </Text>
+              <Text variant="bodyLarge" style={styles.subtitle}>
+                Your premium travel consultancy
+              </Text>
+            </View>
 
-          <TextInput
-            label="Password"
-            value={password}
-            onChangeText={(text) => {
-              setPassword(text);
-              clearError();
-            }}
-            mode="outlined"
-            style={styles.input}
-            secureTextEntry={!showPassword}
-            autoCapitalize="none"
-            autoComplete="password"
-            left={<TextInput.Icon icon="lock-outline" />}
-            right={
-              <TextInput.Icon
-                icon={showPassword ? "eye-off" : "eye"}
-                onPress={() => setShowPassword(!showPassword)}
-              />
-            }
-          />
+            {/* Glass Form */}
+            <GlassSurface intensity={30} style={styles.glassForm}>
+              <View style={styles.form}>
+                <TextInput
+                  label="Email"
+                  value={email}
+                  onChangeText={(text) => {
+                    setEmail(text);
+                    clearError();
+                  }}
+                  mode="flat"
+                  style={styles.input}
+                  underlineColor="transparent"
+                  activeUnderlineColor={theme.colors.primary}
+                  autoCapitalize="none"
+                  keyboardType="email-address"
+                  left={<TextInput.Icon icon="email-outline" color="#555" />}
+                  contentStyle={{ backgroundColor: "#f5f5f5" }}
+                />
 
-          {error ? (
-            <HelperText type="error" visible={!!error}>
-              {error}
-            </HelperText>
-          ) : null}
+                <TextInput
+                  label="Password"
+                  value={password}
+                  onChangeText={(text) => {
+                    setPassword(text);
+                    clearError();
+                  }}
+                  mode="flat"
+                  style={styles.input}
+                  underlineColor="transparent"
+                  activeUnderlineColor={theme.colors.primary}
+                  secureTextEntry={!showPassword}
+                  autoCapitalize="none"
+                  left={<TextInput.Icon icon="lock-outline" color="#555" />}
+                  right={
+                    <TextInput.Icon
+                      icon={showPassword ? "eye-off" : "eye"}
+                      onPress={() => setShowPassword(!showPassword)}
+                      color="#555"
+                    />
+                  }
+                  contentStyle={{ backgroundColor: "#f5f5f5" }}
+                />
 
-          <Button
-            mode="contained"
-            onPress={handleLogin}
-            loading={isLoading}
-            disabled={isLoading || !email || !password}
-            style={styles.button}
-            contentStyle={{ height: 50 }}
-          >
-            Sign In
-          </Button>
+                {error ? (
+                  <HelperText
+                    type="error"
+                    visible={!!error}
+                    style={{
+                      backgroundColor: "rgba(255,255,255,0.8)",
+                      borderRadius: 4,
+                    }}
+                  >
+                    {error}
+                  </HelperText>
+                ) : null}
 
-          <Button
-            mode="text"
-            onPress={() => router.push("/(auth)/forgot-password" as any)}
-            style={styles.textButton}
-          >
-            Forgot Password?
-          </Button>
+                <Button
+                  mode="contained"
+                  onPress={handleLogin}
+                  loading={isLoading}
+                  disabled={isLoading || !email || !password}
+                  style={styles.button}
+                  contentStyle={{ height: 52 }}
+                  labelStyle={{ fontSize: 16, fontWeight: "bold" }}
+                >
+                  Sign In
+                </Button>
 
-          {/* Social Login - Archived for future use when OAuth is configured
-          <View style={styles.divider}>
-            <View style={[styles.dividerLine, { backgroundColor: theme.colors.outline }]} />
-            <Text style={{ color: theme.colors.outline, marginHorizontal: 16 }}>OR</Text>
-            <View style={[styles.dividerLine, { backgroundColor: theme.colors.outline }]} />
+                <Button
+                  mode="text"
+                  onPress={() => router.push("/(auth)/forgot-password" as any)}
+                  textColor="#fff"
+                  style={{ marginTop: 8 }}
+                >
+                  Forgot Password?
+                </Button>
+              </View>
+            </GlassSurface>
+
+            {/* Footer Action */}
+            <View style={styles.footer}>
+              <Text style={{ color: "#eee" }}>Don't have an account?</Text>
+              <Button
+                mode="contained-tonal"
+                onPress={() => router.push("/(auth)/signup" as any)}
+                style={styles.secondaryButton}
+                compact
+              >
+                Create Account
+              </Button>
+            </View>
           </View>
-          <Button mode="outlined" onPress={() => loginWithProvider("google")} icon="google" style={styles.button}>
-            Continue with Google
-          </Button>
-          <Button mode="outlined" onPress={() => loginWithProvider("apple")} icon="apple" style={styles.button}>
-            Continue with Apple
-          </Button>
-          */}
-
-          <View style={{ height: 16 }} />
-
-          <Button
-            mode="outlined"
-            onPress={() => router.push("/(auth)/signup" as any)}
-            style={styles.button}
-          >
-            Create New Account
-          </Button>
-        </View>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 24,
   },
   keyboardView: {
     flex: 1,
     justifyContent: "center",
   },
+  contentContainer: {
+    flex: 1,
+    justifyContent: "center",
+    padding: 24,
+  },
   header: {
     alignItems: "center",
-    marginBottom: 48,
+    marginBottom: 32,
+  },
+  iconContainer: {
+    padding: 0, // Removed padding for cleaner icon look
+    borderRadius: 20,
+    marginBottom: 16,
+    // shadowColor: "#000",
+    // shadowOffset: { width: 0, height: 8 },
+    // shadowOpacity: 0.3,
+    // shadowRadius: 12,
   },
   title: {
     fontWeight: "bold",
-    marginTop: 16,
+    textShadowColor: "rgba(0, 0, 0, 0.5)",
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
   },
   subtitle: {
-    color: "#666",
+    color: "#e0e0e0",
     marginTop: 8,
+    textAlign: "center",
+    textShadowColor: "rgba(0, 0, 0, 0.5)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
+  },
+  glassForm: {
+    borderRadius: 24,
+    padding: 24,
+    overflow: "hidden",
   },
   form: {
-    gap: 12,
+    gap: 16,
   },
   input: {
-    backgroundColor: "#fff",
+    backgroundColor: "#f5f5f5", // Light bg for inputs so text is legible
+    borderRadius: 12,
+    borderTopLeftRadius: 12,
+    borderTopRightRadius: 12,
+    height: 56,
+    overflow: "hidden",
   },
   button: {
+    borderRadius: 12,
     marginTop: 8,
-    borderRadius: 8,
+    backgroundColor: "#0056D2",
   },
-  textButton: {
-    marginTop: 4,
-  },
-  divider: {
+  footer: {
     flexDirection: "row",
     alignItems: "center",
-    marginVertical: 16,
+    justifyContent: "center",
+    marginTop: 32,
+    gap: 12,
   },
-  dividerLine: {
-    flex: 1,
-    height: 1,
+  secondaryButton: {
+    backgroundColor: "rgba(255,255,255,0.9)",
   },
+  // Removed unused styles
 });

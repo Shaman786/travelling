@@ -106,7 +106,11 @@ export default function HeroCarousel() {
               mode="contained"
               onPress={() => handlePress(item.link)}
               style={styles.button}
-              labelStyle={{ fontSize: 12 }}
+              labelStyle={{
+                fontSize: 12,
+                fontWeight: "bold",
+                color: theme.colors.primary, // Force Visible Text Color
+              }}
               compact
             >
               {item.cta}

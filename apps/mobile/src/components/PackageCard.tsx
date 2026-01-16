@@ -12,6 +12,7 @@ import type { TravelPackage } from "../types";
 interface PackageCardProps {
   item: TravelPackage;
   style?: any;
+  isGrid?: boolean; // New prop for Grid Mode
   searchParams?: {
     startDate?: string;
     endDate?: string;
@@ -21,7 +22,12 @@ interface PackageCardProps {
   };
 }
 
-const PackageCard = ({ item, style, searchParams }: PackageCardProps) => {
+const PackageCard = ({
+  item,
+  style,
+  searchParams,
+  isGrid = false,
+}: PackageCardProps) => {
   const theme = useTheme();
   const router = useRouter();
   const activeComparison = useStore((state) =>
@@ -76,77 +82,130 @@ const PackageCard = ({ item, style, searchParams }: PackageCardProps) => {
           style={styles.gradient}
         />
 
-        {/* Action Buttons */}
+        {/* Action Buttons - Adjusted for Grid */}
         <View style={styles.actionsContainer}>
+          {/* Hide Compare in Grid Mode to save space */}
+          {!isGrid && (
+            <Pressable
+              style={({ pressed }) => [
+                styles.iconButton,
+                { opacity: pressed ? 0.7 : 1 },
+              ]}
+              onPress={toggleCompare}
+            >
+              <MaterialCommunityIcons
+                name={activeComparison ? "scale-balance" : "scale-balance"}
+                size={20}
+                color={activeComparison ? theme.colors.primary : "#fff"}
+              />
+            </Pressable>
+          )}
+
           <Pressable
             style={({ pressed }) => [
               styles.iconButton,
               { opacity: pressed ? 0.7 : 1 },
-            ]}
-            onPress={toggleCompare}
-          >
-            <MaterialCommunityIcons
-              name={activeComparison ? "scale-balance" : "scale-balance"}
-              size={20}
-              color={activeComparison ? theme.colors.primary : "#fff"}
-            />
-          </Pressable>
-          <Pressable
-            style={({ pressed }) => [
-              styles.iconButton,
-              { opacity: pressed ? 0.7 : 1 },
+              isGrid && { width: 32, height: 32 }, // Smaller in grid
             ]}
             onPress={handleToggleFavorite}
           >
             <MaterialCommunityIcons
               name={isFavorite ? "heart" : "heart-outline"}
-              size={20}
+              size={isGrid ? 16 : 20}
               color={isFavorite ? "#FF4757" : "#fff"}
             />
           </Pressable>
         </View>
 
-        <View style={styles.priceTag}>
-          <Text style={styles.priceText}>
+        {/* Price Tag - Smaller in Grid */}
+        <View
+          style={[
+            styles.priceTag,
+            isGrid && {
+              paddingHorizontal: 8,
+              paddingVertical: 4,
+              bottom: 8,
+              right: 8,
+            },
+          ]}
+        >
+          <Text
+            style={[
+              styles.priceText,
+              isGrid && { fontSize: 13 }, // Smaller price font
+            ]}
+          >
             ${(item.price ?? 0).toLocaleString()}
           </Text>
         </View>
+
+        {/* Duration Chip - Smaller/Hidden in Grid */}
         <Chip
           icon="clock-outline"
-          style={styles.durationChip}
+          style={[
+            styles.durationChip,
+            isGrid && { top: 8, left: 8, transform: [{ scale: 0.85 }] }, // Scale down
+          ]}
           textStyle={styles.chipText}
           compact
         >
-          {durationDays} Days
+          {durationDays}D
         </Chip>
       </View>
 
-      <Card.Content style={styles.content}>
+      <Card.Content
+        style={[
+          styles.content,
+          isGrid && { paddingHorizontal: 8, paddingVertical: 8 },
+        ]}
+      >
         <View style={styles.headerRow}>
-          <Text variant="titleMedium" style={styles.title} numberOfLines={2}>
+          <Text
+            variant={isGrid ? "titleSmall" : "titleMedium"}
+            style={styles.title}
+            numberOfLines={isGrid ? 1 : 2}
+          >
             {item.title}
           </Text>
-          <View style={styles.ratingContainer}>
-            <MaterialCommunityIcons name="star" size={16} color="#FFC107" />
-            <Text style={styles.rating}>{item.rating ?? 0}</Text>
-          </View>
+          {!isGrid && (
+            <View style={styles.ratingContainer}>
+              <MaterialCommunityIcons name="star" size={16} color="#FFC107" />
+              <Text style={styles.rating}>{item.rating ?? 0}</Text>
+            </View>
+          )}
         </View>
 
         <View style={styles.footerRow}>
-          <View style={styles.locationContainer}>
+          <View style={[styles.locationContainer, { maxWidth: "80%" }]}>
             <MaterialCommunityIcons
               name="map-marker-outline"
-              size={16}
+              size={14}
               color={theme.colors.secondary}
             />
-            <Text variant="bodySmall" style={{ color: theme.colors.secondary }}>
+            <Text
+              variant="bodySmall"
+              style={{ color: theme.colors.secondary, flex: 1 }}
+              numberOfLines={1}
+            >
               {item.destination}
             </Text>
           </View>
-
-          <Text variant="bodySmall" style={{ color: theme.colors.outline }}>
-            {item.reviewCount ?? 0} reviews
-          </Text>
+          {/* Show rating in footer for grid since header space is tight */}
+          {isGrid && (
+            <View
+              style={{ flexDirection: "row", alignItems: "center", gap: 2 }}
+            >
+              <MaterialCommunityIcons name="star" size={12} color="#FFC107" />
+              <Text style={{ fontSize: 12, fontWeight: "bold" }}>
+                {item.rating ?? 0}
+              </Text>
+            </View>
+          )}
+          {!isGrid && (
+            <Text variant="bodySmall" style={{ color: theme.colors.outline }}>
+              {item.reviewCount ?? 0} reviews
+            </Text>
+          )}
         </View>
       </Card.Content>
     </Card>
@@ -225,6 +284,7 @@ const styles = StyleSheet.create({
     left: 12,
     backgroundColor: "rgba(0,0,0,0.6)",
     backdropFilter: "blur(4px)",
+    borderRadius: 12, // Ensure rounded
   },
   chipText: {
     color: "#fff",

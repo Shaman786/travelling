@@ -99,6 +99,27 @@ export default function CatalogScreen() {
   // It is assumed imports will be handled by auto-import or manual addition at top
   // But since I am editing the file, I will add them in a separate step or try to add them here if possible.
 
+  // Scroll restoration for Grid Toggle
+  const listRef = React.useRef<FlashList<TravelPackage>>(null);
+  const scrollOffset = React.useRef(0);
+
+  const handleScroll = useCallback((event: any) => {
+    scrollOffset.current = event.nativeEvent.contentOffset.y;
+  }, []);
+
+  // Restore scroll when switching views
+  useEffect(() => {
+    if (listRef.current && scrollOffset.current > 0) {
+      // Small timeout to allow layout to settle
+      setTimeout(() => {
+        listRef.current?.scrollToOffset({
+          offset: scrollOffset.current,
+          animated: false,
+        });
+      }, 50); // 50ms delay is usually enough
+    }
+  }, [isGridView]);
+
   const renderItem = useCallback(
     ({ item }: { item: TravelPackage }) => (
       <View
@@ -107,18 +128,21 @@ export default function CatalogScreen() {
           isGridView
             ? {
                 flex: 0.5,
-                paddingRight: 8,
-                paddingLeft: 8,
+                paddingRight: 6, // Reduced padding for tighter grid
+                paddingLeft: 6,
                 paddingHorizontal: 0,
+                marginBottom: 12, // Reduced margin
               }
             : {},
         ]}
       >
-        <PackageCard item={item} />
+        <PackageCard item={item} isGrid={isGridView} />
       </View>
     ),
     [isGridView]
   );
+
+  // ... (Header code remains mostly same, just ensuring correct context)
 
   const ListHeader = useCallback(
     () => (
@@ -182,10 +206,10 @@ export default function CatalogScreen() {
             Curated Packages
           </Text>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-            <Pressable onPress={() => setIsGridView(!isGridView)}>
+            <Pressable onPress={() => setIsGridView(!isGridView)} hitSlop={10}>
               <MaterialCommunityIcons
                 name={isGridView ? "view-list" : "view-grid"}
-                size={24}
+                size={28}
                 color={theme.colors.primary}
               />
             </Pressable>
@@ -228,19 +252,23 @@ export default function CatalogScreen() {
       style={[styles.container, { backgroundColor: theme.colors.background }]}
     >
       <FlashList
+        ref={listRef}
         data={packages}
         renderItem={renderItem}
         keyExtractor={(item) => item.$id}
         ListHeaderComponent={ListHeader}
         ListEmptyComponent={ListEmptyComponent}
         contentContainerStyle={{
-          paddingBottom: 120,
-          paddingHorizontal: isGridView ? 12 : 0,
+          paddingBottom: 140, // Increased padding for Nav Bar
+          paddingHorizontal: isGridView ? 8 : 0,
         }}
         refreshing={refreshing}
         onRefresh={onRefresh}
+        onScroll={handleScroll} // Track scroll
+        scrollEventThrottle={16}
         numColumns={isGridView ? 2 : 1}
         key={isGridView ? "grid" : "list"}
+        estimatedItemSize={280}
       />
 
       {/* Comparison Floating Bar */}
