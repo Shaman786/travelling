@@ -155,13 +155,16 @@ export default function CuratedPackagesScreen() {
           </Text>
         </View>
 
-        <View style={styles.packagesGrid}>
-          {filteredPackages.map((pkg) => (
-            <View key={pkg.$id} style={styles.packageCardWrapper}>
-              <PackageCard item={pkg} />
+        <FlashList
+          data={filteredPackages}
+          renderItem={({ item }) => (
+            <View style={styles.packageCardWrapper}>
+              <PackageCard item={item} />
             </View>
-          ))}
-        </View>
+          )}
+          contentContainerStyle={styles.packagesGrid}
+          showsVerticalScrollIndicator={false}
+        />
 
         {filteredPackages.length === 0 && (
           <View style={styles.center}>

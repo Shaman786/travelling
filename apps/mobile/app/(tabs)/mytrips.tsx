@@ -342,6 +342,17 @@ export default function MyTripsScreen() {
               </Chip>
               {activeSegment === "completed" && (
                 <View style={{ flexDirection: "row", gap: 8 }}>
+                  <Pressable onPress={() => handleOpenReview(trip)} hitSlop={8}>
+                    <Text
+                      variant="labelSmall"
+                      style={{
+                        color: theme.colors.primary,
+                        fontWeight: "bold",
+                      }}
+                    >
+                      Review
+                    </Text>
+                  </Pressable>
                   <Pressable onPress={() => handleShareTrip(trip)} hitSlop={8}>
                     <Text
                       variant="labelSmall"

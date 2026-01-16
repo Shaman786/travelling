@@ -71,7 +71,7 @@ const PackageCard = ({ item, style, searchParams }: PackageCardProps) => {
           placeholder={require("../../assets/images/splash-icon.png")}
         />
         <LinearGradient
-          colors={["transparent", "rgba(0,0,0,0.7)"]}
+          colors={["transparent", "rgba(0,0,0,0.85)"]}
           style={styles.gradient}
         />
 
@@ -160,9 +160,11 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     elevation: 8,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.2,
+    shadowRadius: 16,
+    borderWidth: 0.5,
+    borderColor: "rgba(0,0,0,0.05)",
   },
   imageContainer: {
     height: 200,
@@ -178,7 +180,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    height: "60%",
+    height: "70%",
   },
 
   actionsContainer: {

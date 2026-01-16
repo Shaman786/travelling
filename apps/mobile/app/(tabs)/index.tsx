@@ -1,3 +1,4 @@
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { FlashList } from "@shopify/flash-list";
 import { useRouter } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
@@ -9,6 +10,7 @@ import { PackageCardSkeleton } from "../../src/components/Skeleton";
 import ConsultingGrid from "../../src/components/home/ConsultingGrid";
 import ExpertiseShowcase from "../../src/components/home/ExpertiseShowcase";
 import HeroCarousel from "../../src/components/home/HeroCarousel";
+import PromotionalBanner from "../../src/components/home/PromotionalBanner";
 
 import databaseService from "../../src/lib/databaseService";
 import { useStore } from "../../src/store/useStore";
@@ -29,6 +31,7 @@ export default function CatalogScreen() {
   const clearComparison = useStore((state) => state.clearComparison);
 
   const [selectedCategory] = useState("all");
+  const [isGridView, setIsGridView] = useState(false);
   const [packages, setPackages] = useState<TravelPackage[]>([]);
   const [categories, setCategories] = useState<{ id: string; name: string }[]>(
     []
@@ -95,11 +98,26 @@ export default function CatalogScreen() {
 
   const renderItem = useCallback(
     ({ item }: { item: TravelPackage }) => (
-      <View style={styles.packageCardWrapper}>
-        <PackageCard item={item} />
+      <View
+        style={[
+          styles.packageCardWrapper,
+          isGridView
+            ? {
+                flex: 0.5,
+                paddingRight: 8,
+                paddingLeft: 8,
+                paddingHorizontal: 0,
+              }
+            : {},
+        ]}
+      >
+        <PackageCard
+          item={item}
+          style={isGridView ? { height: 280 } : undefined}
+        />
       </View>
     ),
-    []
+    [isGridView]
   );
 
   const ListHeader = useCallback(
@@ -155,23 +173,35 @@ export default function CatalogScreen() {
         {/* 3. Expertise Showcase */}
         <ExpertiseShowcase />
 
+        {/* 3.5 Promotional Banner */}
+        <PromotionalBanner />
+
         {/* Featured Packages Title */}
         <View style={[styles.sectionHeader, { marginTop: 10 }]}>
           <Text variant="titleLarge" style={styles.sectionTitle}>
             Curated Packages
           </Text>
-          <Pressable onPress={() => router.push("/curated" as any)}>
-            <Text
-              variant="labelLarge"
-              style={{ color: theme.colors.primary, fontWeight: "bold" }}
-            >
-              See All
-            </Text>
-          </Pressable>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+            <Pressable onPress={() => setIsGridView(!isGridView)}>
+              <MaterialCommunityIcons
+                name={isGridView ? "view-list" : "view-grid"}
+                size={24}
+                color={theme.colors.primary}
+              />
+            </Pressable>
+            <Pressable onPress={() => router.push("/curated" as any)}>
+              <Text
+                variant="labelLarge"
+                style={{ color: theme.colors.primary, fontWeight: "bold" }}
+              >
+                See All
+              </Text>
+            </Pressable>
+          </View>
         </View>
       </View>
     ),
-    [theme.colors, user, router]
+    [theme.colors, user, router, isGridView]
   );
 
   const ListEmptyComponent = useCallback(() => {
@@ -203,9 +233,14 @@ export default function CatalogScreen() {
         keyExtractor={(item) => item.$id}
         ListHeaderComponent={ListHeader}
         ListEmptyComponent={ListEmptyComponent}
-        contentContainerStyle={{ paddingBottom: 100 }}
+        contentContainerStyle={{
+          paddingBottom: 120,
+          paddingHorizontal: isGridView ? 12 : 0,
+        }}
         refreshing={refreshing}
         onRefresh={onRefresh}
+        numColumns={isGridView ? 2 : 1}
+        key={isGridView ? "grid" : "list"}
       />
 
       {/* Comparison Floating Bar */}

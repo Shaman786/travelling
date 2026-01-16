@@ -13,6 +13,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import ToastManager from "toastify-react-native";
 import { ErrorBoundary } from "../src/components/ErrorBoundary";
 import OfflineNotice from "../src/components/OfflineNotice";
+import WhatsAppButton from "../src/components/WhatsAppButton";
 import { useAuth } from "../src/hooks/useAuth";
 import { usePushToken } from "../src/hooks/usePushToken";
 import "../src/i18n"; // Init i18n
@@ -94,6 +95,7 @@ export default function RootLayout() {
         <StatusBar style="dark" />
         <PaperProvider theme={theme}>
           <OfflineNotice />
+          <WhatsAppButton />
           <AuthHandler />
           <PushTokenHandler />
           <Stack screenOptions={{ headerShown: false }}>
