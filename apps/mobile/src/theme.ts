@@ -1,5 +1,7 @@
 /**
- * Commercial Travel App Theme
+ * Host-Palace Travel App Theme
+ *
+ * UI Overhaul v2.0 - Inspired by modern travel app aesthetics
  *
  * Platform-Adaptive Design System:
  * - Android: Material Design 3 (Material You)
@@ -9,28 +11,33 @@
 import { Platform, ViewStyle } from "react-native";
 import { MD3DarkTheme, MD3LightTheme } from "react-native-paper";
 
-// Core Color Palette
+// Core Color Palette - Refreshed with warm orange accent
 export const colors = {
   // Primary - Deep Blue (Trustworthy, Professional)
   primary: "#0056D2",
   primaryLight: "#4A8FE7",
   primaryDark: "#003B8E",
 
-  // Accent - Gold (Premium, Consultancy Feel)
-  accent: "#FFC107",
-  accentLight: "#FFD54F",
-  accentDark: "#FFA000",
+  // Accent - Warm Orange (Energetic, Travel Vibes) - Updated!
+  accent: "#F5A623",
+  accentLight: "#FFD180",
+  accentDark: "#E09000",
 
-  // Background & Surface
-  background: "#F5F7FA",
+  // Secondary Accents
+  teal: "#00BFA5", // For success states, bookings
+  coral: "#FF6B6B", // For favorites, hearts
+
+  // Background & Surface - Lighter, airier feel
+  background: "#FAFBFC",
   surface: "#FFFFFF",
-  surfaceVariant: "#EEF2F6",
+  surfaceVariant: "#F3F5F7",
+  surfaceElevated: "#FFFFFF",
 
   // Status Colors
-  success: "#4CAF50",
-  warning: "#FF9800",
-  error: "#F44336",
-  info: "#2196F3",
+  success: "#10B981", // Emerald green
+  warning: "#F59E0B", // Amber
+  error: "#EF4444", // Red
+  info: "#3B82F6", // Blue
 
   // Text Colors
   textPrimary: "#1A1A2E",
@@ -45,17 +52,24 @@ export const colors = {
   usa: "#3C3B6E", // American Blue
 
   // Booking Status Colors
-  processing: "#FF9800",
-  visaApproved: "#4CAF50",
-  readyToFly: "#2196F3",
-  completed: "#9C27B0",
+  processing: "#F59E0B",
+  visaApproved: "#10B981",
+  readyToFly: "#3B82F6",
+  completed: "#8B5CF6",
 
-  // iOS Specific (Liquid Glass)
-  glassBorder: "rgba(255, 255, 255, 0.2)",
-  glassSurface: "rgba(255, 255, 255, 0.7)",
+  // Enhanced Glass/Blur Effects
+  glassBorder: "rgba(255, 255, 255, 0.3)",
+  glassSurface: "rgba(255, 255, 255, 0.85)",
+  glassOverlay: "rgba(0, 0, 0, 0.4)",
+
+  // Gradient Presets
+  gradientSunrise: ["#FF9500", "#FF5E3A"],
+  gradientOcean: ["#0056D2", "#00A8FF"],
+  gradientSunset: ["#FF6B6B", "#FF9F43"],
+  gradientForest: ["#10B981", "#059669"],
 };
 
-// Spacing & Sizing
+// Spacing & Sizing - More generous for airy feel
 export const spacing = {
   xs: 4,
   sm: 8,
@@ -63,86 +77,163 @@ export const spacing = {
   lg: 24,
   xl: 32,
   xxl: 48,
+  xxxl: 64,
 };
 
-// Platform-Adaptive Border Radius
+// Platform-Adaptive Border Radius - More rounded for modern feel
 export const borderRadius = {
-  sm: Platform.OS === "ios" ? 10 : 8,
-  md: Platform.OS === "ios" ? 16 : 12,
-  lg: Platform.OS === "ios" ? 24 : 16,
-  xl: Platform.OS === "ios" ? 32 : 24,
+  xs: 6,
+  sm: Platform.OS === "ios" ? 12 : 10,
+  md: Platform.OS === "ios" ? 18 : 14,
+  lg: Platform.OS === "ios" ? 24 : 20,
+  xl: Platform.OS === "ios" ? 32 : 28,
   full: 9999,
 };
 
-// Typography
+// Typography - Enhanced hierarchy
 export const typography = {
   fontFamily: {
     regular: Platform.OS === "ios" ? "System" : "Roboto",
     medium: Platform.OS === "ios" ? "System" : "Roboto-Medium",
+    semibold: Platform.OS === "ios" ? "System" : "Roboto-Medium",
     bold: Platform.OS === "ios" ? "System" : "Roboto-Bold",
   },
   sizes: {
-    xs: 12,
-    sm: 14,
-    md: 16,
-    lg: 18,
-    xl: 24,
-    xxl: 32,
-    hero: 40,
+    xs: 11,
+    sm: 13,
+    md: 15,
+    lg: 17,
+    xl: 22,
+    xxl: 28,
+    hero: 36,
+    display: 44,
+  },
+  lineHeights: {
+    tight: 1.2,
+    normal: 1.5,
+    relaxed: 1.75,
   },
 };
 
-// Shadow presets - Platform Adaptive
+// Shadow presets - Platform Adaptive, softer look
 export const shadows = {
-  sm: Platform.select({
+  xs: Platform.select<ViewStyle>({
+    ios: {
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.03,
+      shadowRadius: 2,
+    },
+    android: {
+      elevation: 1,
+    },
+  }),
+  sm: Platform.select<ViewStyle>({
     ios: {
       shadowColor: "#000",
       shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.05,
-      shadowRadius: 4,
+      shadowOpacity: 0.06,
+      shadowRadius: 6,
     },
     android: {
       elevation: 2,
     },
   }),
-  md: Platform.select({
+  md: Platform.select<ViewStyle>({
     ios: {
       shadowColor: "#000",
       shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.1,
+      shadowOpacity: 0.08,
       shadowRadius: 12,
     },
     android: {
       elevation: 4,
     },
   }),
-  lg: Platform.select({
+  lg: Platform.select<ViewStyle>({
     ios: {
       shadowColor: "#000",
       shadowOffset: { width: 0, height: 8 },
-      shadowOpacity: 0.15,
+      shadowOpacity: 0.12,
       shadowRadius: 24,
     },
     android: {
       elevation: 8,
     },
   }),
+  xl: Platform.select<ViewStyle>({
+    ios: {
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 12 },
+      shadowOpacity: 0.15,
+      shadowRadius: 32,
+    },
+    android: {
+      elevation: 12,
+    },
+  }),
+  // Colored shadows for accent elements
+  accent: Platform.select<ViewStyle>({
+    ios: {
+      shadowColor: colors.accent,
+      shadowOffset: { width: 0, height: 6 },
+      shadowOpacity: 0.35,
+      shadowRadius: 12,
+    },
+    android: {
+      elevation: 6,
+    },
+  }),
+  primary: Platform.select<ViewStyle>({
+    ios: {
+      shadowColor: colors.primary,
+      shadowOffset: { width: 0, height: 6 },
+      shadowOpacity: 0.3,
+      shadowRadius: 12,
+    },
+    android: {
+      elevation: 6,
+    },
+  }),
 };
 
 // Glassmorphism Utilities (iOS)
-// Glassmorphism Utilities (iOS)
-// NOTE: Prefer using <GlassSurface /> component for real blur.
 export const glassStyle: ViewStyle =
   Platform.OS === "ios"
     ? {
-        // Fallback or lightweight usage where component isn't possible
-        backgroundColor: "rgba(255, 255, 255, 0.6)",
+        backgroundColor: colors.glassSurface,
+        borderColor: colors.glassBorder,
+        borderWidth: 1,
         shadowColor: "#000",
         shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.12,
+        shadowOpacity: 0.1,
         shadowRadius: 16,
       }
-    : {}; // Android relies on elevation/surfaces normally
+    : {
+        backgroundColor: colors.surface,
+        elevation: 4,
+      };
+
+// Animation Presets
+export const animations = {
+  spring: {
+    damping: 15,
+    stiffness: 400,
+  },
+  springGentle: {
+    damping: 20,
+    stiffness: 300,
+  },
+  springBouncy: {
+    damping: 12,
+    stiffness: 500,
+  },
+  duration: {
+    fast: 150,
+    normal: 300,
+    slow: 500,
+  },
+};
 
 // React Native Paper Light Theme
 export const lightTheme = {
@@ -153,6 +244,7 @@ export const lightTheme = {
     primaryContainer: colors.primaryLight,
     secondary: colors.accent,
     secondaryContainer: colors.accentLight,
+    tertiary: colors.teal,
     background: colors.background,
     surface: colors.surface,
     surfaceVariant: colors.surfaceVariant,
@@ -162,19 +254,20 @@ export const lightTheme = {
     onBackground: colors.textPrimary,
     onSurface: colors.textPrimary,
     onSurfaceVariant: colors.textSecondary,
+    outline: colors.textMuted,
     elevation: {
       level0: "transparent",
       level1: "#FFFFFF",
-      level2: "#F7F9FC",
-      level3: "#F5F7FA",
-      level4: "#F0F4F8",
-      level5: "#EBEEF2",
+      level2: "#FAFBFC",
+      level3: "#F7F8FA",
+      level4: "#F3F5F7",
+      level5: "#EFF1F3",
     },
   },
   roundness: borderRadius.md,
 };
 
-// React Native Paper Dark Theme (for future use)
+// React Native Paper Dark Theme
 export const darkTheme = {
   ...MD3DarkTheme,
   colors: {
@@ -183,15 +276,17 @@ export const darkTheme = {
     primaryContainer: colors.primary,
     secondary: colors.accent,
     secondaryContainer: colors.accentDark,
-    background: "#121212",
-    surface: "#1E1E1E",
-    surfaceVariant: "#2C2C2C",
+    tertiary: colors.teal,
+    background: "#0F0F14",
+    surface: "#1A1A24",
+    surfaceVariant: "#252532",
     error: colors.error,
     onPrimary: colors.textPrimary,
     onSecondary: colors.textPrimary,
     onBackground: colors.textInverse,
     onSurface: colors.textInverse,
     onSurfaceVariant: colors.textMuted,
+    outline: "#4A4A5A",
   },
   roundness: borderRadius.md,
 };

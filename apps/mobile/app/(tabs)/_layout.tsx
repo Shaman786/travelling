@@ -1,8 +1,15 @@
+/**
+ * 5-Tab Navigation Layout
+ *
+ * Home | Chat | Schedule | Saved | Profile
+ */
+
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
-import { Platform } from "react-native";
+import { Platform, StyleSheet, View } from "react-native";
 import { useNavigationMode } from "react-native-navigation-mode";
 import { useTheme } from "react-native-paper";
+import { colors, shadows } from "../../src/theme";
 
 export default function TabsLayout() {
   const theme = useTheme();
@@ -20,36 +27,84 @@ export default function TabsLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: theme.colors.primary,
-        tabBarInactiveTintColor: theme.colors.outline,
+        tabBarActiveTintColor: colors.accent,
+        tabBarInactiveTintColor: colors.textMuted,
+        tabBarShowLabel: true,
+        tabBarLabelStyle: {
+          fontSize: 11,
+          fontWeight: "600",
+          marginTop: -2,
+        },
         tabBarStyle: {
-          backgroundColor: theme.colors.background,
+          backgroundColor: colors.surface,
           borderTopWidth: 0,
-          elevation: 0,
-          height: 60 + navBarPadding,
+          height: 65 + navBarPadding,
+          paddingTop: 8,
           paddingBottom: 8 + navBarPadding,
+          ...shadows.md,
+        },
+        tabBarItemStyle: {
+          paddingVertical: 4,
         },
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
-          title: "Explore",
-          tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="compass" size={size} color={color} />
+          title: "Home",
+          tabBarIcon: ({ color, focused }) => (
+            <View style={focused ? styles.activeIconWrapper : undefined}>
+              <MaterialCommunityIcons
+                name={focused ? "home" : "home-outline"}
+                size={26}
+                color={color}
+              />
+            </View>
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="chat"
+        options={{
+          title: "Chat",
+          tabBarIcon: ({ color, focused }) => (
+            <View style={focused ? styles.activeIconWrapper : undefined}>
+              <MaterialCommunityIcons
+                name={focused ? "chat" : "chat-outline"}
+                size={26}
+                color={color}
+              />
+            </View>
           ),
         }}
       />
       <Tabs.Screen
         name="mytrips"
         options={{
-          title: "My Trips",
-          tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons
-              name="ticket-confirmation"
-              size={size}
-              color={color}
-            />
+          title: "Schedule",
+          tabBarIcon: ({ color, focused }) => (
+            <View style={focused ? styles.activeIconWrapper : undefined}>
+              <MaterialCommunityIcons
+                name={focused ? "calendar-check" : "calendar-check-outline"}
+                size={26}
+                color={color}
+              />
+            </View>
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="saved"
+        options={{
+          title: "Saved",
+          tabBarIcon: ({ color, focused }) => (
+            <View style={focused ? styles.activeIconWrapper : undefined}>
+              <MaterialCommunityIcons
+                name={focused ? "heart" : "heart-outline"}
+                size={26}
+                color={color}
+              />
+            </View>
           ),
         }}
       />
@@ -57,11 +112,26 @@ export default function TabsLayout() {
         name="profile"
         options={{
           title: "Profile",
-          tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="account" size={size} color={color} />
+          tabBarIcon: ({ color, focused }) => (
+            <View style={focused ? styles.activeIconWrapper : undefined}>
+              <MaterialCommunityIcons
+                name={focused ? "account-circle" : "account-circle-outline"}
+                size={26}
+                color={color}
+              />
+            </View>
           ),
         }}
       />
     </Tabs>
   );
 }
+
+const styles = StyleSheet.create({
+  activeIconWrapper: {
+    backgroundColor: `${colors.accent}15`,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+  },
+});

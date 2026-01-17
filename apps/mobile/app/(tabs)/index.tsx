@@ -20,8 +20,6 @@ import databaseService from "../../src/lib/databaseService";
 import { useStore } from "../../src/store/useStore";
 import type { TravelPackage } from "../../src/types";
 
-import { shadows } from "../../src/theme";
-
 // DESTINATION_CATEGORIES removed - fetched dynamically
 
 export default function CatalogScreen() {
@@ -352,7 +350,7 @@ const styles = StyleSheet.create({
   searchbar: {
     backgroundColor: "#fff",
     borderRadius: 12,
-    ...shadows.sm, // Platform Adaptive Shadow
+    elevation: 2,
   },
   historyContainer: {
     marginTop: 12,
