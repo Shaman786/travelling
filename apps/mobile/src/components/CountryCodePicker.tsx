@@ -1,11 +1,6 @@
-import React, { useState } from "react";
-import {
-  FlatList,
-  Modal,
-  StyleSheet,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { MotiPressable } from "moti/interactions";
+import React, { useMemo, useState } from "react";
+import { FlatList, Modal, StyleSheet, View } from "react-native";
 import { Searchbar, Text, TouchableRipple, useTheme } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -53,11 +48,24 @@ export function CountryCodePicker({
   const theme = useTheme();
   const [searchQuery, setSearchQuery] = useState("");
 
+  // Memoized animation state
+  const animateState = useMemo(
+    () =>
+      ({ pressed }: { pressed: boolean }) => {
+        "worklet";
+        return {
+          scale: pressed ? 0.95 : 1,
+          opacity: pressed ? 0.8 : 1,
+        };
+      },
+    [],
+  );
+
   // Filter countries
   const filteredCountries = COUNTRIES.filter(
     (c) =>
       c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      c.dial_code.includes(searchQuery)
+      c.dial_code.includes(searchQuery),
   );
 
   return (
@@ -73,11 +81,19 @@ export function CountryCodePicker({
           <Text variant="titleMedium" style={{ fontWeight: "bold" }}>
             Select Country Code
           </Text>
-          <TouchableOpacity onPress={onDismiss}>
+          <MotiPressable
+            onPress={onDismiss}
+            animate={animateState}
+            transition={{
+              type: "spring",
+              damping: 15,
+              stiffness: 400,
+            }}
+          >
             <Text style={{ color: theme.colors.primary, fontWeight: "600" }}>
               Close
             </Text>
-          </TouchableOpacity>
+          </MotiPressable>
         </View>
 
         <Searchbar

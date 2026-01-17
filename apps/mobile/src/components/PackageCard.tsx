@@ -31,7 +31,7 @@ const PackageCard = ({
   const theme = useTheme();
   const router = useRouter();
   const activeComparison = useStore((state) =>
-    state.comparisonList.includes(item.$id)
+    state.comparisonList.includes(item.$id),
   );
   const favoritePackages = useStore((state) => state.favoritePackages);
   const toggleFavorite = useStore((state) => state.toggleFavorite);
@@ -139,18 +139,22 @@ const PackageCard = ({
           </Text>
         </View>
 
-        {/* Duration Chip - Smaller/Hidden in Grid */}
-        <Chip
-          icon="clock-outline"
+        {/* Duration Chip - Wrapped to avoid transform issues on Chip */}
+        <View
           style={[
-            styles.durationChip,
-            isGrid && { top: 8, left: 8, transform: [{ scale: 0.85 }] }, // Scale down
+            styles.durationChipWrapper,
+            isGrid && { top: 8, left: 8, transform: [{ scale: 0.85 }] },
           ]}
-          textStyle={styles.chipText}
-          compact
         >
-          {durationDays}D
-        </Chip>
+          <Chip
+            icon="clock-outline"
+            style={styles.durationChipInner}
+            textStyle={styles.chipText}
+            compact
+          >
+            {durationDays}D
+          </Chip>
+        </View>
       </View>
 
       <Card.Content
@@ -278,13 +282,15 @@ const styles = StyleSheet.create({
     fontSize: 16,
     letterSpacing: 0.5,
   },
-  durationChip: {
+  durationChipWrapper: {
     position: "absolute",
     top: 12,
     left: 12,
+    zIndex: 10,
+  },
+  durationChipInner: {
     backgroundColor: "rgba(0,0,0,0.6)",
-    backdropFilter: "blur(4px)",
-    borderRadius: 12, // Ensure rounded
+    borderRadius: 12,
   },
   chipText: {
     color: "#fff",

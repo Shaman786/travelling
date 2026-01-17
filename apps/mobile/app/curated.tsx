@@ -1,8 +1,9 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { FlashList } from "@shopify/flash-list";
 import { useRouter } from "expo-router";
-import React, { useEffect, useState } from "react";
-import { ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
+import { MotiPressable } from "moti/interactions";
+import React, { useEffect, useMemo, useState } from "react";
+import { ScrollView, StyleSheet, View } from "react-native";
 import {
   ActivityIndicator,
   Searchbar,
@@ -23,6 +24,31 @@ export default function CuratedPackagesScreen() {
   >([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+
+  // Memoized animation states
+  const animateState = useMemo(
+    () =>
+      ({ pressed }: { pressed: boolean }) => {
+        "worklet";
+        return {
+          scale: pressed ? 0.95 : 1,
+          opacity: pressed ? 0.8 : 1,
+        };
+      },
+    [],
+  );
+
+  const cardAnimateState = useMemo(
+    () =>
+      ({ pressed }: { pressed: boolean }) => {
+        "worklet";
+        return {
+          scale: pressed ? 0.97 : 1,
+          opacity: pressed ? 0.9 : 1,
+        };
+      },
+    [],
+  );
 
   useEffect(() => {
     loadData();
@@ -56,12 +82,18 @@ export default function CuratedPackagesScreen() {
   }: {
     item: { id: string; name: string };
   }) => (
-    <TouchableOpacity
+    <MotiPressable
       onPress={() => handleDestinationPress(item.name)}
       style={[
         styles.destinationCard,
         { backgroundColor: theme.colors.surfaceVariant },
       ]}
+      animate={cardAnimateState}
+      transition={{
+        type: "spring",
+        damping: 15,
+        stiffness: 400,
+      }}
     >
       <MaterialCommunityIcons
         name="map-marker-radius"
@@ -71,7 +103,7 @@ export default function CuratedPackagesScreen() {
       <Text variant="labelLarge" style={{ marginTop: 8, fontWeight: "600" }}>
         {item.name}
       </Text>
-    </TouchableOpacity>
+    </MotiPressable>
   );
 
   if (loading) {
@@ -92,7 +124,7 @@ export default function CuratedPackagesScreen() {
   const filteredPackages = packages.filter(
     (p) =>
       p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.destination.toLowerCase().includes(searchQuery.toLowerCase())
+      p.destination.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   return (
@@ -100,16 +132,22 @@ export default function CuratedPackagesScreen() {
       style={[styles.container, { backgroundColor: theme.colors.background }]}
     >
       <View style={styles.header}>
-        <TouchableOpacity
+        <MotiPressable
           onPress={() => router.back()}
           style={styles.backButton}
+          animate={animateState}
+          transition={{
+            type: "spring",
+            damping: 15,
+            stiffness: 400,
+          }}
         >
           <MaterialCommunityIcons
             name="arrow-left"
             size={24}
             color={theme.colors.onSurface}
           />
-        </TouchableOpacity>
+        </MotiPressable>
         <Text variant="headlineSmall" style={styles.title}>
           Curated Collections
         </Text>

@@ -1,7 +1,8 @@
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import React from "react";
-import { StyleSheet, TouchableOpacity, View } from "react-native";
+import { MotiPressable } from "moti/interactions";
+import React, { useMemo } from "react";
+import { StyleSheet, View } from "react-native";
 import { Avatar, Text, useTheme } from "react-native-paper";
 import { borderRadius, shadows } from "../../theme";
 
@@ -66,6 +67,66 @@ const GRID_ITEMS = [
   },
 ];
 
+// Grid item component with Moti animations
+function GridItem({
+  item,
+  onPress,
+  labelColor,
+}: {
+  item: (typeof GRID_ITEMS)[0];
+  onPress: () => void;
+  labelColor: string;
+}) {
+  // Memoize the animation state function
+  const animateState = useMemo(
+    () =>
+      ({ pressed }: { pressed: boolean }) => {
+        "worklet";
+        return {
+          scale: pressed ? 0.92 : 1,
+          opacity: pressed ? 0.85 : 1,
+        };
+      },
+    [],
+  );
+
+  return (
+    <MotiPressable
+      style={styles.item}
+      onPress={onPress}
+      animate={animateState}
+      transition={{
+        type: "spring",
+        damping: 15,
+        stiffness: 400,
+      }}
+    >
+      <View style={styles.shadowContainer}>
+        <LinearGradient
+          colors={item.gradient as [string, string]}
+          style={styles.iconContainer}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+        >
+          <Avatar.Icon
+            size={32}
+            icon={item.icon}
+            color="#FFFFFF"
+            style={styles.avatarIcon}
+          />
+        </LinearGradient>
+      </View>
+      <Text
+        variant="labelSmall"
+        numberOfLines={1}
+        style={[styles.label, { color: labelColor }]}
+      >
+        {item.label}
+      </Text>
+    </MotiPressable>
+  );
+}
+
 export default function ConsultingGrid() {
   const router = useRouter();
   const theme = useTheme();
@@ -73,34 +134,12 @@ export default function ConsultingGrid() {
   return (
     <View style={styles.container}>
       {GRID_ITEMS.map((item) => (
-        <TouchableOpacity
+        <GridItem
           key={item.id}
-          style={styles.item}
+          item={item}
           onPress={() => router.push(item.route as any)}
-        >
-          <View style={styles.shadowContainer}>
-            <LinearGradient
-              colors={item.gradient as [string, string]}
-              style={styles.iconContainer}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-            >
-              <Avatar.Icon
-                size={32}
-                icon={item.icon}
-                color="#FFFFFF"
-                style={{ backgroundColor: "transparent" }}
-              />
-            </LinearGradient>
-          </View>
-          <Text
-            variant="labelSmall"
-            numberOfLines={1}
-            style={[styles.label, { color: theme.colors.onSurface }]}
-          >
-            {item.label}
-          </Text>
-        </TouchableOpacity>
+          labelColor={theme.colors.onSurface}
+        />
       ))}
     </View>
   );
@@ -130,6 +169,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 8,
+  },
+  avatarIcon: {
+    backgroundColor: "transparent",
   },
   label: {
     textAlign: "center",

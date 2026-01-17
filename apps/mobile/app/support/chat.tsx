@@ -1,12 +1,12 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Stack, useRouter } from "expo-router";
-import React, { useCallback, useEffect, useState } from "react";
+import { MotiPressable } from "moti/interactions";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
-  TouchableOpacity,
   View,
 } from "react-native";
 import { Bubble, GiftedChat, IMessage, Send } from "react-native-gifted-chat";
@@ -33,10 +33,23 @@ export default function ChatScreen() {
 
   const { messages, isLoading, sendMessage } = useChat(
     conversationId,
-    user?.$id || "guest"
+    user?.$id || "guest",
   );
 
   const [giftedMessages, setGiftedMessages] = useState<IMessage[]>([]);
+
+  // Memoized animation state
+  const animateState = useMemo(
+    () =>
+      ({ pressed }: { pressed: boolean }) => {
+        "worklet";
+        return {
+          scale: pressed ? 0.9 : 1,
+          opacity: pressed ? 0.8 : 1,
+        };
+      },
+    [],
+  );
 
   // Map Appwrite messages to GiftedChat messages
   useEffect(() => {
@@ -71,7 +84,7 @@ export default function ChatScreen() {
         console.error("Send failed", error);
       }
     },
-    [sendMessage, user]
+    [sendMessage, user],
   );
 
   const renderBubble = (props: any) => {
@@ -115,12 +128,18 @@ export default function ChatScreen() {
           headerStyle: { backgroundColor: COLORS.background },
           headerTintColor: COLORS.text,
           headerLeft: () => (
-            <TouchableOpacity
+            <MotiPressable
               onPress={() => router.back()}
               style={{ marginLeft: 10 }}
+              animate={animateState}
+              transition={{
+                type: "spring",
+                damping: 15,
+                stiffness: 400,
+              }}
             >
               <Ionicons name="arrow-back" size={24} color={COLORS.text} />
-            </TouchableOpacity>
+            </MotiPressable>
           ),
         }}
       />

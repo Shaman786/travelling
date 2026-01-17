@@ -6,8 +6,9 @@
 
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { MotiPressable } from "moti/interactions";
 import React, { useCallback, useEffect, useState } from "react";
-import { ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
+import { ScrollView, StyleSheet, View } from "react-native";
 import {
   Button,
   Chip,
@@ -48,7 +49,7 @@ export default function TravelerDetailsScreen() {
       if (user?.$id) {
         try {
           const travelers = await databaseService.travelers.getUserTravelers(
-            user.$id
+            user.$id,
           );
           setSavedTravelers(travelers);
         } catch (error) {
@@ -105,7 +106,7 @@ export default function TravelerDetailsScreen() {
   };
 
   const [travelers, setTravelers] = useState<Traveler[]>(
-    createInitialTravelers
+    createInitialTravelers,
   );
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -113,10 +114,10 @@ export default function TravelerDetailsScreen() {
   const updateTraveler = (
     id: string,
     field: keyof Traveler,
-    value: string | number
+    value: string | number,
   ) => {
     setTravelers((prev) =>
-      prev.map((t) => (t.id === id ? { ...t, [field]: value } : t))
+      prev.map((t) => (t.id === id ? { ...t, [field]: value } : t)),
     );
     // Clear error
     setErrors((prev) => ({ ...prev, [`${id}_${field}`]: "" }));
@@ -149,25 +150,27 @@ export default function TravelerDetailsScreen() {
     const newErrors: Record<string, string> = {};
     let isValid = true;
 
-    travelers.forEach((traveler) => {
-      if (!traveler.name.trim()) {
-        newErrors[`${traveler.id}_name`] = "Name is required";
-        isValid = false;
-      }
+    if (travelers) {
+      travelers.forEach((traveler) => {
+        if (!traveler.name.trim()) {
+          newErrors[`${traveler.id}_name`] = "Name is required";
+          isValid = false;
+        }
 
-      if (!traveler.passportNumber?.trim()) {
-        newErrors[`${traveler.id}_passport`] = "Passport is required";
-        isValid = false;
-      } else if (traveler.passportNumber.length < 6) {
-        newErrors[`${traveler.id}_passport`] = "Invalid passport number";
-        isValid = false;
-      }
+        if (!traveler.passportNumber?.trim()) {
+          newErrors[`${traveler.id}_passport`] = "Passport is required";
+          isValid = false;
+        } else if (traveler.passportNumber.length < 6) {
+          newErrors[`${traveler.id}_passport`] = "Invalid passport number";
+          isValid = false;
+        }
 
-      if (traveler.type === "adult" && traveler.age < 12) {
-        newErrors[`${traveler.id}_age`] = "Adult must be 12+";
-        isValid = false;
-      }
-    });
+        if (traveler.type === "adult" && traveler.age < 12) {
+          newErrors[`${traveler.id}_age`] = "Adult must be 12+";
+          isValid = false;
+        }
+      });
+    }
 
     setErrors(newErrors);
     return isValid;
@@ -447,7 +450,7 @@ export default function TravelerDetailsScreen() {
                 </Text>
               ) : (
                 savedTravelers.map((t) => (
-                  <TouchableOpacity
+                  <MotiPressable
                     key={t.$id}
                     onPress={() => handleSelectSavedTraveler(t)}
                   >
@@ -457,7 +460,7 @@ export default function TravelerDetailsScreen() {
                       left={(props) => <List.Icon {...props} icon="account" />}
                     />
                     <Divider />
-                  </TouchableOpacity>
+                  </MotiPressable>
                 ))
               )}
             </ScrollView>

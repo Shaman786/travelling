@@ -1,14 +1,9 @@
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import LottieView from "lottie-react-native";
-import React, { useEffect, useState } from "react";
-import {
-  ImageBackground,
-  Linking,
-  StyleSheet,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { MotiPressable } from "moti/interactions";
+import React, { useEffect, useMemo, useState } from "react";
+import { ImageBackground, Linking, StyleSheet, View } from "react-native";
 import { Button, Text, useTheme } from "react-native-paper";
 import { remoteConfig } from "../../services/RemoteConfigService";
 import { shadows } from "../../theme";
@@ -34,6 +29,18 @@ const PromotionalBanner = () => {
 
     fetchBanner();
   }, []);
+
+  const animateState = useMemo(
+    () =>
+      ({ pressed }: { pressed: boolean }) => {
+        "worklet";
+        return {
+          scale: pressed ? 0.98 : 1,
+          opacity: pressed ? 0.9 : 1,
+        };
+      },
+    [],
+  );
 
   if (loading || !banner) {
     return null; // Or a skeleton loader
@@ -131,9 +138,17 @@ const PromotionalBanner = () => {
   };
 
   return (
-    <TouchableOpacity activeOpacity={0.9} onPress={handlePress}>
+    <MotiPressable
+      onPress={handlePress}
+      animate={animateState}
+      transition={{
+        type: "spring",
+        damping: 20,
+        stiffness: 300,
+      }}
+    >
       {renderContent()}
-    </TouchableOpacity>
+    </MotiPressable>
   );
 };
 

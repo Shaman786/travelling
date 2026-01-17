@@ -59,6 +59,13 @@ export async function registerForPushNotificationsAsync(): Promise<
         Constants?.expoConfig?.extra?.eas?.projectId ??
         Constants?.easConfig?.projectId;
 
+      if (!projectId) {
+        console.log(
+          "Push notifications skipped: Project ID not found (EAS init required).",
+        );
+        return;
+      }
+
       token = (
         await Notifications.getExpoPushTokenAsync({
           projectId,
@@ -70,7 +77,7 @@ export async function registerForPushNotificationsAsync(): Promise<
         e.message?.includes("Default FirebaseApp is not initialized")
       ) {
         console.warn(
-          "Push Notifications skipped: Missing google-services.json configuration."
+          "Push Notifications skipped: Missing google-services.json configuration.",
         );
       } else {
         // Log push token error in development only
@@ -87,7 +94,7 @@ export async function registerForPushNotificationsAsync(): Promise<
 // ... (previous content)
 export async function savePushToken(
   token: string,
-  userId: string
+  userId: string,
 ): Promise<void> {
   if (!token || !userId) return;
 
@@ -105,7 +112,7 @@ export async function savePushToken(
 export async function sendLocalNotification(
   title: string,
   body: string,
-  data?: Record<string, unknown>
+  data?: Record<string, unknown>,
 ) {
   await Notifications.scheduleNotificationAsync({
     content: {

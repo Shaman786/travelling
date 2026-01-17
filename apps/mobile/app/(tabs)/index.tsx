@@ -40,7 +40,7 @@ export default function CatalogScreen() {
   const [isGridView, setIsGridView] = useState(false);
   const [packages, setPackages] = useState<TravelPackage[]>([]);
   const [categories, setCategories] = useState<{ id: string; name: string }[]>(
-    []
+    [],
   ); // Dynamic Categories
   const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -86,7 +86,7 @@ export default function CatalogScreen() {
         setRefreshing(false);
       }
     },
-    [selectedCategory, categories]
+    [selectedCategory, categories],
   );
 
   useEffect(() => {
@@ -142,7 +142,7 @@ export default function CatalogScreen() {
         <PackageCard item={item} isGrid={isGridView} />
       </View>
     ),
-    [isGridView]
+    [isGridView],
   );
 
   // ... (Header code remains mostly same, just ensuring correct context)
@@ -150,7 +150,7 @@ export default function CatalogScreen() {
   // Memoize the ListHeaderComponent
   // We return a Component function that returns the JSX
   const HeaderComponent = React.useMemo(() => {
-    return () => (
+    const Header = () => (
       <View>
         {/* Header (UserInfo) */}
         <GlassSurface style={styles.header} intensity={60}>
@@ -230,6 +230,7 @@ export default function CatalogScreen() {
         </View>
       </View>
     );
+    return Header;
   }, [theme.colors, user, router, isGridView]);
 
   const ListEmptyComponent = useCallback(() => {
@@ -267,7 +268,7 @@ export default function CatalogScreen() {
         ListHeaderComponent={HeaderComponent}
         ListEmptyComponent={ListEmptyComponent}
         contentContainerStyle={{
-          paddingBottom: 100 + insets.bottom, // Dynamic bottom padding for gesture nav
+          paddingBottom: 100 + (insets.bottom || 20), // Dynamic bottom padding for gesture nav
           paddingHorizontal: isGridView ? 8 : 0,
         }}
         refreshing={refreshing}

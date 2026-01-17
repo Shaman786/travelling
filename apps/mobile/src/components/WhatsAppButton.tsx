@@ -1,33 +1,49 @@
-import React from "react";
-import { Image, Linking, StyleSheet, TouchableOpacity } from "react-native";
-import { useTheme } from "react-native-paper";
+import { Image } from "expo-image";
+import { MotiPressable } from "moti/interactions";
+import React, { useMemo } from "react";
+import { Linking, StyleSheet } from "react-native";
 // @ts-ignore
 import whatsappIcon from "../../assets/WhatsApp-Brand-Resource-Center/01_Glyph/01_Digital/03_PNG/White/Digital_Glyph_White.png";
 
 const WhatsAppButton = () => {
-  const theme = useTheme();
-
   const handlePress = () => {
     // Replace with the actual phone number
     const phoneNumber = "1234567890";
     const message = "Hello, I would like to inquire about a travel package.";
     const url = `whatsapp://send?phone=${phoneNumber}&text=${encodeURIComponent(
-      message
+      message,
     )}`;
 
     Linking.openURL(url).catch((err) =>
-      console.error("An error occurred", err)
+      console.error("An error occurred", err),
     );
   };
 
+  const animateState = useMemo(
+    () =>
+      ({ pressed }: { pressed: boolean }) => {
+        "worklet";
+        return {
+          scale: pressed ? 0.9 : 1,
+          opacity: pressed ? 0.85 : 1,
+        };
+      },
+    [],
+  );
+
   return (
-    <TouchableOpacity
+    <MotiPressable
       style={[styles.container, { backgroundColor: "#25D366" }]}
       onPress={handlePress}
-      activeOpacity={0.8}
+      animate={animateState}
+      transition={{
+        type: "spring",
+        damping: 15,
+        stiffness: 400,
+      }}
     >
       <Image source={whatsappIcon} style={styles.icon} contentFit="contain" />
-    </TouchableOpacity>
+    </MotiPressable>
   );
 };
 

@@ -3,9 +3,9 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  Pressable,
   ScrollView,
   Text,
-  TouchableOpacity,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -67,9 +67,12 @@ export default function BookingAddonsScreen() {
     <SafeAreaView className="flex-1 bg-white">
       {/* Header */}
       <View className="flex-row items-center p-4 border-b border-gray-100">
-        <TouchableOpacity onPress={() => router.back()} className="mr-4">
+        <Pressable
+          onPress={() => router.back()}
+          className="mr-4 active:opacity-70 active:scale-95"
+        >
           <MaterialCommunityIcons name="arrow-left" size={24} color="#000" />
-        </TouchableOpacity>
+        </Pressable>
         <View className="flex-1">
           <Text className="text-lg font-bold">Enhance Your Trip</Text>
           <Text className="text-xs text-gray-500">Step 3 of 4</Text>
@@ -95,10 +98,10 @@ export default function BookingAddonsScreen() {
             {addons.map((addon) => {
               const isSelected = selectedAddons.includes(addon.$id);
               return (
-                <TouchableOpacity
+                <Pressable
                   key={addon.$id}
                   onPress={() => toggleAddon(addon)}
-                  className={`flex-row p-4 rounded-xl border-2 items-center ${
+                  className={`flex-row p-4 rounded-xl border-2 items-center active:scale-[0.98] active:opacity-90 ${
                     isSelected
                       ? "border-blue-500 bg-blue-50"
                       : "border-gray-100 bg-white"
@@ -139,7 +142,7 @@ export default function BookingAddonsScreen() {
                       />
                     )}
                   </View>
-                </TouchableOpacity>
+                </Pressable>
               );
             })}
           </View>
@@ -152,14 +155,14 @@ export default function BookingAddonsScreen() {
           <Text className="text-gray-500">Selected Add-ons</Text>
           <Text className="font-bold text-lg">{selectedAddons.length}</Text>
         </View>
-        <TouchableOpacity
+        <Pressable
           onPress={handleNext}
-          className="bg-blue-600 py-4 rounded-xl items-center shadow-blue-200 shadow-md"
+          className="bg-blue-600 py-4 rounded-xl items-center shadow-blue-200 shadow-md active:scale-[0.98] active:opacity-90"
         >
           <Text className="text-white font-bold text-lg">
             Continue to Review
           </Text>
-        </TouchableOpacity>
+        </Pressable>
       </View>
     </SafeAreaView>
   );

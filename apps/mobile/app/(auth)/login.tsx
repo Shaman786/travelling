@@ -16,14 +16,16 @@ import {
   useTheme,
 } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { GlassSurface } from "../../src/components/ui/GlassSurface";
 import { useAuth } from "../../src/hooks/useAuth";
+
+const authBackgroundImage = require("../../assets/images/auth-background.jpg");
 
 export default function LoginScreen() {
   const theme = useTheme();
   const router = useRouter();
   const { login, isLoading, error, clearError } = useAuth();
   // Using explicit relative path as per project structure
-  const { GlassSurface } = require("../../src/components/ui/GlassSurface");
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -42,7 +44,7 @@ export default function LoginScreen() {
     <View style={styles.container}>
       {/* Background Image */}
       <Image
-        source={require("../../assets/images/auth-background.jpg")}
+        source={authBackgroundImage}
         style={StyleSheet.absoluteFill}
         contentFit="cover"
       />
@@ -144,10 +146,14 @@ export default function LoginScreen() {
                 </Button>
 
                 <Button
-                  mode="text"
+                  mode="contained-tonal"
                   onPress={() => router.push("/(auth)/forgot-password" as any)}
-                  textColor="#fff"
-                  style={{ marginTop: 8 }}
+                  style={{
+                    marginTop: 8,
+                    backgroundColor: "rgba(255, 255, 255, 0.95)",
+                    borderRadius: 8,
+                  }}
+                  labelStyle={{ color: "#1A1A2E", fontWeight: "600" }}
                 >
                   Forgot Password?
                 </Button>

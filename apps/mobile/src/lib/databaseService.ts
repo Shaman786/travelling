@@ -46,7 +46,7 @@ export const packageService = {
   async getPackages(
     filters?: PackageFilters,
     limit = 25,
-    offset = 0
+    offset = 0,
   ): Promise<PaginatedResponse<TravelPackage>> {
     try {
       const queries: string[] = [
@@ -120,7 +120,7 @@ export const packageService = {
           "duration",
           "category",
           "isActive",
-        ])
+        ]),
       );
 
       const response = await tables.listRows({
@@ -175,7 +175,7 @@ export const packageService = {
    */
   async getPackagesByCategory(
     category: string,
-    limit = 10
+    limit = 10,
   ): Promise<TravelPackage[]> {
     try {
       const response = await tables.listRows({
@@ -325,13 +325,15 @@ export const packageService = {
       });
 
       const uniqueCats = new Set<string>();
-      response.rows.forEach((pkg: any) => {
-        if (pkg.category) {
-          // Normalize: Capitalize first letter
-          const cat = pkg.category.trim();
-          uniqueCats.add(cat);
-        }
-      });
+      if (response && response.rows) {
+        response.rows.forEach((pkg: any) => {
+          if (pkg.category) {
+            // Normalize: Capitalize first letter
+            const cat = pkg.category.trim();
+            uniqueCats.add(cat);
+          }
+        });
+      }
 
       return Array.from(uniqueCats)
         .map((cat) => ({
@@ -371,7 +373,7 @@ export const bookingService = {
       | "$databaseId"
       | "$permissions"
       | "$sequence"
-    >
+    >,
   ): Promise<Booking> {
     try {
       // Destructure to remove fields that don't exist in Appwrite schema
@@ -499,7 +501,7 @@ export const bookingService = {
    */
   async confirmBookingPayment(
     bookingId: string,
-    paymentIntentId: string
+    paymentIntentId: string,
   ): Promise<any> {
     // Changing return type to any as transaction result differs
     try {
@@ -598,7 +600,7 @@ export const bookingService = {
   async updateBookingStatus(
     bookingId: string,
     status: BookingStatus,
-    note?: string
+    note?: string,
   ): Promise<Booking> {
     try {
       // Get current booking to append to status history
@@ -648,7 +650,7 @@ export const bookingService = {
   async updatePaymentStatus(
     bookingId: string,
     paymentStatus: "paid" | "failed" | "refunded",
-    paymentId?: string
+    paymentId?: string,
   ): Promise<Booking> {
     try {
       const row = (await tables.updateRow({
@@ -686,7 +688,7 @@ export const bookingService = {
     return this.updateBookingStatus(
       bookingId,
       "cancelled",
-      reason || "Cancelled by user"
+      reason || "Cancelled by user",
     );
   },
 };
@@ -704,7 +706,7 @@ export const documentService = {
       name: string;
       type: string;
       size: number;
-    }
+    },
   ): Promise<TravelDocument> {
     try {
       // Construct file object for React Native
@@ -822,7 +824,7 @@ export const supportService = {
       | "$databaseId"
       | "$permissions"
       | "$sequence"
-    >
+    >,
   ): Promise<SupportTicket> {
     try {
       const row = (await tables.createRow({
@@ -923,7 +925,7 @@ export const supportService = {
       | "$databaseId"
       | "$permissions"
       | "updatedAt"
-    >
+    >,
   ): Promise<TicketMessage> {
     try {
       const row = (await tables.createRow({
@@ -949,7 +951,7 @@ export const supportService = {
    */
   async updateTicketStatus(
     ticketId: string,
-    status: SupportTicket["status"]
+    status: SupportTicket["status"],
   ): Promise<void> {
     try {
       await tables.updateRow({
@@ -1006,7 +1008,7 @@ export const travelerService = {
       | "$databaseId"
       | "$permissions"
       | "$sequence"
-    >
+    >,
   ): Promise<SavedTraveler> {
     try {
       const row = (await tables.createRow({
@@ -1081,7 +1083,7 @@ export const reviewService = {
       | "$databaseId"
       | "$permissions"
       | "$sequence"
-    >
+    >,
   ): Promise<Review> {
     try {
       const row = (await tables.createRow({
@@ -1222,7 +1224,7 @@ export const paymentService = {
       status: "completed" | "failed";
       method?: string;
       metadata?: string;
-    }
+    },
   ): Promise<Payment> {
     try {
       const payment = await tables.updateRow({
@@ -1250,7 +1252,7 @@ export const paymentService = {
       refundId: string;
       refundAmount: number;
       refundReason?: string;
-    }
+    },
   ): Promise<Payment> {
     try {
       const payment = await tables.updateRow({
@@ -1299,7 +1301,7 @@ export const paymentService = {
       status: "pending" | "processing" | "completed" | "failed" | "refunded";
       method: string;
       metadata: string;
-    }>
+    }>,
   ): Promise<Payment> {
     try {
       const payment = await tables.updateRow({
@@ -1418,7 +1420,7 @@ export const chatService = {
     conversationId: string,
     senderId: string,
     content: string,
-    senderName?: string
+    senderName?: string,
   ): Promise<Message> {
     try {
       const row = (await tables.createRow({
@@ -1450,7 +1452,7 @@ export const chatService = {
   async getMessages(
     conversationId: string,
     limit = 50,
-    offset = 0
+    offset = 0,
   ): Promise<Message[]> {
     try {
       const response = await tables.listRows({

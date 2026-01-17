@@ -5,7 +5,6 @@ import { Image } from "expo-image"; // Added Image import
 import { useFocusEffect, useRouter } from "expo-router";
 import React, { useState } from "react";
 import { Alert, Pressable, Share, StyleSheet, View } from "react-native";
-import { useNavigationMode } from "react-native-navigation-mode";
 import {
   Button,
   Card,
@@ -18,10 +17,7 @@ import {
   TextInput,
   useTheme,
 } from "react-native-paper";
-import {
-  SafeAreaView,
-  useSafeAreaInsets,
-} from "react-native-safe-area-context";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Toast } from "toastify-react-native";
 import ReviewModal from "../../src/components/ReviewModal";
 import StepTracker from "../../src/components/StepTracker";
@@ -32,10 +28,6 @@ import { borderRadius, shadows } from "../../src/theme";
 
 export default function MyTripsScreen() {
   const theme = useTheme();
-  const insets = useSafeAreaInsets(); // Fix: Define insets
-  const { navigationMode } = useNavigationMode();
-  const bottomPadding =
-    120 + (navigationMode?.navigationBarHeight ?? insets.bottom);
 
   const router = useRouter();
   const bookedTrips = useStore((state) => state.bookedTrips);
@@ -77,12 +69,12 @@ export default function MyTripsScreen() {
       return () => {
         isActive = false;
       };
-    }, [user?.$id, setBookedTrips])
+    }, [user?.$id, setBookedTrips]),
   );
 
   const [isReviewModalVisible, setIsReviewModalVisible] = useState(false);
   const [currentReviewTrip, setCurrentReviewTrip] = useState<BookedTrip | null>(
-    null
+    null,
   );
 
   const { startPayment, isProcessing } = usePayment();
@@ -108,7 +100,7 @@ export default function MyTripsScreen() {
     })
     .sort(
       (a, b) =>
-        new Date(b.bookingDate).getTime() - new Date(a.bookingDate).getTime()
+        new Date(b.bookingDate).getTime() - new Date(a.bookingDate).getTime(),
     );
 
   // --- Handlers ---
@@ -155,7 +147,7 @@ export default function MyTripsScreen() {
         // 3. Record Transaction in DB (Atomic)
         await bookingService.confirmBookingPayment(
           trip.id,
-          result.paymentIntentId
+          result.paymentIntentId,
         );
 
         Toast.success("Booking Confirmed! ✅");
@@ -192,7 +184,7 @@ export default function MyTripsScreen() {
               // 1. Call Backend
               await bookingService.cancelBooking(
                 tripId,
-                "Cancelled by user via app"
+                "Cancelled by user via app",
               );
 
               // 2. Update Local Store
@@ -205,7 +197,7 @@ export default function MyTripsScreen() {
             }
           },
         },
-      ]
+      ],
     );
   };
 
@@ -426,15 +418,39 @@ export default function MyTripsScreen() {
 
           <Card.Content style={{ paddingTop: 16 }}>
             <View style={{ marginBottom: 16 }}>
-              <Text variant="headlineSmall" style={{ fontWeight: "bold" }}>
-                {trip.packageTitle}
-              </Text>
+              <View style={styles.cardTitleRow}>
+                <Text
+                  variant="headlineSmall"
+                  style={{ fontWeight: "bold", flex: 1 }}
+                >
+                  {trip.packageTitle}
+                </Text>
+              </View>
+
               <Text
                 variant="bodyMedium"
-                style={{ color: theme.colors.secondary }}
+                style={{ color: theme.colors.secondary, marginBottom: 4 }}
               >
                 {displayDate} • {trip.destination}
               </Text>
+
+              <View style={{ flexDirection: "row", gap: 12, marginTop: 4 }}>
+                <Chip
+                  icon="ticket-confirmation"
+                  compact
+                  style={{ backgroundColor: theme.colors.surfaceVariant }}
+                >
+                  Ref: {trip.id}
+                </Chip>
+                <Chip
+                  icon="account-group"
+                  compact
+                  style={{ backgroundColor: theme.colors.surfaceVariant }}
+                >
+                  {trip.travelers?.length || 1} Traveler
+                  {trip.travelers?.length !== 1 ? "s" : ""}
+                </Chip>
+              </View>
             </View>
 
             {/* Step Tracker */}
@@ -507,51 +523,26 @@ export default function MyTripsScreen() {
     "MyTrips Render. Review Modal Visible:",
     isReviewModalVisible,
     "Trip:",
-    currentReviewTrip?.id
+    currentReviewTrip?.id,
   );
 
   // --- Dynamic Segments Logic ---
-  const hasUpcoming = bookedTrips.some((t) =>
-    [
-      "processing",
-      "visa_submitted",
-      "visa_approved",
-      "ready_to_fly",
-      "pending_payment",
-    ].includes(t.status)
-  );
-  const hasCompleted = bookedTrips.some((t) => t.status === "completed");
-  const hasCancelled = bookedTrips.some((t) =>
-    ["cancelled", "refunded", "failed"].includes(t.status)
-  );
-
-  const segments = React.useMemo(
-    () => [
-      ...(hasUpcoming || (!hasCompleted && !hasCancelled)
-        ? [{ value: "upcoming", label: "Upcoming" }]
-        : []),
-      ...(hasCompleted ? [{ value: "completed", label: "Completed" }] : []),
-      ...(hasCancelled ? [{ value: "cancelled", label: "Cancelled" }] : []),
-    ],
-    [hasUpcoming, hasCompleted, hasCancelled]
-  );
+  // (Removed dynamic switching to keep UI stable)
+  const segments = [
+    { value: "upcoming", label: "Upcoming" },
+    { value: "completed", label: "Completed" },
+    { value: "cancelled", label: "Cancelled" },
+  ];
 
   // Effect to ensure activeSegment is valid
-  React.useEffect(() => {
-    const isValid = segments.some((s) => s.value === activeSegment);
-    if (!isValid && segments.length > 0) {
-      setActiveSegment(segments[0].value as any);
-    }
-  }, [segments, activeSegment]);
+  // Removed dynamic auto-switching to prevent jumping between tabs unexpectedly
+  // React.useEffect(() => { ... }, [segments, activeSegment]);
 
   return (
     <SafeAreaView
       style={[styles.container, { backgroundColor: theme.colors.background }]}
-      edges={["top", "left", "right"]}
+      edges={["top", "left", "right"]} // Bottom handled manually by useNavBarHeight
     >
-      {/* Search Bar Removed from here as it's in Header now */}
-
-      {/* Custom Header */}
       <View style={styles.header}>
         <View
           style={{
@@ -577,7 +568,7 @@ export default function MyTripsScreen() {
           </Button>
         </View>
 
-        {segments.length > 1 && (
+        {true && (
           <SegmentedButtons
             value={activeSegment}
             onValueChange={(val) => setActiveSegment(val as any)}
@@ -595,12 +586,10 @@ export default function MyTripsScreen() {
           filteredTrips.length === 0
             ? { flexGrow: 1, justifyContent: "center" }
             : styles.listContent,
-          { paddingBottom: bottomPadding },
         ]}
         ListEmptyComponent={renderEmptyState}
         showsVerticalScrollIndicator={false}
       />
-
       <Portal>
         <Dialog
           visible={isAddTripVisible}

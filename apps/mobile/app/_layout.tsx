@@ -1,10 +1,5 @@
 import * as Notifications from "expo-notifications";
-import {
-  Stack,
-  useRootNavigationState,
-  useRouter,
-  useSegments,
-} from "expo-router";
+import { Stack, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import * as SystemUI from "expo-system-ui";
 import { useEffect, useRef } from "react";
@@ -15,46 +10,11 @@ import ToastManager from "toastify-react-native";
 import { ErrorBoundary } from "../src/components/ErrorBoundary";
 import OfflineNotice from "../src/components/OfflineNotice";
 import WhatsAppButton from "../src/components/WhatsAppButton";
-import { useAuth } from "../src/hooks/useAuth";
 import { usePushToken } from "../src/hooks/usePushToken";
 import "../src/i18n"; // Init i18n
 import { theme } from "../src/theme";
 
-function AuthHandler() {
-  const segments = useSegments();
-  const router = useRouter();
-  // Use useAuth instead of reading directly from store
-  // This ensures checkSession() runs and verifies with backend
-  const { isLoggedIn, isLoading, user } = useAuth();
-  const navigationState = useRootNavigationState();
-
-  useEffect(() => {
-    if (!navigationState?.key) return;
-
-    // IMPORTANT: Wait until auth check is complete before redirecting
-    if (isLoading) return;
-
-    const inAuthGroup = segments[0] === "(auth)";
-
-    if (!isLoggedIn && !inAuthGroup) {
-      // Not logged in -> go to login
-      router.replace("/(auth)/login" as any);
-    } else if (isLoggedIn && user) {
-      // Logged in
-      if (!user.onboardingComplete) {
-        // Not onboarded -> go to onboarding
-        if (segments[1] !== "onboarding") {
-          router.replace("/(auth)/onboarding" as any);
-        }
-      } else if (inAuthGroup) {
-        // Onboarded but in auth group -> go to home
-        router.replace("/(tabs)" as any);
-      }
-    }
-  }, [isLoggedIn, isLoading, user, segments, navigationState?.key, router]);
-
-  return null;
-}
+// Auth redirects are handled declaratively in app/index.tsx using <Redirect>
 
 function PushTokenHandler() {
   usePushToken();
@@ -62,6 +22,9 @@ function PushTokenHandler() {
 }
 
 // Enable Edge-to-Edge globally
+
+// Edge-to-Edge is enabled via app.config.ts (android.edgeToEdgeEnabled: true)
+// and handled by expo-router / react-native-safe-area-context automatically.
 
 export default function RootLayout() {
   const notificationListener = useRef<Notifications.Subscription | null>(null);
@@ -105,7 +68,6 @@ export default function RootLayout() {
         <PaperProvider theme={theme}>
           <OfflineNotice />
           {!hideWhatsApp && <WhatsAppButton />}
-          <AuthHandler />
           <PushTokenHandler />
           <Stack screenOptions={{ headerShown: false }}>
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
@@ -123,7 +85,7 @@ export default function RootLayout() {
               options={{ headerShown: false }}
             />
             <Stack.Screen name="booking" options={{ headerShown: false }} />
-            <Stack.Screen />
+
             <Stack.Screen
               name="favorites/index"
               options={{ headerShown: false }}

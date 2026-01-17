@@ -11,9 +11,9 @@ import React, { useState } from "react";
 import {
   KeyboardAvoidingView,
   Platform,
+  Pressable,
   ScrollView,
   StyleSheet,
-  TouchableOpacity,
   View,
 } from "react-native";
 import {
@@ -76,14 +76,14 @@ export default function OnboardingScreen() {
   const [travelStyle, setTravelStyle] = useState<string>("");
   const [budgetRange, setBudgetRange] = useState<string>("");
   const [selectedDestinations, setSelectedDestinations] = useState<string[]>(
-    []
+    [],
   );
 
   const TOTAL_STEPS = 4;
 
   const toggleDestination = (dest: string) => {
     setSelectedDestinations((prev) =>
-      prev.includes(dest) ? prev.filter((d) => d !== dest) : [...prev, dest]
+      prev.includes(dest) ? prev.filter((d) => d !== dest) : [...prev, dest],
     );
   };
 
@@ -204,7 +204,7 @@ export default function OnboardingScreen() {
         />
 
         <View style={styles.phoneRow}>
-          <TouchableOpacity
+          <Pressable
             style={styles.countryButton}
             onPress={() => setShowCountryPicker(true)}
           >
@@ -212,7 +212,7 @@ export default function OnboardingScreen() {
             <Text variant="bodySmall" style={{ fontSize: 10 }}>
               ▼
             </Text>
-          </TouchableOpacity>
+          </Pressable>
 
           <TextInput
             label="Phone Number"

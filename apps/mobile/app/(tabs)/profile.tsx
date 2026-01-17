@@ -5,7 +5,6 @@ import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ScrollView, StyleSheet, View } from "react-native";
-import { useNavigationMode } from "react-native-navigation-mode";
 import {
   Avatar,
   Button,
@@ -42,9 +41,9 @@ export default function ProfileScreen() {
 
   // Safe Area & Navigation Mode
   const insets = useSafeAreaInsets();
-  const { navigationMode } = useNavigationMode();
-  // Base padding 20 + insets.bottom (Tab bar height is handled by Tabs, but extra space avoids cutoff)
-  const bottomPadding = 20 + insets.bottom;
+  // const { navigationMode } = useNavigationMode();
+  // Base padding 100 + insets.bottom to ensure content clears the floating tab bar
+  const bottomPadding = 100 + (insets.bottom || 20);
 
   const toggleLanguage = () => {
     const current = i18n.language;
@@ -83,13 +82,13 @@ export default function ProfileScreen() {
     const supportNumber = process.env.EXPO_PUBLIC_SUPPORT_PHONE || "";
     if (!supportNumber) {
       Toast.info(
-        "WhatsApp support not configured. Please use Support Tickets."
+        "WhatsApp support not configured. Please use Support Tickets.",
       );
       return;
     }
     const message = "Hello! I need help with my travel booking.";
     const url = `whatsapp://send?phone=${supportNumber}&text=${encodeURIComponent(
-      message
+      message,
     )}`;
     Linking.openURL(url).catch(() => {
       Toast.error("WhatsApp is not installed on this device.");

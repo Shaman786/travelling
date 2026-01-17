@@ -60,7 +60,8 @@ export default function SignInForm() {
         <div>
           <div className="mb-5 sm:mb-8">
             <h1 className="text-title-sm sm:text-title-md mb-2 font-semibold text-gray-800 dark:text-white/90">
-              Host-Palace Admin // ... placeholder="admin@host-palace.app"
+              Host-Palace Admin // ...
+              placeholder=&quot;admin@host-palace.app&quot;
             </h1>
             <p className="text-sm text-gray-500 dark:text-gray-400">
               Sign in to manage your application
