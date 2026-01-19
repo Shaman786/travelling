@@ -24,6 +24,7 @@ export const TABLES = {
   PAYMENTS: "payments",
   SYSTEM_CONFIG: "system_config",
   MESSAGES: "ticket_messages",
+  NOTIFICATIONS: "notifications",
   CHAT_MESSAGES: "messages",
   ADDONS: "addons",
   CONSULTATIONS: "consultations",
@@ -57,3 +58,4 @@ export const isAppwriteConfigured = (): boolean => {
 
 export { ID } from "appwrite";
 export { client };
+

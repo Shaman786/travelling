@@ -6,12 +6,13 @@ import { usePathname } from "next/navigation";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useSidebar } from "../context/SidebarContext";
 import {
-  ChatIcon,
-  ChevronDownIcon,
-  EnvelopeIcon,
-  GridIcon,
-  HorizontaLDots,
-  ListIcon,
+    BellIcon,
+    ChatIcon,
+    ChevronDownIcon,
+    EnvelopeIcon,
+    GridIcon,
+    HorizontaLDots,
+    ListIcon
 } from "../icons/index";
 
 type NavItem = {
@@ -66,6 +67,11 @@ const navItems: NavItem[] = [
     icon: <ListIcon />,
     name: "Payments",
     path: "/payments",
+  },
+  {
+    icon: <BellIcon />,
+    name: "Notifications",
+    path: "/notifications",
   },
   {
     icon: <GridIcon />, // Placeholder icon, ideally use SettingsIcon

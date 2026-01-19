@@ -1,15 +1,15 @@
 import dotenv from "dotenv";
 import {
-  Client,
-  Databases,
-  ID,
-  Permission,
-  Query,
-  Role,
-  Storage,
-  TablesDB,
-  Teams,
-  Users,
+    Client,
+    Databases,
+    ID,
+    Permission,
+    Query,
+    Role,
+    Storage,
+    TablesDB,
+    Teams,
+    Users,
 } from "node-appwrite";
 import path from "path";
 
@@ -505,6 +505,28 @@ const COLLECTIONS: any = {
       { key: "read_idx", type: "key", attributes: ["read"] },
     ],
   },
+  notifications: {
+    name: "Notifications",
+    documentSecurity: true,
+    permissions: [
+      Permission.create(Role.team(TEAM_NAME)), // Admins create (mostly)
+      Permission.read(Role.users()), // Users read their own
+      Permission.update(Role.users()), // Users can mark as read
+      Permission.delete(Role.team(TEAM_NAME)),
+    ],
+    attributes: [
+      { key: "userId", type: "string", size: 36, required: true },
+      { key: "title", type: "string", size: 128, required: true },
+      { key: "message", type: "string", size: 500, required: true },
+      { key: "type", type: "string", size: 32, required: true }, // booking, promo, system, security
+      { key: "isRead", type: "boolean", required: false, default: false },
+      { key: "relatedId", type: "string", size: 36, required: false }, // Optional link to booking/etc
+    ],
+    indexes: [
+      { key: "user_idx", type: "key", attributes: ["userId"] },
+      { key: "active_idx", type: "key", attributes: ["isRead"] },
+    ],
+  },
 };
 
 const BUCKETS = [
@@ -760,37 +782,10 @@ async function init() {
     console.log(`Processing table '${colId}'...`);
     try {
       await tableService.getTable(DATABASE_ID, colId);
-      await tableService.getTable(DATABASE_ID, colId);
-      console.log(`   ✅ Exists. Checking indices...`);
-
-      // Check and create missing indices
-      if (colConfig.indexes && colConfig.indexes.length > 0) {
-        for (const idx of colConfig.indexes) {
-          try {
-            await tableService.createIndex(
-              DATABASE_ID,
-              colId,
-              idx.key,
-              idx.type, // key, unique, fulltext
-              idx.attributes,
-              undefined, // orders (optional)
-            );
-            console.log(`      + Index created: ${idx.key}`);
-          } catch (err: any) {
-            if (err.code === 409) {
-              // Index already exists, ignore
-            } else {
-              console.log(
-                `      ⚠️ Error creating index ${idx.key}: ${err.message}`,
-              );
-            }
-          }
-        }
-      }
-      // Update logic...
+      console.log(`   ✅ Exists.`);
     } catch (err: any) {
       if (err.code === 404) {
-        console.log(`   Creating...`);
+        console.log(`   Creating '${colConfig.name}'...`);
 
         // Map attributes to columns definition
         const columns = colConfig.attributes.map((attr: any) => {
@@ -822,40 +817,58 @@ async function init() {
             attributes: idx.attributes,
           })) || [];
 
-        await tableService.createTable({
-          databaseId: DATABASE_ID,
-          tableId: colId,
-          name: colConfig.name,
-          permissions: colConfig.permissions,
-          rowSecurity: colConfig.documentSecurity,
-          columns: columns,
-          indexes: indexes,
-        });
-        continue; // Skip individual column creation for new tables
+        try {
+          await tableService.createTable({
+            databaseId: DATABASE_ID,
+            tableId: colId,
+            name: colConfig.name,
+            permissions: colConfig.permissions,
+            rowSecurity: colConfig.documentSecurity,
+            columns: columns,
+            indexes: indexes,
+          });
+          console.log(`   ✅ Created '${colConfig.name}'`);
+        } catch (createErr: any) {
+          console.error(
+            `   ❌ Failed to create '${colConfig.name}':`,
+            createErr.message,
+          );
+        }
+        continue; // Skip individual syncing for new tables as they are created with full schema
       }
     }
 
-    // Columns (Only run for existing tables to ensure they are up to date)
+    // Logic for EXISTING tables:
+    // 1. Sync Columns
     console.log(`   Syncing columns (for existing table)...`);
-    for (const attr of colConfig.attributes) {
-      await createColumnWithRetry(DATABASE_ID, colId, attr);
+    if (colConfig.attributes) {
+      for (const attr of colConfig.attributes) {
+        await createColumnWithRetry(DATABASE_ID, colId, attr);
+      }
     }
 
-    // Indexes (Only run for existing tables)
-    if (colConfig.indexes) {
+    // 2. Sync Indices (After columns ensure they exist)
+    if (colConfig.indexes && colConfig.indexes.length > 0) {
+      console.log(`   Checking indices...`);
       for (const idx of colConfig.indexes) {
         try {
-          // Note: createIndex doesn't support "if not exists" easily without listing.
-          // We'll catch conflict (409) errors which is standard.
           await tableService.createIndex(
             DATABASE_ID,
             colId,
             idx.key,
-            idx.type,
+            idx.type, // key, unique, fulltext
             idx.attributes,
+            undefined, // orders (optional)
           );
-        } catch (e: any) {
-          if (e.code !== 409) console.log(`      Index error: ${e.message}`);
+          console.log(`      + Index created: ${idx.key}`);
+        } catch (err: any) {
+          if (err.code === 409) {
+            // Index already exists, ignore
+          } else {
+            console.log(
+              `      ⚠️ Error creating index ${idx.key}: ${err.message}`,
+            );
+          }
         }
       }
     }

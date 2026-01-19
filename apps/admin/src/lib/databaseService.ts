@@ -42,6 +42,16 @@ export interface Addon extends Models.Document {
   isActive: boolean;
 }
 
+export interface AdminNotification {
+  $id?: string;
+  userId: string;
+  title: string;
+  message: string;
+  type: "booking" | "promo" | "system" | "security";
+  isRead: boolean;
+  createdAt?: string;
+}
+
 export const databaseService = {
   // ============ PACKAGES ============
   packages: {
@@ -488,6 +498,63 @@ export const databaseService = {
         return await databases.deleteDocument(DATABASE_ID, TABLES.BANNERS, id);
       } catch (error) {
         console.error("Delete banner error:", error);
+        throw error;
+      }
+    },
+  },
+
+  // ============ NOTIFICATIONS ============
+  notifications: {
+    async list(limit = 100) {
+      try {
+        const response = await databases.listDocuments(
+          DATABASE_ID,
+          TABLES.NOTIFICATIONS,
+          [Query.orderDesc("$createdAt"), Query.limit(limit)],
+        );
+        return response.documents;
+      } catch (error) {
+        console.error("List notifications error:", error);
+        return [];
+      }
+    },
+    async create(data: Omit<AdminNotification, "$id" | "createdAt" | "isRead">) {
+      try {
+        return await databases.createDocument(
+          DATABASE_ID,
+          TABLES.NOTIFICATIONS,
+          generateId(),
+          {
+            ...data,
+            isRead: false,
+          },
+        );
+      } catch (error) {
+        console.error("Create notification error:", error);
+        throw error;
+      }
+    },
+    // Admin specific: Send to all users
+    async sendToAll(
+      title: string,
+      message: string,
+      type: AdminNotification["type"] = "system",
+    ) {
+      try {
+        // Warning: efficient for small user bases only. For larger, use Functions.
+        const users = await databaseService.users.list(1000); // Pagination needed for real production
+        const promises = users.map((user) =>
+          this.create({
+            userId: user.$id,
+            title,
+            message,
+            type,
+          }),
+        );
+        await Promise.all(promises);
+        return true;
+      } catch (error) {
+        console.error("Send all notifications error:", error);
         throw error;
       }
     },
