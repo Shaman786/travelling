@@ -67,32 +67,34 @@ export default function TabsLayout() {
         headerShown: false,
         tabBarActiveTintColor: theme.colors.primary,
         tabBarInactiveTintColor: theme.colors.onSurfaceVariant,
-        tabBarShowLabel: false,
+        tabBarShowLabel: true,
         tabBarStyle: {
           position: "absolute",
-          // iOS: add padding above home indicator
-          // Android: use safe area for button nav, or 16 for gesture nav
+          // Use insets.bottom to clear system nav bar (both gesture and button nav)
+          // Add extra padding (16) to float it slightly above
           bottom:
             Platform.OS === "ios"
               ? insets.bottom + 10
-              : Math.max(insets.bottom + 8, 16),
+              : Math.max(insets.bottom, 16),
           left: 20,
           right: 20,
           borderRadius: 32,
-          height: 64,
+          // Increased height to accommodate labels if enabled
+          height: 84,
           backgroundColor: theme.dark
-            ? "rgba(30,30,30,0.8)" // Fallback for android if glass fails or needs bg
-            : "rgba(255,255,255,0.8)",
+            ? "rgba(30,30,30,0.9)"
+            : "rgba(255,255,255,0.9)",
           borderTopWidth: 0,
           elevation: 10,
           shadowColor: "#000",
           shadowOpacity: 0.15,
           shadowRadius: 10,
           shadowOffset: { width: 0, height: 5 },
-          paddingBottom: 0,
+          paddingBottom: 8, // Internal padding for labels
         },
         tabBarItemStyle: {
-          height: 64,
+          // ensure item takes full height
+          height: 84,
           padding: 0,
         },
       }}
