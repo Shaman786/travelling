@@ -2,14 +2,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { FlashList } from "@shopify/flash-list";
 import { useFocusEffect, useRouter } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
-import {
-  LayoutAnimation,
-  Platform,
-  Pressable,
-  StyleSheet,
-  UIManager,
-  View,
-} from "react-native";
+import { LayoutAnimation, Pressable, StyleSheet, View } from "react-native";
 import { Button, Text, useTheme } from "react-native-paper";
 import {
   SafeAreaView,
@@ -61,12 +54,7 @@ export default function CatalogScreen() {
     };
     loadCategories();
 
-    if (
-      Platform.OS === "android" &&
-      UIManager.setLayoutAnimationEnabledExperimental
-    ) {
-      UIManager.setLayoutAnimationEnabledExperimental(true);
-    }
+    // LayoutAnimation experimental check removed (New Architecture enabled)
   }, []);
 
   // Fetch unread notifications count on focus
