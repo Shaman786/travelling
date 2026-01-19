@@ -1,7 +1,8 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { MotiPressable } from "moti/interactions";
 import React, { useEffect, useMemo, useState } from "react";
-import { Linking, StyleSheet, ViewStyle } from "react-native";
+import { Linking, Platform, StyleSheet, ViewStyle } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import databaseService from "../lib/databaseService";
 
 interface WhatsAppButtonProps {
@@ -11,6 +12,15 @@ interface WhatsAppButtonProps {
 
 const WhatsAppButton = ({ style, message }: WhatsAppButtonProps) => {
   const [phoneNumber, setPhoneNumber] = useState<string | null>(null);
+  const insets = useSafeAreaInsets();
+
+  // Calculate dynamic bottom position to clear tab bar
+  // TabBar uses: Math.max(insets.bottom, 16) + 84 (height)
+  // We add 16px extra spacing above that
+  const tabHeight = 84;
+  const tabBottom =
+    Platform.OS === "ios" ? insets.bottom + 10 : Math.max(insets.bottom, 16);
+  const defaultBottom = tabBottom + tabHeight + 16;
 
   useEffect(() => {
     const loadPhone = async () => {
@@ -50,7 +60,7 @@ const WhatsAppButton = ({ style, message }: WhatsAppButtonProps) => {
 
   return (
     <MotiPressable
-      style={[styles.container, style]}
+      style={[styles.container, { bottom: defaultBottom }, style]}
       onPress={handlePress}
       animate={animateState}
       transition={{
@@ -67,7 +77,7 @@ const WhatsAppButton = ({ style, message }: WhatsAppButtonProps) => {
 const styles = StyleSheet.create({
   container: {
     position: "absolute",
-    bottom: 90, // Adjusted to be above standard bottom tabs/FABs
+    // bottom is dynamic now
     right: 20,
     width: 60,
     height: 60,
