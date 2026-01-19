@@ -173,13 +173,6 @@ export default function SupportScreen() {
         color="#fff"
         onPress={() => router.push("/support/create")}
       />
-      <FAB
-        icon="plus"
-        label="New Ticket"
-        style={[styles.fab, { backgroundColor: theme.colors.primary }]}
-        color="#fff"
-        onPress={() => router.push("/support/create")}
-      />
       <WhatsAppButton
         style={{ bottom: 160 }}
         message="Hello, I need to raise a support ticket or have an issue."

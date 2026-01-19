@@ -70,7 +70,12 @@ export default function TabsLayout() {
         tabBarShowLabel: false,
         tabBarStyle: {
           position: "absolute",
-          bottom: Platform.OS === "ios" ? insets.bottom + 10 : 20,
+          // iOS: add padding above home indicator
+          // Android: use safe area for button nav, or 16 for gesture nav
+          bottom:
+            Platform.OS === "ios"
+              ? insets.bottom + 10
+              : Math.max(insets.bottom + 8, 16),
           left: 20,
           right: 20,
           borderRadius: 32,
