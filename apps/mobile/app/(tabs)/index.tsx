@@ -1,20 +1,29 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { FlashList } from "@shopify/flash-list";
-import { useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
-import { Pressable, StyleSheet, View } from "react-native";
-import { Avatar, Button, Searchbar, Text, useTheme } from "react-native-paper";
+import {
+  LayoutAnimation,
+  Platform,
+  Pressable,
+  StyleSheet,
+  UIManager,
+  View,
+} from "react-native";
+import { Button, Text, useTheme } from "react-native-paper";
 import {
   SafeAreaView,
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
 import PackageCard from "../../src/components/PackageCard";
 import { PackageCardSkeleton } from "../../src/components/Skeleton";
+import CategoryChips from "../../src/components/home/CategoryChips";
 import ConsultingGrid from "../../src/components/home/ConsultingGrid";
+import DestinationScroller from "../../src/components/home/DestinationScroller";
 import ExpertiseShowcase from "../../src/components/home/ExpertiseShowcase";
-import HeroCarousel from "../../src/components/home/HeroCarousel";
+import { HeroSection } from "../../src/components/home/HeroSection";
 import PromotionalBanner from "../../src/components/home/PromotionalBanner";
-import { GlassSurface } from "../../src/components/ui/GlassSurface";
+import TwoToneHeadline from "../../src/components/ui/TwoToneHeadline";
 
 import databaseService from "../../src/lib/databaseService";
 import { useStore } from "../../src/store/useStore";
@@ -42,15 +51,37 @@ export default function CatalogScreen() {
   ); // Dynamic Categories
   const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
 
-  // Load Categories on mount
+  // Load Categories on mount and enable LayoutAnimation
   useEffect(() => {
     const loadCategories = async () => {
       const cats = await databaseService.packages.getUniqueCategories();
       setCategories(cats);
     };
     loadCategories();
+
+    if (
+      Platform.OS === "android" &&
+      UIManager.setLayoutAnimationEnabledExperimental
+    ) {
+      UIManager.setLayoutAnimationEnabledExperimental(true);
+    }
   }, []);
+
+  // Fetch unread notifications count on focus
+  useFocusEffect(
+    useCallback(() => {
+      if (user?.$id) {
+        databaseService.notifications
+          .getUnreadCount(user.$id)
+          .then(setUnreadCount)
+          .catch((err) => console.error("Failed to get unread count:", err));
+      } else {
+        setUnreadCount(0);
+      }
+    }, [user?.$id]),
+  );
 
   // Fetch packages from Appwrite
   const fetchPackages = useCallback(
@@ -70,6 +101,15 @@ export default function CatalogScreen() {
             console.warn("Category ID not found:", selectedCategory);
             filters.category = selectedCategory; // Try ID as fallback
           }
+        }
+
+        // Limit to 10 for "Popular Destinations" unless specific category selected (which acts as filter)
+        // If "all" category, we assume it's the main feed which should show popular/featured
+        if (
+          (!selectedCategory || selectedCategory === "all") &&
+          !filters.category
+        ) {
+          (filters as any).limit = 10;
         }
 
         const response = await databaseService.packages.getPackages(filters);
@@ -100,26 +140,8 @@ export default function CatalogScreen() {
   // It is assumed imports will be handled by auto-import or manual addition at top
   // But since I am editing the file, I will add them in a separate step or try to add them here if possible.
 
-  // Scroll restoration for Grid Toggle
+  // Manual scroll restoration removed in favor of FlashList v2 native handling
   const listRef = React.useRef<any>(null);
-  const scrollOffset = React.useRef(0);
-
-  const handleScroll = useCallback((event: any) => {
-    scrollOffset.current = event.nativeEvent.contentOffset.y;
-  }, []);
-
-  // Restore scroll when switching views
-  useEffect(() => {
-    if (listRef.current && scrollOffset.current > 0) {
-      // Small timeout to allow layout to settle
-      setTimeout(() => {
-        listRef.current?.scrollToOffset({
-          offset: scrollOffset.current,
-          animated: false,
-        });
-      }, 50); // 50ms delay is usually enough
-    }
-  }, [isGridView]);
 
   const renderItem = useCallback(
     ({ item }: { item: TravelPackage }) => (
@@ -146,90 +168,88 @@ export default function CatalogScreen() {
   // ... (Header code remains mostly same, just ensuring correct context)
 
   // Memoize the ListHeaderComponent
-  // We return a Component function that returns the JSX
   const HeaderComponent = React.useMemo(() => {
     const Header = () => (
       <View>
-        {/* Header (UserInfo) */}
-        <GlassSurface style={styles.header} intensity={60}>
-          <View>
-            <Text
-              variant="titleSmall"
-              style={{ color: theme.colors.secondary }}
-            >
-              Welcome back,
-            </Text>
-            <Text variant="headlineMedium" style={styles.userName}>
-              {user?.name || "Traveller"} 👋
-            </Text>
-          </View>
-          <Pressable onPress={() => router.push("/(tabs)/profile" as any)}>
-            {user?.avatar ? (
-              <Avatar.Image size={44} source={{ uri: user.avatar }} />
-            ) : (
-              <Avatar.Text
-                size={44}
-                label={user?.name?.substring(0, 2).toUpperCase() || "U"}
-              />
-            )}
-          </Pressable>
-        </GlassSurface>
+        <HeroSection
+          userName={user?.name?.split(" ")[0] || "Traveller"}
+          unreadCount={unreadCount}
+          onNotificationPress={() => router.push("/notifications" as any)}
+          onSettingsPress={() => router.push("/settings" as any)}
+        />
 
-        {/* Search Bar */}
-        <Pressable
-          style={[styles.searchContainer, { marginBottom: 24 }]}
-          onPress={() => router.push("/search" as any)}
-        >
-          <View pointerEvents="none">
-            <Searchbar
-              placeholder="Search packages, experts..."
-              value=""
-              style={styles.searchbar}
-              elevation={1}
-              iconColor={theme.colors.primary}
-            />
-          </View>
-        </Pressable>
+        {/* 1. Destination Scroller (Where to go?) */}
+        <DestinationScroller title="Where to next?" />
 
-        {/* 1. Hero Carousel */}
-        <HeroCarousel />
+        {/* 2. Category Chips (Filters) */}
+        <CategoryChips selectedCategory={selectedCategory} />
 
-        {/* 2. Consulting Grid */}
+        {/* 3. Services Grid (Moved down) */}
+        <View style={{ paddingHorizontal: 20, marginTop: 16, marginBottom: 8 }}>
+          <TwoToneHeadline highlight="Services" prefix="Our" size="small" />
+        </View>
         <ConsultingGrid />
 
-        {/* 3. Expertise Showcase */}
+        {/* 4. Expertise Showcase */}
         <ExpertiseShowcase />
 
-        {/* 3.5 Promotional Banner */}
+        {/* 5. Promotional Banner */}
         <PromotionalBanner />
 
         {/* Featured Packages Title */}
-        <View style={[styles.sectionHeader, { marginTop: 10 }]}>
-          <Text variant="titleLarge" style={styles.sectionTitle}>
-            Curated Packages
-          </Text>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-            <Pressable onPress={() => setIsGridView(!isGridView)} hitSlop={10}>
+        <View style={[styles.sectionHeader, { marginTop: 16 }]}>
+          <TwoToneHeadline
+            highlight="Destinations"
+            prefix="Popular"
+            size="small" // "lil bit small"
+          />
+          <View style={styles.headerActions}>
+            <Pressable
+              onPress={() => {
+                listRef.current?.prepareForLayoutAnimationRender();
+                LayoutAnimation.configureNext(
+                  LayoutAnimation.Presets.easeInEaseOut,
+                );
+                setIsGridView(!isGridView);
+              }}
+              hitSlop={10}
+              style={[
+                styles.gridToggle,
+                { backgroundColor: theme.colors.surfaceVariant },
+              ]}
+            >
               <MaterialCommunityIcons
                 name={isGridView ? "view-list" : "view-grid"}
-                size={28}
+                size={22} // Slightly smaller icon
                 color={theme.colors.primary}
               />
             </Pressable>
-            <Pressable onPress={() => router.push("/curated" as any)}>
+            <Pressable
+              onPress={() => router.push("/curated" as any)}
+              style={styles.seeAllBtn}
+            >
               <Text
                 variant="labelLarge"
-                style={{ color: theme.colors.primary, fontWeight: "bold" }}
+                style={{
+                  color: theme.colors.primary,
+                  fontWeight: "bold",
+                  fontSize: 13,
+                }}
               >
                 See All
               </Text>
+              <MaterialCommunityIcons
+                name="chevron-right"
+                size={18}
+                color={theme.colors.primary}
+              />
             </Pressable>
           </View>
         </View>
       </View>
     );
     return Header;
-  }, [theme.colors, user, router, isGridView]);
+  }, [theme.colors, user, router, isGridView, selectedCategory, unreadCount]);
 
   const ListEmptyComponent = useCallback(() => {
     if (isLoading) {
@@ -261,22 +281,23 @@ export default function CatalogScreen() {
       <FlashList
         ref={listRef}
         data={packages}
+        extraData={isGridView}
         renderItem={renderItem}
+        // Removed explicit key to allow native layout transition
         keyExtractor={(item) => item.$id}
         ListHeaderComponent={HeaderComponent}
         ListEmptyComponent={ListEmptyComponent}
+        viewabilityConfig={{
+          itemVisiblePercentThreshold: 50,
+          minimumViewTime: 100, // Reduce tracking jank
+        }}
         contentContainerStyle={{
           paddingBottom: 100 + (insets.bottom || 20), // Dynamic bottom padding for gesture nav
           paddingHorizontal: isGridView ? 8 : 0,
         }}
         refreshing={refreshing}
         onRefresh={onRefresh}
-        onScroll={handleScroll}
-        scrollEventThrottle={16}
         numColumns={isGridView ? 2 : 1}
-        // Removed `key` prop to prevent full re-render/scroll reset
-        // @ts-ignore: estimatedItemSize exists in FlashList but TS is complaining
-        estimatedItemSize={280}
       />
 
       {/* Comparison Floating Bar */}
@@ -318,7 +339,9 @@ const styles = StyleSheet.create({
     bottom: 20,
     left: 20,
     right: 20,
-    backgroundColor: "#1A1A2E",
+    backgroundColor: "#1A1A2E", // Keep dark bg for contrast even in light mode? Or maybe primary?
+    // Let's keep it fixed dark since text is #fff. Or adapt if needed.
+    // For now, let's keep it distinctive.
     padding: 12,
     borderRadius: 12,
     flexDirection: "row",
@@ -329,28 +352,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 4,
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    marginBottom: 20,
-    borderRadius: 24, // Consistent radius for the glass container
-  },
-  userName: {
-    fontWeight: "bold",
-    color: "#1A1A2E",
-  },
-  searchContainer: {
-    paddingHorizontal: 20,
-    marginBottom: 24,
-  },
-  searchbar: {
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    elevation: 2,
   },
   historyContainer: {
     marginTop: 12,
@@ -377,5 +378,20 @@ const styles = StyleSheet.create({
   packageCardWrapper: {
     paddingHorizontal: 20,
     marginBottom: 20,
+  },
+  headerActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    marginRight: 20, // Ensure absolute right padding
+  },
+  gridToggle: {
+    padding: 4,
+    // backgroundColor: "#F3F4F6", handled dynamically
+    borderRadius: 8,
+  },
+  seeAllBtn: {
+    flexDirection: "row",
+    alignItems: "center",
   },
 });

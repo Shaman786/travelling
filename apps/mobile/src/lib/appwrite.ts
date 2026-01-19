@@ -39,6 +39,7 @@ export const TABLES = {
   ADDONS: "addons",
   BANNERS: "banners",
   CONSULTATIONS: "consultations",
+  NOTIFICATIONS: "notifications",
 };
 
 export const BUCKETS = {

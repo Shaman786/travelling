@@ -199,17 +199,28 @@ export default function OnboardingScreen() {
           value={name}
           onChangeText={setName}
           mode="outlined"
-          style={styles.input}
+          style={[styles.input, { backgroundColor: theme.colors.surface }]}
           left={<TextInput.Icon icon="account" />}
         />
 
         <View style={styles.phoneRow}>
           <Pressable
-            style={styles.countryButton}
+            style={[
+              styles.countryButton,
+              {
+                borderColor: theme.colors.outline,
+                backgroundColor: theme.colors.surface,
+              },
+            ]}
             onPress={() => setShowCountryPicker(true)}
           >
-            <Text variant="bodyLarge">{countryCode}</Text>
-            <Text variant="bodySmall" style={{ fontSize: 10 }}>
+            <Text variant="bodyLarge" style={{ color: theme.colors.onSurface }}>
+              {countryCode}
+            </Text>
+            <Text
+              variant="bodySmall"
+              style={{ fontSize: 10, color: theme.colors.onSurfaceVariant }}
+            >
               ▼
             </Text>
           </Pressable>
@@ -220,7 +231,10 @@ export default function OnboardingScreen() {
             onChangeText={setPhone}
             mode="outlined"
             keyboardType="phone-pad"
-            style={[styles.input, { flex: 1 }]}
+            style={[
+              styles.input,
+              { flex: 1, backgroundColor: theme.colors.surface },
+            ]}
             placeholder="98765 43210"
           />
         </View>
@@ -254,9 +268,9 @@ export default function OnboardingScreen() {
             onPress={() => setTravelStyle(style.id)}
             style={[
               styles.styleChip,
-              travelStyle === style.id && {
-                backgroundColor: theme.colors.primaryContainer,
-              },
+              travelStyle === style.id
+                ? { backgroundColor: theme.colors.primaryContainer }
+                : { backgroundColor: theme.colors.surface },
             ]}
             textStyle={styles.chipText}
           >
@@ -278,9 +292,9 @@ export default function OnboardingScreen() {
             onPress={() => setBudgetRange(budget.id)}
             style={[
               styles.budgetChip,
-              budgetRange === budget.id && {
-                backgroundColor: theme.colors.primaryContainer,
-              },
+              budgetRange === budget.id
+                ? { backgroundColor: theme.colors.primaryContainer }
+                : { backgroundColor: theme.colors.surface },
             ]}
           >
             {budget.label}
@@ -301,9 +315,9 @@ export default function OnboardingScreen() {
             onPress={() => toggleDestination(dest)}
             style={[
               styles.destChip,
-              selectedDestinations.includes(dest) && {
-                backgroundColor: theme.colors.secondaryContainer,
-              },
+              selectedDestinations.includes(dest)
+                ? { backgroundColor: theme.colors.primaryContainer }
+                : { backgroundColor: theme.colors.surface },
             ]}
           >
             {dest}
@@ -324,8 +338,13 @@ export default function OnboardingScreen() {
         Get ready to explore amazing destinations tailored just for you.
       </Text>
 
-      <View style={styles.summary}>
-        {name && <Text style={styles.summaryItem}>👤 {name}</Text>}
+      <View
+        style={[
+          styles.summary,
+          { backgroundColor: theme.colors.surfaceVariant },
+        ]}
+      >
+        {name ? <Text style={styles.summaryItem}>👤 {name}</Text> : null}
         {travelStyle && (
           <Text style={styles.summaryItem}>
             🎯 {TRAVEL_STYLES.find((s) => s.id === travelStyle)?.label}
@@ -385,10 +404,9 @@ export default function OnboardingScreen() {
               <View
                 key={i}
                 style={[
-                  styles.progressDot,
-                  i <= currentStep && {
-                    backgroundColor: theme.colors.primary,
-                  },
+                  i <= currentStep
+                    ? { backgroundColor: theme.colors.primary }
+                    : { backgroundColor: theme.colors.surfaceVariant }, // Use surfaceVariant or similar gray
                 ]}
               />
             ))}
@@ -453,7 +471,7 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: "#E0E0E0",
+    // backgroundColor: "#E0E0E0", // Dynamic now
   },
   content: {
     flex: 1,
@@ -495,7 +513,7 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   input: {
-    backgroundColor: "white",
+    // backgroundColor: "white", // Handled by paper or inline style now
   },
   phoneRow: {
     flexDirection: "row",
@@ -507,11 +525,11 @@ const styles = StyleSheet.create({
     width: 80,
     borderRadius: 4,
     borderWidth: 1,
-    borderColor: "#79747E", // Default Outline color
+    // borderColor: "#79747E", // Handled inline
     justifyContent: "center",
     alignItems: "center",
     marginTop: 6, // Align top with Input label offset
-    backgroundColor: "white",
+    // backgroundColor: "white", // Handled inline
     flexDirection: "row",
     gap: 4,
   },
@@ -555,7 +573,7 @@ const styles = StyleSheet.create({
   summary: {
     gap: 12,
     padding: 24,
-    backgroundColor: "rgba(0,0,0,0.03)",
+    // backgroundColor: "rgba(0,0,0,0.03)", // Handled inline
     borderRadius: 16,
     width: "100%",
   },

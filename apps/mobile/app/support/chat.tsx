@@ -10,22 +10,16 @@ import {
   View,
 } from "react-native";
 import { Bubble, GiftedChat, IMessage, Send } from "react-native-gifted-chat";
+import { useTheme } from "react-native-paper"; // Added useTheme
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useChat } from "../../src/hooks/useChat";
 import { useStore } from "../../src/store/useStore";
 
-const COLORS = {
-  primary: "#6C63FF",
-  background: "#0F172A",
-  card: "#1E293B",
-  text: "#F8FAFC",
-  textSecondary: "#94A3B8",
-};
-
 export default function ChatScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const theme = useTheme(); // Use theme hook
   const user = useStore((state) => state.user);
 
   // Consistent conversation ID
@@ -62,7 +56,6 @@ export default function ChatScreen() {
           _id: msg.senderId,
           name: msg.senderName || "User",
         },
-        // Mark as sent/received for UI if needed, but GiftedChat handles "user._id" comparison
       }));
       setGiftedMessages(mapped);
     }
@@ -72,13 +65,6 @@ export default function ChatScreen() {
     async (newMessages: IMessage[] = []) => {
       const text = newMessages[0].text;
       try {
-        // Optimistically update is handled by GiftedChat usually, but with Realtime
-        // we might see double if we append manually + receive event.
-        // GiftedChat allows appending manually:
-        // setGiftedMessages(previous => GiftedChat.append(previous, newMessages))
-
-        // We will rely on real-time hook to update the list, or append optimally.
-        // Let's just send.
         await sendMessage(text, user?.name || "Guest");
       } catch (error) {
         console.error("Send failed", error);
@@ -93,19 +79,19 @@ export default function ChatScreen() {
         {...props}
         wrapperStyle={{
           right: {
-            backgroundColor: COLORS.primary,
+            backgroundColor: theme.colors.primary,
           },
           left: {
-            backgroundColor: COLORS.card,
+            backgroundColor: theme.colors.surfaceVariant,
           },
         }}
         textStyle={{
-          right: { color: "#FFF" },
-          left: { color: "#FFF" },
+          right: { color: theme.colors.onPrimary },
+          left: { color: theme.colors.onSurfaceVariant },
         }}
         timeTextStyle={{
-          right: { color: "rgba(255,255,255,0.7)" },
-          left: { color: COLORS.textSecondary },
+          right: { color: theme.colors.onPrimaryContainer }, // Subtle text on primary
+          left: { color: theme.colors.outline },
         }}
       />
     );
@@ -114,19 +100,28 @@ export default function ChatScreen() {
   const renderSend = (props: any) => (
     <Send {...props}>
       <View style={{ marginBottom: 10, marginRight: 10 }}>
-        <Ionicons name="send" size={24} color={COLORS.primary} />
+        <Ionicons name="send" size={24} color={theme.colors.primary} />
       </View>
     </Send>
   );
 
   return (
-    <View style={[styles.container, { paddingBottom: insets.bottom }]}>
+    <View
+      style={[
+        styles.container,
+        {
+          paddingBottom: insets.bottom,
+          backgroundColor: theme.colors.background,
+        },
+      ]}
+    >
       <Stack.Screen
         options={{
           headerShown: true,
           title: "Expert Chat",
-          headerStyle: { backgroundColor: COLORS.background },
-          headerTintColor: COLORS.text,
+          headerStyle: { backgroundColor: theme.colors.surface },
+          headerTintColor: theme.colors.onSurface,
+          headerShadowVisible: false,
           headerLeft: () => (
             <MotiPressable
               onPress={() => router.back()}
@@ -138,7 +133,11 @@ export default function ChatScreen() {
                 stiffness: 400,
               }}
             >
-              <Ionicons name="arrow-back" size={24} color={COLORS.text} />
+              <Ionicons
+                name="arrow-back"
+                size={24}
+                color={theme.colors.onSurface}
+              />
             </MotiPressable>
           ),
         }}
@@ -146,7 +145,7 @@ export default function ChatScreen() {
 
       {isLoading ? (
         <View style={styles.loader}>
-          <ActivityIndicator size="large" color={COLORS.primary} />
+          <ActivityIndicator size="large" color={theme.colors.primary} />
         </View>
       ) : (
         <GiftedChat
@@ -160,12 +159,15 @@ export default function ChatScreen() {
           renderSend={renderSend}
           textInputProps={{
             placeholder: "Type a message...",
-            placeholderTextColor: COLORS.textSecondary,
-            style: { color: COLORS.text }, // Dark mode input
+            placeholderTextColor: theme.colors.outline,
+            style: {
+              color: theme.colors.onSurface,
+              paddingTop: 8,
+              paddingHorizontal: 10,
+            },
           }}
         />
       )}
-      {/* Keyboard fix for Android if needed, though KeyboardAvoidingView wraps usually */}
       {Platform.OS === "android" && <KeyboardAvoidingView behavior="padding" />}
     </View>
   );
@@ -174,7 +176,6 @@ export default function ChatScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
   },
   loader: {
     flex: 1,

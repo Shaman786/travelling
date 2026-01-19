@@ -34,10 +34,10 @@ export default function SelectDatesScreen() {
 
   // Initialize with draft dates or defaults
   const [departureDate, setDepartureDate] = useState<Date>(
-    bookingDraft.departureDate || addDays(new Date(), 14)
+    bookingDraft.departureDate || addDays(new Date(), 14),
   );
   const [returnDate, setReturnDate] = useState<Date>(
-    bookingDraft.returnDate || addDays(new Date(), 21)
+    bookingDraft.returnDate || addDays(new Date(), 21),
   );
 
   // Modal State
@@ -59,7 +59,7 @@ export default function SelectDatesScreen() {
       if (startDate) setDepartureDate(startDate);
       if (endDate) setReturnDate(endDate);
     },
-    [setOpen, setDepartureDate, setReturnDate]
+    [setOpen, setDepartureDate, setReturnDate],
   );
 
   // Continue to next step
@@ -98,8 +98,17 @@ export default function SelectDatesScreen() {
     >
       <ScrollView contentContainerStyle={styles.content}>
         {/* Package Summary */}
-        <Surface style={styles.summaryCard} elevation={1}>
-          <Text variant="titleMedium" style={{ fontWeight: "bold" }}>
+        <Surface
+          style={[
+            styles.summaryCard,
+            { backgroundColor: theme.colors.surface },
+          ]}
+          elevation={1}
+        >
+          <Text
+            variant="titleMedium"
+            style={{ fontWeight: "bold", color: theme.colors.onSurface }}
+          >
             {pkg?.title || "Loading..."}
           </Text>
           <Text
@@ -117,7 +126,7 @@ export default function SelectDatesScreen() {
           </Text>
 
           <Surface
-            style={styles.dateCard}
+            style={[styles.dateCard, { backgroundColor: theme.colors.surface }]}
             elevation={2}
             onTouchEnd={() => setOpen(true)}
           >
@@ -136,7 +145,11 @@ export default function SelectDatesScreen() {
                 </Text>
                 <Text
                   variant="titleLarge"
-                  style={{ fontWeight: "bold", marginTop: 4 }}
+                  style={{
+                    fontWeight: "bold",
+                    marginTop: 4,
+                    color: theme.colors.onSurface,
+                  }}
                 >
                   {format(departureDate, "MMM dd")} -{" "}
                   {format(returnDate, "MMM dd, yyyy")}
@@ -160,7 +173,13 @@ export default function SelectDatesScreen() {
               { backgroundColor: theme.colors.outlineVariant },
             ]}
           />
-          <Surface style={styles.durationBadge} elevation={1}>
+          <Surface
+            style={[
+              styles.durationBadge,
+              { backgroundColor: theme.colors.surface },
+            ]}
+            elevation={1}
+          >
             <MaterialCommunityIcons
               name="clock-outline"
               size={16}
@@ -182,7 +201,16 @@ export default function SelectDatesScreen() {
         </View>
 
         {/* Info */}
-        <View style={styles.infoBox}>
+        <View
+          style={[
+            styles.infoBox,
+            {
+              backgroundColor: theme.dark
+                ? theme.colors.surfaceVariant
+                : "#E3F2FD",
+            },
+          ]}
+        >
           <MaterialCommunityIcons
             name="information"
             size={20}
@@ -193,7 +221,7 @@ export default function SelectDatesScreen() {
             style={{
               flex: 1,
               marginLeft: 8,
-              color: theme.colors.onSurfaceVariant,
+              color: theme.colors.onSurface,
             }}
           >
             Tap the edit button to open the calendar and select your customized
@@ -216,12 +244,18 @@ export default function SelectDatesScreen() {
       />
 
       {/* Bottom CTA */}
-      <Surface style={styles.bottomBar} elevation={5}>
+      <Surface
+        style={[styles.bottomBar, { backgroundColor: theme.colors.surface }]}
+        elevation={5}
+      >
         <View>
           <Text variant="labelSmall" style={{ color: theme.colors.outline }}>
             Trip Duration
           </Text>
-          <Text variant="titleMedium" style={{ fontWeight: "bold" }}>
+          <Text
+            variant="titleMedium"
+            style={{ fontWeight: "bold", color: theme.colors.onSurface }}
+          >
             {tripDuration} Days /{" "}
             {tripDuration - 1 > 0 ? tripDuration - 1 : tripDuration} Nights
           </Text>
@@ -290,7 +324,7 @@ const styles = StyleSheet.create({
   infoBox: {
     flexDirection: "row",
     alignItems: "flex-start",
-    backgroundColor: "#E3F2FD",
+    // backgroundColor: "#E3F2FD",
     padding: 16,
     borderRadius: 12,
     marginTop: 24,
@@ -305,7 +339,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 16,
     paddingBottom: 24,
-    backgroundColor: "#fff",
+    // backgroundColor: "#fff",
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
   },

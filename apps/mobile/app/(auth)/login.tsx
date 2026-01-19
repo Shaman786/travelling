@@ -16,7 +16,7 @@ import {
   useTheme,
 } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { GlassSurface } from "../../src/components/ui/GlassSurface";
+import { GlassSurface } from "../../src/components/ui/GlassySurface";
 import { useAuth } from "../../src/hooks/useAuth";
 
 const authBackgroundImage = require("../../assets/images/auth-background.jpg");
@@ -91,8 +91,18 @@ export default function LoginScreen() {
                   activeUnderlineColor={theme.colors.primary}
                   autoCapitalize="none"
                   keyboardType="email-address"
-                  left={<TextInput.Icon icon="email-outline" color="#555" />}
-                  contentStyle={{ backgroundColor: "rgba(255, 255, 255, 0.5)" }} // Translucent input
+                  textColor={theme.dark ? "#fff" : "#000"}
+                  left={
+                    <TextInput.Icon
+                      icon="email-outline"
+                      color={theme.dark ? "rgba(255,255,255,0.7)" : "#555"}
+                    />
+                  }
+                  contentStyle={{
+                    backgroundColor: theme.dark
+                      ? "rgba(0, 0, 0, 0.3)"
+                      : "rgba(255, 255, 255, 0.5)",
+                  }}
                 />
 
                 <TextInput
@@ -106,17 +116,27 @@ export default function LoginScreen() {
                   style={styles.input}
                   underlineColor="transparent"
                   activeUnderlineColor={theme.colors.primary}
+                  textColor={theme.dark ? "#fff" : "#000"}
                   secureTextEntry={!showPassword}
                   autoCapitalize="none"
-                  left={<TextInput.Icon icon="lock-outline" color="#555" />}
+                  left={
+                    <TextInput.Icon
+                      icon="lock-outline"
+                      color={theme.dark ? "rgba(255,255,255,0.7)" : "#555"}
+                    />
+                  }
                   right={
                     <TextInput.Icon
                       icon={showPassword ? "eye-off" : "eye"}
                       onPress={() => setShowPassword(!showPassword)}
-                      color="#555"
+                      color={theme.dark ? "rgba(255,255,255,0.7)" : "#555"}
                     />
                   }
-                  contentStyle={{ backgroundColor: "rgba(255, 255, 255, 0.5)" }} // Translucent input
+                  contentStyle={{
+                    backgroundColor: theme.dark
+                      ? "rgba(0, 0, 0, 0.3)"
+                      : "rgba(255, 255, 255, 0.5)",
+                  }}
                 />
 
                 {error ? (
@@ -150,10 +170,15 @@ export default function LoginScreen() {
                   onPress={() => router.push("/(auth)/forgot-password" as any)}
                   style={{
                     marginTop: 8,
-                    backgroundColor: "rgba(255, 255, 255, 0.95)",
+                    backgroundColor: theme.dark
+                      ? "rgba(255, 255, 255, 0.1)"
+                      : "rgba(255, 255, 255, 0.95)",
                     borderRadius: 8,
                   }}
-                  labelStyle={{ color: "#1A1A2E", fontWeight: "600" }}
+                  labelStyle={{
+                    color: theme.dark ? "#fff" : "#1A1A2E",
+                    fontWeight: "600",
+                  }}
                 >
                   Forgot Password?
                 </Button>
@@ -166,7 +191,17 @@ export default function LoginScreen() {
               <Button
                 mode="contained-tonal"
                 onPress={() => router.push("/(auth)/signup" as any)}
-                style={styles.secondaryButton}
+                style={[
+                  styles.secondaryButton,
+                  {
+                    backgroundColor: theme.dark
+                      ? "rgba(255,255,255,0.1)"
+                      : "rgba(255,255,255,0.9)",
+                  },
+                ]}
+                labelStyle={{
+                  color: theme.dark ? "#fff" : theme.colors.primary,
+                }}
                 compact
               >
                 Create Account
@@ -220,6 +255,7 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.2)",
+    // backgroundColor: "rgba(0,0,0,0.1)", // Optional dark tint
   },
   form: {
     gap: 16,
@@ -245,7 +281,7 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   secondaryButton: {
-    backgroundColor: "rgba(255,255,255,0.9)",
+    // backgroundColor handled dynamically
   },
   // Removed unused styles
 });

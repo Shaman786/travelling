@@ -1,68 +1,68 @@
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { MotiPressable } from "moti/interactions";
 import React, { useMemo } from "react";
-import { StyleSheet, View } from "react-native";
-import { Avatar, Text, useTheme } from "react-native-paper";
-import { borderRadius, shadows } from "../../theme";
+import { ScrollView, StyleSheet, View } from "react-native";
+import { Text, useTheme } from "react-native-paper";
+import { shadows } from "../../theme";
 
-// Gradient Pairs for "3rd Effect" (Depth and Style)
+// Grid items with vector icons
 const GRID_ITEMS = [
   {
     id: "plan",
     label: "Plan Trip",
-    icon: "map-outline",
-    gradient: ["#FF6B6B", "#EE5253"], // Soft Red -> Red
+    icon: "airplane",
+    gradient: ["#0047AB", "#4180DB"], // Blue Theme
     route: "/consult/plan-trip",
   },
   {
     id: "expert",
-    label: "Talk to Expert",
+    label: "Expert",
     icon: "headset",
-    gradient: ["#4ECDC4", "#22A6B3"], // Teal -> Dark Teal
+    gradient: ["#002F75", "#0047AB"], // Darker Blue
     route: "/consult/expert",
   },
   {
     id: "visa",
-    label: "Visa Help",
-    icon: "card-account-details-outline",
-    gradient: ["#487EB0", "#273c75"], // Steel Blue -> Navy
+    label: "Visa",
+    icon: "file-document-outline",
+    gradient: ["#FF6B00", "#FF9E4D"], // Orange Accent
     route: "/consult/visa",
   },
   {
     id: "stays",
-    label: "Curated Stays",
-    icon: "bed-outline",
-    gradient: ["#1DD1A1", "#10AC84"], // Bright Green -> Forest
+    label: "Stays",
+    icon: "bed",
+    gradient: ["#101820", "#4B5563"], // Black/Grey
     route: "/consult/stays",
   },
   {
     id: "flights",
-    label: "Flight Deals",
-    icon: "airplane",
-    // Replaced weak Yellow with Vibrant Amber/Orange for "Deals" visibility
-    gradient: ["#FFC312", "#F79F1F"], // Sunflower -> Orange
+    label: "Flights",
+    icon: "airplane-takeoff",
+    gradient: ["#0047AB", "#4180DB"], // Blue Theme
     route: "/consult/flights",
   },
   {
     id: "group",
-    label: "Group Tours",
-    icon: "account-group-outline",
-    gradient: ["#D980FA", "#9980FA"], // Lavender -> Purple
+    label: "Groups",
+    icon: "account-group",
+    gradient: ["#002F75", "#0047AB"], // Darker Blue
     route: "/consult/group",
   },
   {
     id: "insurance",
     label: "Insurance",
-    icon: "shield-check-outline",
-    gradient: ["#FDA7DF", "#D980FA"], // Pink -> Lavender
+    icon: "shield-check",
+    gradient: ["#FF6B00", "#FF9E4D"], // Orange Accent
     route: "/consult/insurance",
   },
   {
     id: "more",
     label: "More",
     icon: "dots-horizontal",
-    gradient: ["#dcdde1", "#7f8fa6"], // Grey gradients
+    gradient: ["#101820", "#4B5563"], // Black/Grey
     route: "/consult/more",
   },
 ];
@@ -77,7 +77,6 @@ function GridItem({
   onPress: () => void;
   labelColor: string;
 }) {
-  // Memoize the animation state function
   const animateState = useMemo(
     () =>
       ({ pressed }: { pressed: boolean }) => {
@@ -108,18 +107,17 @@ function GridItem({
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
         >
-          <Avatar.Icon
-            size={32}
-            icon={item.icon}
-            color="#FFFFFF"
-            style={styles.avatarIcon}
+          <MaterialCommunityIcons
+            name={item.icon as any}
+            size={28}
+            color="#fff"
           />
         </LinearGradient>
       </View>
       <Text
-        variant="labelSmall"
-        numberOfLines={1}
         style={[styles.label, { color: labelColor }]}
+        numberOfLines={2}
+        variant="labelSmall"
       >
         {item.label}
       </Text>
@@ -132,51 +130,51 @@ export default function ConsultingGrid() {
   const theme = useTheme();
 
   return (
-    <View style={styles.container}>
-      {GRID_ITEMS.map((item) => (
-        <GridItem
-          key={item.id}
-          item={item}
-          onPress={() => router.push(item.route as any)}
-          labelColor={theme.colors.onSurface}
-        />
-      ))}
+    <View>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.container}
+      >
+        {GRID_ITEMS.map((item) => (
+          <GridItem
+            key={item.id}
+            item={item}
+            onPress={() => router.push(item.route as any)}
+            labelColor={theme.colors.onSurface}
+          />
+        ))}
+      </ScrollView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    paddingHorizontal: 12, // Adjusted spacing
-    marginBottom: 20,
-    marginTop: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    gap: 16,
   },
   item: {
-    width: "25%", // 4 items per row
+    width: 72,
     alignItems: "center",
-    marginBottom: 20,
   },
   shadowContainer: {
-    ...shadows.sm, // Apply shadow to container for 3D lift
-    borderRadius: borderRadius.xl,
-  },
-  iconContainer: {
-    width: 54,
-    height: 54,
-    borderRadius: borderRadius.xl, // Squircle / Soft round
-    justifyContent: "center",
-    alignItems: "center",
+    ...shadows.sm,
+    borderRadius: 24,
     marginBottom: 8,
   },
-  avatarIcon: {
-    backgroundColor: "transparent",
+  iconContainer: {
+    width: 60,
+    height: 60,
+    borderRadius: 30, // Perfectly round
+    justifyContent: "center",
+    alignItems: "center",
   },
   label: {
     textAlign: "center",
     fontWeight: "600",
     fontSize: 11,
-    marginTop: 4,
+    lineHeight: 14,
   },
 });

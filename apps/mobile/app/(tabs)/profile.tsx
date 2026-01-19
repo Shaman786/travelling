@@ -4,13 +4,11 @@ import * as Linking from "expo-linking";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ScrollView, StyleSheet, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import {
   Avatar,
   Button,
   Divider,
-  IconButton,
-  List,
   Surface,
   Text,
   useTheme,
@@ -20,10 +18,10 @@ import {
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
 import { Toast } from "toastify-react-native";
-import { GlassSurface } from "../../src/components/ui/GlassSurface";
+import { GlassSurface } from "../../src/components/ui/GlassySurface";
 import { useAuth } from "../../src/hooks/useAuth";
 import { useStore } from "../../src/store/useStore";
-import { borderRadius, shadows } from "../../src/theme";
+import { shadows } from "../../src/theme";
 
 interface UploadedFile {
   name: string;
@@ -103,170 +101,286 @@ export default function ProfileScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: bottomPadding }}
       >
-        <GlassSurface style={styles.header} intensity={40}>
+        <GlassSurface
+          style={[styles.header, { backgroundColor: theme.colors.surface }]}
+          intensity={40}
+        >
           {user?.avatar ? (
-            <Avatar.Image size={100} source={{ uri: user.avatar }} />
+            <Avatar.Image size={80} source={{ uri: user.avatar }} />
           ) : (
             <Avatar.Text
-              size={100}
+              size={80}
               label={user?.name?.substring(0, 2).toUpperCase() || "U"}
+              style={{ backgroundColor: theme.colors.primaryContainer }}
+              color={theme.colors.primary}
             />
           )}
-          <Text variant="headlineMedium" style={styles.name}>
+          <Text
+            variant="titleLarge"
+            style={[styles.name, { color: theme.colors.onSurface }]}
+          >
             {user?.name || "Guest"}
           </Text>
-          <Text variant="bodyMedium" style={styles.email}>
+          <Text
+            variant="bodyMedium"
+            style={[styles.email, { color: theme.colors.onSurfaceVariant }]}
+          >
             {user?.email || "guest@host-palace.app"}
           </Text>
         </GlassSurface>
 
         <View style={styles.sectionContainer}>
-          {/* Travel Vault */}
-          <Surface style={styles.card} elevation={2}>
-            <View style={styles.cardHeader}>
-              <Avatar.Icon
-                size={48}
-                icon="safe"
-                style={{ backgroundColor: theme.colors.primaryContainer }}
-                color={theme.colors.primary}
-              />
-              <View style={{ marginLeft: 16 }}>
-                <Text variant="titleMedium" style={{ fontWeight: "bold" }}>
-                  {t("travel_vault")}
+          <Text style={[styles.sectionTitle, { color: theme.colors.outline }]}>
+            {t("travel_vault")}
+          </Text>
+          <Surface
+            style={[
+              styles.sectionBox,
+              { backgroundColor: theme.colors.surface },
+            ]}
+            elevation={0}
+          >
+            {/* Travel Vault Header */}
+            <Pressable style={styles.vaultHeader}>
+              <View
+                style={[
+                  styles.iconBox,
+                  { backgroundColor: `${theme.colors.primary}15` },
+                ]}
+              >
+                <MaterialCommunityIcons
+                  name="safe"
+                  size={24}
+                  color={theme.colors.primary}
+                />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text
+                  style={[styles.itemTitle, { color: theme.colors.onSurface }]}
+                >
+                  {t("my_documents") ?? "My Documents"}
                 </Text>
                 <Text
-                  variant="bodySmall"
-                  style={{ color: theme.colors.outline }}
+                  style={[
+                    styles.itemSubtitle,
+                    { color: theme.colors.onSurfaceVariant },
+                  ]}
                 >
-                  {t("store_docs_subtitle") ??
-                    "Secure your important documents"}
+                  {t("store_docs_subtitle") ?? "Secure important files"}
                 </Text>
               </View>
-            </View>
+              <Button mode="text" onPress={handleUpload} compact>
+                {t("add")}
+              </Button>
+            </Pressable>
 
-            <View style={styles.cardContent}>
-              {documents.length === 0 ? (
-                <View style={styles.emptyState}>
-                  <MaterialCommunityIcons
-                    name="file-document-outline"
-                    size={40}
-                    color={theme.colors.outlineVariant}
-                  />
-                  <Text variant="bodySmall" style={styles.emptyText}>
-                    {t("no_docs")}
-                  </Text>
-                </View>
-              ) : (
-                documents.map((doc, idx) => (
-                  <Surface key={idx} style={styles.docItem} elevation={0}>
-                    <List.Icon
-                      icon="file-document-outline"
-                      color={theme.colors.secondary}
+            {/* Documents List */}
+            {documents.length > 0 && (
+              <View style={styles.docList}>
+                {documents.map((doc, idx) => (
+                  <View
+                    key={idx}
+                    style={[
+                      styles.docRow,
+                      { backgroundColor: theme.colors.surfaceVariant },
+                    ]}
+                  >
+                    <MaterialCommunityIcons
+                      name="file-document-outline"
+                      size={20}
+                      color={theme.colors.onSurfaceVariant}
                     />
                     <Text
-                      variant="bodyMedium"
-                      style={styles.docName}
+                      style={[
+                        styles.docName,
+                        { color: theme.colors.onSurface },
+                      ]}
                       numberOfLines={1}
                     >
                       {doc.name}
                     </Text>
-                  </Surface>
-                ))
-              )}
-              <Button
-                mode="contained"
-                onPress={handleUpload}
-                icon="cloud-upload"
-                style={styles.actionBtn}
-                contentStyle={{ height: 44 }}
-              >
-                {t("upload_doc")}
-              </Button>
-            </View>
+                  </View>
+                ))}
+              </View>
+            )}
           </Surface>
 
-          {/* Expert Support */}
-          <Surface style={[styles.card, { marginTop: 16 }]} elevation={2}>
-            <View style={styles.supportContent}>
-              <View style={{ flex: 1 }}>
+          <Text style={[styles.sectionTitle, { color: theme.colors.outline }]}>
+            {t("support")}
+          </Text>
+          <Surface
+            style={[
+              styles.sectionBox,
+              { backgroundColor: theme.colors.surface },
+            ]}
+            elevation={0}
+          >
+            <Pressable style={styles.menuItem} onPress={openWhatsApp}>
+              <View style={styles.menuLeft}>
+                <View style={[styles.iconBox, { backgroundColor: "#E0F2F1" }]}>
+                  <MaterialCommunityIcons
+                    name="whatsapp"
+                    size={22}
+                    color="#00897B"
+                  />
+                </View>
                 <Text
-                  variant="titleMedium"
-                  style={{ fontWeight: "bold", marginBottom: 4 }}
+                  style={[styles.itemTitle, { color: theme.colors.onSurface }]}
                 >
-                  {t("support")}
-                </Text>
-                <Text
-                  variant="bodySmall"
-                  style={{ color: theme.colors.outline }}
-                >
-                  {t("chat_expert_subtitle") ??
-                    "Need help? Chat with an expert instantly."}
+                  {t("chat_support") ?? "Chat with Expert"}
                 </Text>
               </View>
-              <IconButton
-                icon="whatsapp"
-                mode="contained"
-                containerColor="#25D366"
-                iconColor="#fff"
-                size={28}
-                onPress={openWhatsApp}
+              <MaterialCommunityIcons
+                name="chevron-right"
+                size={20}
+                color="#C7C7CC"
               />
-            </View>
-          </Surface>
-
-          {/* Account Actions */}
-          <Surface style={styles.menuContainer} elevation={0}>
-            <List.Section>
-              <List.Subheader>{t("account_settings")}</List.Subheader>
-
-              <List.Item
-                title={`${t("language")}: ${i18n.language.toUpperCase()}`}
-                left={(props) => <List.Icon {...props} icon="translate" />}
-                right={(props) => <List.Icon {...props} icon="chevron-right" />}
-                onPress={toggleLanguage}
-              />
-
-              <List.Item
-                title={t("edit_profile")}
-                left={(props) => (
-                  <List.Icon {...props} icon="account-edit-outline" />
-                )}
-                right={(props) => <List.Icon {...props} icon="chevron-right" />}
-                onPress={() => router.push("/profile/edit" as any)}
-              />
-              <List.Item
-                title={t("my_favorites")}
-                left={(props) => <List.Icon {...props} icon="heart" />}
-                right={(props) => <List.Icon {...props} icon="chevron-right" />}
-                onPress={() => router.push("/favorites" as any)}
-              />
-              <List.Item
-                title={t("change_password")}
-                left={(props) => <List.Icon {...props} icon="lock-reset" />}
-                right={(props) => <List.Icon {...props} icon="chevron-right" />}
-                onPress={() => router.push("/profile/change-password" as any)}
-              />
-              <List.Item
-                title={t("support_tickets")}
-                left={(props) => <List.Icon {...props} icon="ticket-account" />}
-                right={(props) => <List.Icon {...props} icon="chevron-right" />}
-                onPress={() => router.push("/support" as any)}
-              />
-              <Divider />
-              <List.Item
-                title={t("logout")}
-                left={(props) => (
-                  <List.Icon
-                    {...props}
-                    icon="logout"
-                    color={theme.colors.error}
+            </Pressable>
+            <Divider
+              style={[
+                styles.divider,
+                {
+                  backgroundColor: theme.dark
+                    ? "rgba(255,255,255,0.1)"
+                    : "#f0f0f0",
+                },
+              ]}
+            />
+            <Pressable
+              style={styles.menuItem}
+              onPress={() => router.push("/support" as any)}
+            >
+              <View style={styles.menuLeft}>
+                <View style={[styles.iconBox, { backgroundColor: "#FFF3E0" }]}>
+                  <MaterialCommunityIcons
+                    name="ticket-account"
+                    size={22}
+                    color="#F57C00"
                   />
-                )}
-                onPress={handleLogout}
-                titleStyle={{ color: theme.colors.error }}
+                </View>
+                <Text
+                  style={[styles.itemTitle, { color: theme.colors.onSurface }]}
+                >
+                  {t("support_tickets")}
+                </Text>
+              </View>
+              <MaterialCommunityIcons
+                name="chevron-right"
+                size={20}
+                color="#C7C7CC"
               />
-            </List.Section>
+            </Pressable>
           </Surface>
+
+          <Text style={[styles.sectionTitle, { color: theme.colors.outline }]}>
+            {t("account_settings")}
+          </Text>
+          <Surface
+            style={[
+              styles.sectionBox,
+              { backgroundColor: theme.colors.surface },
+            ]}
+            elevation={0}
+          >
+            <Pressable
+              style={styles.menuItem}
+              onPress={() => router.push("/profile/edit" as any)}
+            >
+              <View style={styles.menuLeft}>
+                <View style={[styles.iconBox, { backgroundColor: "#ECEFF1" }]}>
+                  <MaterialCommunityIcons
+                    name="account-edit-outline"
+                    size={22}
+                    color="#546E7A"
+                  />
+                </View>
+                <Text
+                  style={[styles.itemTitle, { color: theme.colors.onSurface }]}
+                >
+                  {t("edit_profile")}
+                </Text>
+              </View>
+              <MaterialCommunityIcons
+                name="chevron-right"
+                size={20}
+                color="#C7C7CC"
+              />
+            </Pressable>
+            <Divider
+              style={[
+                styles.divider,
+                {
+                  backgroundColor: theme.dark
+                    ? "rgba(255,255,255,0.1)"
+                    : "#f0f0f0",
+                },
+              ]}
+            />
+            <Pressable
+              style={styles.menuItem}
+              onPress={() => router.push("/favorites" as any)}
+            >
+              <View style={styles.menuLeft}>
+                <View style={[styles.iconBox, { backgroundColor: "#FFEBEE" }]}>
+                  <MaterialCommunityIcons
+                    name="heart-outline"
+                    size={22}
+                    color="#E53935"
+                  />
+                </View>
+                <Text
+                  style={[styles.itemTitle, { color: theme.colors.onSurface }]}
+                >
+                  {t("my_favorites")}
+                </Text>
+              </View>
+              <MaterialCommunityIcons
+                name="chevron-right"
+                size={20}
+                color="#C7C7CC"
+              />
+            </Pressable>
+            <Divider
+              style={[
+                styles.divider,
+                {
+                  backgroundColor: theme.dark
+                    ? "rgba(255,255,255,0.1)"
+                    : "#f0f0f0",
+                },
+              ]}
+            />
+            <Pressable style={styles.menuItem} onPress={toggleLanguage}>
+              <View style={styles.menuLeft}>
+                <View style={[styles.iconBox, { backgroundColor: "#F3E5F5" }]}>
+                  <MaterialCommunityIcons
+                    name="translate"
+                    size={22}
+                    color="#8E24AA"
+                  />
+                </View>
+                <Text
+                  style={[styles.itemTitle, { color: theme.colors.onSurface }]}
+                >
+                  {t("language")}: {i18n.language.toUpperCase()}
+                </Text>
+              </View>
+              <MaterialCommunityIcons
+                name="chevron-right"
+                size={20}
+                color="#C7C7CC"
+              />
+            </Pressable>
+          </Surface>
+
+          <Button
+            mode="outlined"
+            onPress={handleLogout}
+            textColor={theme.colors.error}
+            style={{ marginTop: 24, borderColor: theme.colors.error }}
+          >
+            {t("logout")}
+          </Button>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -279,79 +393,84 @@ const styles = StyleSheet.create({
   },
   header: {
     alignItems: "center",
-    paddingVertical: 32,
-    backgroundColor: "#fff",
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
-    marginBottom: 20,
+    paddingVertical: 24,
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
+    marginBottom: 16,
     ...shadows.sm,
   },
   name: {
     fontWeight: "bold",
-    marginTop: 16,
-    color: "#1A1A2E",
+    marginTop: 12,
   },
   email: {
-    color: "#666",
+    // color handled dynamically
   },
   sectionContainer: {
     paddingHorizontal: 20,
-    paddingBottom: 40,
   },
-  card: {
-    backgroundColor: "#fff",
-    borderRadius: borderRadius.md,
-    overflow: "hidden",
-    padding: 16,
-    ...shadows.sm,
-  },
-  cardHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 16,
-  },
-  cardContent: {
-    gap: 8,
-  },
-  emptyState: {
-    alignItems: "center",
-    padding: 16,
-    backgroundColor: "#f9f9f9",
-    borderRadius: 12,
-    borderStyle: "dashed",
-    borderWidth: 1,
-    borderColor: "#e0e0e0",
-    marginBottom: 12,
-  },
-  emptyText: {
-    color: "#999",
-    marginTop: 8,
-    textAlign: "center",
-  },
-  docItem: {
-    flexDirection: "row",
-    alignItems: "center",
+  sectionTitle: {
+    fontSize: 13,
+    fontWeight: "bold",
     marginBottom: 8,
-    backgroundColor: "#F5F7FA",
-    padding: 8,
+    marginTop: 16,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  sectionBox: {
     borderRadius: 12,
+    overflow: "hidden",
+    marginBottom: 8,
   },
-  docName: {
-    marginLeft: 8,
-    flex: 1,
-    fontWeight: "500",
-  },
-  actionBtn: {
-    marginTop: 8,
-    borderRadius: 12,
-  },
-  supportContent: {
+  menuItem: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    padding: 16,
   },
-  menuContainer: {
-    marginTop: 20,
-    backgroundColor: "transparent",
+  menuLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  iconBox: {
+    width: 36,
+    height: 36,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 12,
+  },
+  itemTitle: {
+    fontSize: 16,
+    fontWeight: "500",
+  },
+  itemSubtitle: {
+    fontSize: 12,
+  },
+  divider: {
+    marginLeft: 64, // Indent divider to align with text
+  },
+
+  // Specific for Travel Vault
+  vaultHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 16,
+    paddingBottom: 12,
+  },
+  docList: {
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+  },
+  docRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 8,
+    padding: 8,
+    borderRadius: 8,
+  },
+  docName: {
+    marginLeft: 8,
+    fontSize: 14,
   },
 });

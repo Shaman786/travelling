@@ -14,12 +14,16 @@ import {
   Text,
   useTheme,
 } from "react-native-paper";
+import Animated from "react-native-reanimated";
 import { Toast } from "toastify-react-native";
 import { usePackage } from "../../src/hooks/usePackages";
 import { reviewService } from "../../src/lib/databaseService"; // Added bookingService
 import { useStore } from "../../src/store/useStore";
 import { borderRadius, shadows } from "../../src/theme";
 import { Review } from "../../src/types";
+
+// Define outside component
+const AnimatedImage = Animated.createAnimatedComponent(Image) as any;
 
 export default function PackageDetailsScreen() {
   const { id, startDate, endDate, adults, children, infants } =
@@ -147,7 +151,7 @@ export default function PackageDetailsScreen() {
                 <div class="day">Day ${day.day}: ${day.title}</div>
                 <div class="desc">${day.description}</div>
               </div>
-            `
+            `,
               )
               .join("")}
             
@@ -176,7 +180,7 @@ export default function PackageDetailsScreen() {
           headerShown: true,
           headerTransparent: true,
           headerTitle: "",
-          headerTintColor: "#fff",
+          headerTintColor: "#fff", // Keep white for hero image overlay
           headerRight: () => (
             <MaterialCommunityIcons
               name="file-download-outline"
@@ -195,10 +199,11 @@ export default function PackageDetailsScreen() {
       >
         {/* Same Hero Container Code... adjusted slightly for header */}
         <View style={styles.heroContainer}>
-          <Image
+          <AnimatedImage
             source={{ uri: pkg.imageUrl }}
             style={styles.heroImage}
             contentFit="cover"
+            sharedTransitionTag={`image-${pkg.$id}`}
           />
           <LinearGradient
             colors={["rgba(0,0,0,0.3)", "transparent", "rgba(0,0,0,0.8)"]}
@@ -215,9 +220,23 @@ export default function PackageDetailsScreen() {
           </View>
         </View>
 
-        <View style={styles.contentContainer}>
+        <View
+          style={[
+            styles.contentContainer,
+            { backgroundColor: theme.colors.background },
+          ]}
+        >
           {/* Trust & Urgency Banner */}
-          <Surface style={styles.trustBanner} elevation={0}>
+          <Surface
+            style={[
+              styles.trustBanner,
+              {
+                backgroundColor: theme.colors.surface,
+                borderColor: theme.colors.outlineVariant,
+              },
+            ]}
+            elevation={0}
+          >
             <View style={styles.trustHeader}>
               <View
                 style={[
@@ -279,7 +298,10 @@ export default function PackageDetailsScreen() {
               <View
                 style={[
                   styles.badge,
-                  { backgroundColor: theme.colors.secondaryContainer },
+                  {
+                    backgroundColor: theme.colors.secondaryContainer,
+                    borderColor: theme.colors.secondaryContainer,
+                  },
                 ]}
               >
                 <MaterialCommunityIcons
@@ -330,15 +352,27 @@ export default function PackageDetailsScreen() {
           <Divider style={styles.divider} />
 
           {/* Description */}
-          <Text variant="titleLarge" style={styles.sectionTitle}>
+          <Text
+            variant="titleLarge"
+            style={[styles.sectionTitle, { color: theme.colors.onBackground }]}
+          >
             Overview
           </Text>
-          <Text variant="bodyMedium" style={styles.description}>
+          <Text
+            variant="bodyMedium"
+            style={[
+              styles.description,
+              { color: theme.colors.onSurfaceVariant },
+            ]}
+          >
             {pkg.description}
           </Text>
 
           {/* Inclusions */}
-          <Text variant="titleLarge" style={styles.sectionTitle}>
+          <Text
+            variant="titleLarge"
+            style={[styles.sectionTitle, { color: theme.colors.onBackground }]}
+          >
             What&apos;s Included
           </Text>
           <View style={styles.inclusionsGrid}>
@@ -349,7 +383,13 @@ export default function PackageDetailsScreen() {
                   size={20}
                   color={theme.colors.tertiary}
                 />
-                <Text variant="bodyMedium" style={styles.inclusionText}>
+                <Text
+                  variant="bodyMedium"
+                  style={[
+                    styles.inclusionText,
+                    { color: theme.colors.onSurface },
+                  ]}
+                >
                   {item}
                 </Text>
               </View>
@@ -359,7 +399,13 @@ export default function PackageDetailsScreen() {
           {/* Gallery Section */}
           {pkg.images && pkg.images.length > 0 && (
             <>
-              <Text variant="titleLarge" style={styles.sectionTitle}>
+              <Text
+                variant="titleLarge"
+                style={[
+                  styles.sectionTitle,
+                  { color: theme.colors.onBackground },
+                ]}
+              >
                 Gallery
               </Text>
               <ScrollView
@@ -382,7 +428,10 @@ export default function PackageDetailsScreen() {
           )}
 
           {/* Itinerary Timeline */}
-          <Text variant="titleLarge" style={styles.sectionTitle}>
+          <Text
+            variant="titleLarge"
+            style={[styles.sectionTitle, { color: theme.colors.onBackground }]}
+          >
             Itinerary
           </Text>
           <View style={styles.timelineContainer}>
@@ -402,7 +451,13 @@ export default function PackageDetailsScreen() {
                     ]}
                   />
                 </View>
-                <Surface style={styles.timelineCard} elevation={1}>
+                <Surface
+                  style={[
+                    styles.timelineCard,
+                    { backgroundColor: theme.colors.surface },
+                  ]}
+                  elevation={1}
+                >
                   {day.image && (
                     <View style={styles.dayImageContainer}>
                       <Image
@@ -412,13 +467,19 @@ export default function PackageDetailsScreen() {
                       />
                     </View>
                   )}
-                  <Text variant="titleMedium" style={styles.dayTitle}>
+                  <Text
+                    variant="titleMedium"
+                    style={[styles.dayTitle, { color: theme.colors.onSurface }]}
+                  >
                     {day.title}
                   </Text>
                   <Text
                     variant="bodySmall"
                     numberOfLines={3}
-                    style={styles.dayDesc}
+                    style={[
+                      styles.dayDesc,
+                      { color: theme.colors.onSurfaceVariant },
+                    ]}
                   >
                     {day.description}
                   </Text>
@@ -429,7 +490,10 @@ export default function PackageDetailsScreen() {
 
           {/* Reviews Section */}
           <Divider style={styles.divider} />
-          <Text variant="titleLarge" style={styles.sectionTitle}>
+          <Text
+            variant="titleLarge"
+            style={[styles.sectionTitle, { color: theme.colors.onBackground }]}
+          >
             Reviews
           </Text>
           {reviews.length === 0 ? (
@@ -441,7 +505,14 @@ export default function PackageDetailsScreen() {
             </Text>
           ) : (
             reviews.map((review) => (
-              <Surface key={review.$id} style={styles.reviewCard} elevation={1}>
+              <Surface
+                key={review.$id}
+                style={[
+                  styles.reviewCard,
+                  { backgroundColor: theme.colors.surface },
+                ]}
+                elevation={1}
+              >
                 <View
                   style={{
                     flexDirection: "row",
@@ -493,16 +564,28 @@ export default function PackageDetailsScreen() {
       </ScrollView>
 
       {/* Sticky Bottom Bar */}
-      <Surface style={styles.bottomBar} elevation={4}>
+      <Surface
+        style={[styles.bottomBar, { backgroundColor: theme.colors.surface }]}
+        elevation={4}
+      >
         <View>
           <Text variant="labelMedium" style={{ color: theme.colors.outline }}>
             Total Price
           </Text>
           <View style={styles.priceRow}>
-            <Text variant="headlineSmall" style={styles.price}>
+            <Text
+              variant="headlineSmall"
+              style={[styles.price, { color: theme.colors.primary }]}
+            >
               ${pkg.price}
             </Text>
-            <Text variant="bodySmall"> / person</Text>
+            <Text
+              variant="bodySmall"
+              style={{ color: theme.colors.onSurfaceVariant }}
+            >
+              {" "}
+              / person
+            </Text>
           </View>
         </View>
         <Button
@@ -561,7 +644,7 @@ const styles = StyleSheet.create({
   contentContainer: {
     flex: 1,
     marginTop: -20,
-    backgroundColor: "#F5F7FA",
+    // backgroundColor: "#F5F7FA", handled dynamically
     borderTopLeftRadius: borderRadius.xl,
     borderTopRightRadius: borderRadius.xl, // Updated to xl
     padding: 24,
@@ -581,10 +664,10 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontWeight: "bold",
     marginBottom: 12,
-    color: "#1A1A2E",
+    // color: "#1A1A2E", handled dynamically
   },
   description: {
-    color: "#666",
+    // color: "#666", handled dynamically
     marginBottom: 24,
     lineHeight: 22,
   },
@@ -623,7 +706,7 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 16,
     borderRadius: borderRadius.md,
-    backgroundColor: "#fff",
+    // backgroundColor: "#fff", handled dynamically
     marginBottom: 16,
     ...shadows.sm,
   },
@@ -631,9 +714,10 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     fontSize: 16,
     marginBottom: 4,
+    // color handled dynamically
   },
   dayDesc: {
-    color: "#666",
+    // color: "#666",
     fontSize: 13,
   },
   bottomSpacer: {
@@ -644,7 +728,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: "#fff",
+    // backgroundColor: "#fff",
     padding: 20,
     paddingBottom: 30, // Safe area
     flexDirection: "row",
@@ -659,7 +743,7 @@ const styles = StyleSheet.create({
     alignItems: "baseline",
   },
   price: {
-    color: "#0056D2",
+    color: "#0056D2", // Maybe should be primary?
     fontWeight: "bold",
   },
   bookButton: {
@@ -670,7 +754,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     padding: 16,
     borderRadius: borderRadius.md,
-    backgroundColor: "#fff",
+    // backgroundColor: "#fff",
     ...shadows.sm,
   },
   galleryContainer: {
@@ -701,11 +785,11 @@ const styles = StyleSheet.create({
   },
   trustBanner: {
     marginBottom: 24,
-    backgroundColor: "#fff",
+    // backgroundColor: "#fff", handled dynamically
     padding: 16,
     borderRadius: borderRadius.md,
     borderWidth: 1,
-    borderColor: "#f0f0f0",
+    // borderColor: "#f0f0f0", handled dynamically
     ...shadows.sm,
   },
   trustHeader: {

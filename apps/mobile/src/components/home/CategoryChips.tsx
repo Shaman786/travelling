@@ -9,8 +9,8 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { MotiPressable } from "moti/interactions";
 import React, { useMemo, useState } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
-import { Text } from "react-native-paper";
-import { borderRadius, colors, shadows, spacing } from "../../theme";
+import { Text, useTheme } from "react-native-paper";
+import { borderRadius, shadows, spacing } from "../../theme";
 
 const CATEGORIES = [
   { id: "all", name: "All", icon: "compass-rose" },
@@ -32,6 +32,7 @@ export default function CategoryChips({
   selectedCategory = "all",
 }: CategoryChipsProps) {
   const [selected, setSelected] = useState(selectedCategory);
+  const theme = useTheme();
 
   const animateState = useMemo(
     () =>
@@ -52,7 +53,10 @@ export default function CategoryChips({
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text variant="titleMedium" style={styles.title}>
+        <Text
+          variant="titleMedium"
+          style={[styles.title, { color: theme.colors.onBackground }]}
+        >
           Choose Category
         </Text>
         <MotiPressable
@@ -60,7 +64,10 @@ export default function CategoryChips({
           animate={animateState}
           transition={{ type: "spring", damping: 15, stiffness: 400 }}
         >
-          <Text variant="labelLarge" style={styles.seeAll}>
+          <Text
+            variant="labelLarge"
+            style={[styles.seeAll, { color: theme.colors.primary }]}
+          >
             See all
           </Text>
         </MotiPressable>
@@ -78,16 +85,33 @@ export default function CategoryChips({
               onPress={() => handlePress(category.id)}
               animate={animateState}
               transition={{ type: "spring", damping: 15, stiffness: 400 }}
-              style={[styles.chip, isSelected && styles.chipSelected]}
+              style={[
+                styles.chip,
+                {
+                  backgroundColor: theme.colors.surface,
+                  borderColor: theme.colors.outline,
+                },
+                isSelected && {
+                  backgroundColor: theme.colors.primary,
+                  borderColor: theme.colors.primary,
+                  ...shadows.accent,
+                },
+              ]}
             >
               <MaterialCommunityIcons
                 name={category.icon as any}
                 size={20}
-                color={isSelected ? colors.textInverse : colors.accent}
+                color={
+                  isSelected ? theme.colors.onPrimary : theme.colors.primary
+                }
               />
               <Text
                 variant="labelLarge"
-                style={[styles.chipText, isSelected && styles.chipTextSelected]}
+                style={[
+                  styles.chipText,
+                  { color: theme.colors.onSurface },
+                  isSelected && { color: theme.colors.onPrimary },
+                ]}
               >
                 {category.name}
               </Text>
@@ -112,10 +136,8 @@ const styles = StyleSheet.create({
   },
   title: {
     fontWeight: "600",
-    color: colors.textPrimary,
   },
   seeAll: {
-    color: colors.accent,
     fontWeight: "600",
   },
   scrollContent: {
@@ -129,21 +151,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderRadius: borderRadius.full,
-    backgroundColor: colors.surface,
     borderWidth: 1.5,
-    borderColor: colors.accent,
     ...shadows.xs,
   },
-  chipSelected: {
-    backgroundColor: colors.accent,
-    borderColor: colors.accent,
-    ...shadows.accent,
-  },
   chipText: {
-    color: colors.textPrimary,
     fontWeight: "600",
-  },
-  chipTextSelected: {
-    color: colors.textInverse,
   },
 });

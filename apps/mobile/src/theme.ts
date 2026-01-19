@@ -11,45 +11,45 @@
 import { Platform, ViewStyle } from "react-native";
 import { MD3DarkTheme, MD3LightTheme } from "react-native-paper";
 
-// Core Color Palette - Refreshed with warm orange accent
+// Core Color Palette - Refreshed with vibrant modern tones
 export const colors = {
-  // Primary - Deep Blue (Trustworthy, Professional)
-  primary: "#0056D2",
-  primaryLight: "#4A8FE7",
-  primaryDark: "#003B8E",
+  // Primary - Vibrant Blue (Matches Hero Gradient)
+  primary: "#2563EB", // Blue 600 - Dynamic & Trustworthy
+  primaryLight: "#60A5FA", // Blue 400
+  primaryDark: "#1E40AF", // Blue 800
 
-  // Accent - Warm Orange (Energetic, Travel Vibes) - Updated!
-  accent: "#F5A623",
-  accentLight: "#FFD180",
-  accentDark: "#E09000",
+  // Accent - Warm Orange (Highlights)
+  accent: "#F59E0B", // Amber 500
+  accentLight: "#FCD34D", // Amber 300
+  accentDark: "#B45309", // Amber 700
 
   // Secondary Accents
-  teal: "#00BFA5", // For success states, bookings
-  coral: "#FF6B6B", // For favorites, hearts
+  teal: "#14B8A6", // Teal 500
+  coral: "#F43F5E", // Rose 500
 
-  // Background & Surface - Lighter, airier feel
-  background: "#FAFBFC",
-  surface: "#FFFFFF",
-  surfaceVariant: "#F3F5F7",
+  // Background & Surface
+  background: "#FFFFFF",
+  surface: "#F8FAFC", // Slate 50
+  surfaceVariant: "#F1F5F9", // Slate 100
   surfaceElevated: "#FFFFFF",
 
   // Status Colors
-  success: "#10B981", // Emerald green
-  warning: "#F59E0B", // Amber
-  error: "#EF4444", // Red
-  info: "#3B82F6", // Blue
+  success: "#10B981", // Emerald 500
+  warning: "#F59E0B", // Amber 500
+  error: "#EF4444", // Red 500
+  info: "#3B82F6", // Blue 500
 
   // Text Colors
-  textPrimary: "#1A1A2E",
-  textSecondary: "#6B7280",
-  textMuted: "#9CA3AF",
+  textPrimary: "#0F172A", // Slate 900
+  textSecondary: "#475569", // Slate 600
+  textMuted: "#94A3B8", // Slate 400
   textInverse: "#FFFFFF",
 
   // Destination Theme Colors
-  india: "#FF9933", // Saffron
-  gulf: "#C5A572", // Golden Sand
-  uk: "#012169", // British Blue
-  usa: "#3C3B6E", // American Blue
+  india: "#F97316", // Orange 500
+  gulf: "#EAB308", // Yellow 500
+  uk: "#2563EB", // Blue 600
+  usa: "#DC2626", // Red 600
 
   // Booking Status Colors
   processing: "#F59E0B",
@@ -58,15 +58,15 @@ export const colors = {
   completed: "#8B5CF6",
 
   // Enhanced Glass/Blur Effects
-  glassBorder: "rgba(255, 255, 255, 0.3)",
-  glassSurface: "rgba(255, 255, 255, 0.85)",
-  glassOverlay: "rgba(0, 0, 0, 0.4)",
+  glassBorder: "rgba(255, 255, 255, 0.2)",
+  glassSurface: "rgba(255, 255, 255, 0.75)",
+  glassOverlay: "rgba(15, 23, 42, 0.6)", // Slate 900 with opacity
 
   // Gradient Presets
-  gradientSunrise: ["#FF9500", "#FF5E3A"],
-  gradientOcean: ["#0056D2", "#00A8FF"],
-  gradientSunset: ["#FF6B6B", "#FF9F43"],
-  gradientForest: ["#10B981", "#059669"],
+  gradientSunrise: ["#F59E0B", "#EF4444"],
+  gradientOcean: ["#3B82F6", "#0EA5E9"],
+  gradientSunset: ["#F43F5E", "#F59E0B"],
+  gradientForest: ["#10B981", "#34D399"],
 };
 
 // Spacing & Sizing - More generous for airy feel
@@ -82,21 +82,24 @@ export const spacing = {
 
 // Platform-Adaptive Border Radius - More rounded for modern feel
 export const borderRadius = {
-  xs: 6,
-  sm: Platform.OS === "ios" ? 12 : 10,
-  md: Platform.OS === "ios" ? 18 : 14,
-  lg: Platform.OS === "ios" ? 24 : 20,
-  xl: Platform.OS === "ios" ? 32 : 28,
+  xs: 8,
+  sm: 12,
+  md: 16,
+  lg: 24,
+  xl: 32,
   full: 9999,
 };
 
 // Typography - Enhanced hierarchy
 export const typography = {
   fontFamily: {
-    regular: Platform.OS === "ios" ? "System" : "Roboto",
-    medium: Platform.OS === "ios" ? "System" : "Roboto-Medium",
-    semibold: Platform.OS === "ios" ? "System" : "Roboto-Medium",
-    bold: Platform.OS === "ios" ? "System" : "Roboto-Bold",
+    regular: "Inter_400Regular",
+    medium: "Inter_500Medium",
+    semibold: "Inter_600SemiBold",
+    bold: "Inter_700Bold",
+    display: "Outfit_700Bold",
+    displayMedium: "Outfit_500Medium",
+    displayRegular: "Outfit_400Regular",
   },
   sizes: {
     xs: 11,
@@ -265,30 +268,227 @@ export const lightTheme = {
     },
   },
   roundness: borderRadius.md,
+  fonts: {
+    ...MD3LightTheme.fonts,
+    displayLarge: {
+      fontFamily: "Outfit_700Bold",
+      fontWeight: "700",
+      fontSize: 57,
+      lineHeight: 64,
+      letterSpacing: 0,
+    },
+    displayMedium: {
+      fontFamily: "Outfit_700Bold",
+      fontWeight: "700",
+      fontSize: 45,
+      lineHeight: 52,
+      letterSpacing: 0,
+    },
+    displaySmall: {
+      fontFamily: "Outfit_700Bold",
+      fontWeight: "700",
+      fontSize: 36,
+      lineHeight: 44,
+      letterSpacing: 0,
+    },
+    headlineLarge: {
+      fontFamily: "Outfit_700Bold",
+      fontWeight: "700",
+      fontSize: 32,
+      lineHeight: 40,
+      letterSpacing: 0,
+    },
+    headlineMedium: {
+      fontFamily: "Outfit_500Medium",
+      fontWeight: "500",
+      fontSize: 28,
+      lineHeight: 36,
+      letterSpacing: 0,
+    },
+    headlineSmall: {
+      fontFamily: "Outfit_400Regular",
+      fontWeight: "400",
+      fontSize: 24,
+      lineHeight: 32,
+      letterSpacing: 0,
+    },
+    titleLarge: {
+      fontFamily: "Outfit_500Medium",
+      fontWeight: "500",
+      fontSize: 22,
+      lineHeight: 28,
+      letterSpacing: 0,
+    },
+    titleMedium: {
+      fontFamily: "Inter_600SemiBold",
+      fontWeight: "600",
+      fontSize: 16,
+      lineHeight: 24,
+      letterSpacing: 0.15,
+    },
+    titleSmall: {
+      fontFamily: "Inter_600SemiBold",
+      fontWeight: "600",
+      fontSize: 14,
+      lineHeight: 20,
+      letterSpacing: 0.1,
+    },
+    labelLarge: {
+      fontFamily: "Inter_600SemiBold",
+      fontWeight: "600",
+      fontSize: 14,
+      lineHeight: 20,
+      letterSpacing: 0.1,
+    },
+    bodyLarge: {
+      fontFamily: "Inter_400Regular",
+      fontWeight: "400",
+      fontSize: 16,
+      lineHeight: 24,
+      letterSpacing: 0.15,
+    },
+    bodyMedium: {
+      fontFamily: "Inter_400Regular",
+      fontWeight: "400",
+      fontSize: 14,
+      lineHeight: 20,
+      letterSpacing: 0.25,
+    },
+    bodySmall: {
+      fontFamily: "Inter_400Regular",
+      fontWeight: "400",
+      fontSize: 12,
+      lineHeight: 16,
+      letterSpacing: 0.4,
+    },
+  } as any,
 };
 
 // React Native Paper Dark Theme
+// React Native Paper Dark Theme - High Contrast
 export const darkTheme = {
   ...MD3DarkTheme,
   colors: {
     ...MD3DarkTheme.colors,
-    primary: colors.primaryLight,
-    primaryContainer: colors.primary,
-    secondary: colors.accent,
-    secondaryContainer: colors.accentDark,
-    tertiary: colors.teal,
-    background: "#0F0F14",
-    surface: "#1A1A24",
-    surfaceVariant: "#252532",
-    error: colors.error,
-    onPrimary: colors.textPrimary,
-    onSecondary: colors.textPrimary,
-    onBackground: colors.textInverse,
-    onSurface: colors.textInverse,
-    onSurfaceVariant: colors.textMuted,
-    outline: "#4A4A5A",
+    primary: "#60A5FA", // Blue 400 - High brightness for dark mode
+    primaryContainer: "#1E40AF", // Blue 800
+    secondary: "#FBBF24", // Amber 400
+    secondaryContainer: "#B45309", // Amber 700
+    tertiary: "#2DD4BF", // Teal 400
+    background: "#0F172A", // Slate 900 - Rich dark background
+    surface: "#1E293B", // Slate 800
+    surfaceVariant: "#334155", // Slate 700
+    error: "#F87171", // Red 400
+    onPrimary: "#FFFFFF", // White on Blue
+    onSecondary: "#0F172A", // Dark on Amber
+    onBackground: "#F1F5F9", // Slate 100
+    onSurface: "#F1F5F9", // Slate 100
+    onSurfaceVariant: "#94A3B8", // Slate 400
+    outline: "#64748B", // Slate 500
+    elevation: {
+      level0: "transparent",
+      level1: "#272727",
+      level2: "#2C2C2C",
+      level3: "#333333",
+      level4: "#383838",
+      level5: "#3F3F3F",
+    },
   },
   roundness: borderRadius.md,
+  fonts: {
+    ...MD3DarkTheme.fonts,
+    displayLarge: {
+      fontFamily: "Outfit_700Bold",
+      fontWeight: "700",
+      fontSize: 57,
+      lineHeight: 64,
+      letterSpacing: 0,
+    },
+    displayMedium: {
+      fontFamily: "Outfit_700Bold",
+      fontWeight: "700",
+      fontSize: 45,
+      lineHeight: 52,
+      letterSpacing: 0,
+    },
+    displaySmall: {
+      fontFamily: "Outfit_700Bold",
+      fontWeight: "700",
+      fontSize: 36,
+      lineHeight: 44,
+      letterSpacing: 0,
+    },
+    headlineLarge: {
+      fontFamily: "Outfit_700Bold",
+      fontWeight: "700",
+      fontSize: 32,
+      lineHeight: 40,
+      letterSpacing: 0,
+    },
+    headlineMedium: {
+      fontFamily: "Outfit_500Medium",
+      fontWeight: "500",
+      fontSize: 28,
+      lineHeight: 36,
+      letterSpacing: 0,
+    },
+    headlineSmall: {
+      fontFamily: "Outfit_400Regular",
+      fontWeight: "400",
+      fontSize: 24,
+      lineHeight: 32,
+      letterSpacing: 0,
+    },
+    titleLarge: {
+      fontFamily: "Outfit_500Medium",
+      fontWeight: "500",
+      fontSize: 22,
+      lineHeight: 28,
+      letterSpacing: 0,
+    },
+    titleMedium: {
+      fontFamily: "Inter_600SemiBold",
+      fontWeight: "600",
+      fontSize: 16,
+      lineHeight: 24,
+      letterSpacing: 0.15,
+    },
+    titleSmall: {
+      fontFamily: "Inter_600SemiBold",
+      fontWeight: "600",
+      fontSize: 14,
+      lineHeight: 20,
+      letterSpacing: 0.1,
+    },
+    labelLarge: {
+      fontFamily: "Inter_600SemiBold",
+      fontWeight: "600",
+      fontSize: 14,
+      lineHeight: 20,
+      letterSpacing: 0.1,
+    },
+    bodyLarge: {
+      fontFamily: "Inter_400Regular",
+      fontWeight: "400",
+      fontSize: 16,
+      lineHeight: 24,
+      letterSpacing: 0.15,
+    },
+    bodyMedium: {
+      fontFamily: "Inter_400Regular",
+      fontWeight: "400",
+      fontSize: 14,
+      lineHeight: 20,
+      letterSpacing: 0.25,
+    },
+    bodySmall: {
+      fontFamily: "Inter_400Regular",
+      fontWeight: "400",
+      fontSize: 12,
+      lineHeight: 16,
+      letterSpacing: 0.4,
+    },
+  } as any,
 };
 
 // Export default theme

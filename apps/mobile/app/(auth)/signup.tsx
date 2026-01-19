@@ -1,4 +1,4 @@
-import { Image } from "expo-image"; // Updated import
+import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import { KeyboardAvoidingView, Platform, StyleSheet, View } from "react-native";
@@ -14,7 +14,21 @@ import { Toast } from "toastify-react-native";
 import { useAuth } from "../../src/hooks/useAuth";
 // Explicit require for GlassSurface
 
-import { GlassSurface } from "../../src/components/ui/GlassSurface";
+import { GlassSurface } from "../../src/components/ui/GlassySurface";
+
+// Background Image Component
+const BackgroundLayer = () => (
+  <>
+    <Image
+      source={require("../../assets/images/auth-background.jpg")}
+      style={StyleSheet.absoluteFill}
+      contentFit="cover"
+    />
+    <View
+      style={[StyleSheet.absoluteFill, { backgroundColor: "rgba(0,0,0,0.5)" }]}
+    />
+  </>
+);
 
 export default function SignupScreen() {
   const theme = useTheme();
@@ -57,23 +71,6 @@ export default function SignupScreen() {
     }
   };
 
-  // Background Image Component (reused)
-  const BackgroundLayer = () => (
-    <>
-      <Image
-        source={require("../../assets/images/auth-background.jpg")}
-        style={StyleSheet.absoluteFill}
-        contentFit="cover"
-      />
-      <View
-        style={[
-          StyleSheet.absoluteFill,
-          { backgroundColor: "rgba(0,0,0,0.5)" },
-        ]}
-      />
-    </>
-  );
-
   return (
     <View style={styles.container}>
       <BackgroundLayer />
@@ -105,8 +102,18 @@ export default function SignupScreen() {
                   style={styles.input}
                   underlineColor="transparent"
                   activeUnderlineColor={theme.colors.primary}
-                  left={<TextInput.Icon icon="account" color="#555" />}
-                  contentStyle={{ backgroundColor: "rgba(255, 255, 255, 0.5)" }}
+                  textColor={theme.dark ? "#fff" : "#000"}
+                  left={
+                    <TextInput.Icon
+                      icon="account"
+                      color={theme.dark ? "rgba(255,255,255,0.7)" : "#555"}
+                    />
+                  }
+                  contentStyle={{
+                    backgroundColor: theme.dark
+                      ? "rgba(0, 0, 0, 0.3)"
+                      : "rgba(255, 255, 255, 0.5)",
+                  }}
                 />
                 <TextInput
                   label="Email"
@@ -118,8 +125,18 @@ export default function SignupScreen() {
                   activeUnderlineColor={theme.colors.primary}
                   autoCapitalize="none"
                   keyboardType="email-address"
-                  left={<TextInput.Icon icon="email-outline" color="#555" />}
-                  contentStyle={{ backgroundColor: "rgba(255, 255, 255, 0.5)" }}
+                  textColor={theme.dark ? "#fff" : "#000"}
+                  left={
+                    <TextInput.Icon
+                      icon="email-outline"
+                      color={theme.dark ? "rgba(255,255,255,0.7)" : "#555"}
+                    />
+                  }
+                  contentStyle={{
+                    backgroundColor: theme.dark
+                      ? "rgba(0, 0, 0, 0.3)"
+                      : "rgba(255, 255, 255, 0.5)",
+                  }}
                 />
                 <TextInput
                   label="Password"
@@ -130,8 +147,18 @@ export default function SignupScreen() {
                   underlineColor="transparent"
                   activeUnderlineColor={theme.colors.primary}
                   secureTextEntry
-                  left={<TextInput.Icon icon="lock-outline" color="#555" />}
-                  contentStyle={{ backgroundColor: "rgba(255, 255, 255, 0.5)" }}
+                  textColor={theme.dark ? "#fff" : "#000"}
+                  left={
+                    <TextInput.Icon
+                      icon="lock-outline"
+                      color={theme.dark ? "rgba(255,255,255,0.7)" : "#555"}
+                    />
+                  }
+                  contentStyle={{
+                    backgroundColor: theme.dark
+                      ? "rgba(0, 0, 0, 0.3)"
+                      : "rgba(255, 255, 255, 0.5)",
+                  }}
                 />
 
                 {error ? (
@@ -167,7 +194,11 @@ export default function SignupScreen() {
               <Button
                 mode="text"
                 onPress={() => router.back()}
-                textColor={theme.colors.primaryContainer}
+                textColor={
+                  theme.dark
+                    ? theme.colors.primary
+                    : theme.colors.primaryContainer
+                }
               >
                 Sign In
               </Button>

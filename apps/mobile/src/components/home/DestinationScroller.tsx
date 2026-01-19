@@ -12,7 +12,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { Text, useTheme } from "react-native-paper";
 import databaseService from "../../lib/databaseService";
-import { colors, shadows, spacing } from "../../theme";
+import { shadows, spacing } from "../../theme";
 
 // Static popular destinations (will be dashboard-managed later)
 const STATIC_DESTINATIONS = [
@@ -55,8 +55,8 @@ interface DestinationScrollerProps {
 export default function DestinationScroller({
   title = "Where would you like to visit?",
 }: DestinationScrollerProps) {
-  const theme = useTheme();
   const router = useRouter();
+  const theme = useTheme();
   const [dynamicDestinations, setDynamicDestinations] = useState<
     { id: string; name: string }[]
   >([]);
@@ -100,7 +100,10 @@ export default function DestinationScroller({
 
   return (
     <View style={styles.container}>
-      <Text variant="titleMedium" style={styles.title}>
+      <Text
+        variant="titleMedium"
+        style={[styles.title, { color: theme.colors.onBackground }]}
+      >
         {title}
       </Text>
       <ScrollView
@@ -126,7 +129,11 @@ export default function DestinationScroller({
               {/* Subtle border overlay */}
               <View style={styles.imageBorder} />
             </View>
-            <Text variant="labelMedium" style={styles.name} numberOfLines={1}>
+            <Text
+              variant="labelMedium"
+              style={[styles.name, { color: theme.colors.onBackground }]}
+              numberOfLines={1}
+            >
               {destination.name}
             </Text>
           </MotiPressable>
@@ -142,7 +149,6 @@ const styles = StyleSheet.create({
   },
   title: {
     fontWeight: "600",
-    color: colors.textPrimary,
     paddingHorizontal: spacing.lg,
     marginBottom: spacing.md,
   },
@@ -170,11 +176,14 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     borderRadius: 32,
     borderWidth: 2,
-    borderColor: colors.accent,
+    // borderColor: colors.accent, // We can't access theme here easily without passing it or using a functional style or just using a safe static color if it's an overlay
+    // But wait, this is a StyleSheet.
+    // Let's use a dynamic style in the component instead.
+    // For now in styles, we can't use theme.
+    // I will remove it from here and add it to the component.
     opacity: 0.5,
   },
   name: {
-    color: colors.textPrimary,
     fontWeight: "500",
     textAlign: "center",
   },

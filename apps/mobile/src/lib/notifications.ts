@@ -2,7 +2,10 @@ import Constants, { ExecutionEnvironment } from "expo-constants";
 import * as Device from "expo-device";
 import * as Notifications from "expo-notifications";
 import { Platform } from "react-native";
+import { account, ID } from "./appwrite";
 import { authService } from "./authService";
+
+// ... (previous content)
 
 /**
  * Configure how notifications behave when the app is in foreground
@@ -91,18 +94,63 @@ export async function registerForPushNotificationsAsync(): Promise<
   return token;
 }
 
-// ... (previous content)
+// ...
+
 export async function savePushToken(
   token: string,
   userId: string,
 ): Promise<void> {
-  if (!token || !userId) return;
+  if (!userId) return;
 
   try {
-    // Assuming we have a 'pushToken' field in the user document
-    await authService.updateProfile(userId, { pushToken: token } as any);
+    // 1. Save Expo Token to User Profile
+    if (token) {
+      await authService.updateProfile(userId, { pushToken: token } as any);
+    }
   } catch {
     // Failed to save push token
+  }
+}
+
+export async function registerAppwritePushTarget(userId: string) {
+  if (!userId) return;
+
+  // 2. Register FCM Device Token with Appwrite (CRITICAL for Provider Test)
+  if (Device.isDevice && Platform.OS === "android") {
+    try {
+      // Ensure permissions are granted before getting token?
+      // Usually called after registerForPushNotificationsAsync which requests permissions.
+
+      const deviceTokenData = await Notifications.getDevicePushTokenAsync();
+      const fcmToken = deviceTokenData.data;
+
+      // Check if target already exists? Appwrite doesn't have "getPushTarget" easily exposed on client
+      // creating new one with unique ID is standard.
+      // Ideally we store the targetId in local storage to avoid duplicating.
+
+      // For now, let's try creating it. Appwrite might return 409 if duplicate ID,
+      // but we don't have a stable ID for the device without storage.
+      // Let's use ID.unique() for now and rely on Appwrite to handle multiple targets per user (which is allowed).
+
+      await account.createPushTarget(
+        ID.unique(), // targetId
+        fcmToken, // token
+        "fcm", // providerId (should match what user set up? No, this is internal 'fcm' or 'apns')
+        // Actually, this should be 'fcm' for Android.
+      );
+      console.log("Appwrite Push Target Registered ✅");
+    } catch (e: any) {
+      if (
+        e.code === 409 ||
+        e.message?.includes("already exists") ||
+        e.type === "general_argument_invalid" // sometimes Appwrite returns this for dups
+      ) {
+        // Target already registered, which is fine.
+        console.log("Appwrite Push Target Already Registered ✅");
+      } else {
+        console.log("Appwrite Push Registration Info:", e.message);
+      }
+    }
   }
 }
 

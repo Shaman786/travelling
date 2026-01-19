@@ -27,7 +27,7 @@ export const authService = {
   async register(
     email: string,
     password: string,
-    name: string
+    name: string,
   ): Promise<AuthUser> {
     try {
       // Create the account
@@ -76,6 +76,14 @@ export const authService = {
    * Login with email and password
    */
   async login(email: string, password: string): Promise<AuthUser> {
+    // Proactively try to clear any existing session to avoid "Active Session" errors
+    // and prevent unnecessary API calls/rate limits from retries.
+    try {
+      await account.deleteSession("current");
+    } catch {
+      // Ignore if no session exists or other error
+    }
+
     try {
       await account.createEmailPasswordSession({
         email,
@@ -141,7 +149,7 @@ export const authService = {
   // Alias for updateProfile to match usage in components
   async updateUserProfile(
     userId: string,
-    updates: Partial<User>
+    updates: Partial<User>,
   ): Promise<User> {
     return this.updateProfile(userId, updates);
   },
@@ -181,7 +189,7 @@ export const authService = {
   async resetPassword(
     userId: string,
     secret: string,
-    newPassword: string
+    newPassword: string,
   ): Promise<void> {
     try {
       await account.updateRecovery({
@@ -236,7 +244,7 @@ export const authService = {
    */
   async changePassword(
     oldPassword: string,
-    newPassword: string
+    newPassword: string,
   ): Promise<void> {
     try {
       await account.updatePassword({
@@ -357,7 +365,7 @@ export const authService = {
       const token = await account.createMagicURLToken(
         ID.unique(),
         email,
-        redirectUrl
+        redirectUrl,
       );
       return token.$id;
     } catch (error: any) {
@@ -373,7 +381,7 @@ export const authService = {
    */
   async completeMagicLinkLogin(
     userId: string,
-    secret: string
+    secret: string,
   ): Promise<AuthUser> {
     try {
       await account.createSession(userId, secret);
@@ -398,7 +406,7 @@ export const authService = {
       await account.createOAuth2Session(
         providerEnum,
         "travelling://oauth-callback", // Success URL
-        "travelling://login?error=oauth_failed" // Failure URL
+        "travelling://login?error=oauth_failed", // Failure URL
       );
     } catch (error: any) {
       console.error("OAuth2 init error:", error);

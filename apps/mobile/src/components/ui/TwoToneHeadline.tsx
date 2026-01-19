@@ -7,7 +7,8 @@
 
 import React from "react";
 import { Text as RNText, StyleSheet, View } from "react-native";
-import { colors, typography } from "../../theme";
+import { useTheme } from "react-native-paper";
+import { typography } from "../../theme";
 
 interface TwoToneHeadlineProps {
   /** Text before the highlighted word */
@@ -29,9 +30,12 @@ export default function TwoToneHeadline({
   highlight,
   suffix = "",
   size = "medium",
-  accentColor = colors.accent,
+  accentColor,
   centered = false,
 }: TwoToneHeadlineProps) {
+  const theme = useTheme();
+  // Default accent from theme if not provided
+  const effectiveAccent = accentColor || theme.colors.secondary;
   const fontSize = {
     small: typography.sizes.xl,
     medium: typography.sizes.xxl,
@@ -40,9 +44,16 @@ export default function TwoToneHeadline({
 
   return (
     <View style={[styles.container, centered && styles.centered]}>
-      <RNText style={[styles.headline, { fontSize }]}>
+      <RNText
+        style={[
+          styles.headline,
+          { fontSize, color: theme.colors.onBackground },
+        ]}
+      >
         {prefix && `${prefix} `}
-        <RNText style={[styles.highlight, { color: accentColor, fontSize }]}>
+        <RNText
+          style={[styles.highlight, { color: effectiveAccent, fontSize }]}
+        >
           {highlight}
         </RNText>
         {suffix && ` ${suffix}`}
@@ -59,7 +70,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   headline: {
-    color: colors.textPrimary,
     fontWeight: "bold",
     lineHeight: 40,
   },

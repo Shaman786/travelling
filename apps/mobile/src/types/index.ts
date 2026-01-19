@@ -217,6 +217,16 @@ export interface ChatConversation {
   updatedAt: string;
 }
 
+export interface AppNotification extends Models.Document {
+  userId: string;
+  title: string;
+  message: string;
+  type: "booking" | "promo" | "system" | "security";
+  isRead: boolean;
+  relatedId?: string;
+  createdAt: string;
+}
+
 // ============ Payment Types ============
 export type GatewayProvider =
   | "razorpay"

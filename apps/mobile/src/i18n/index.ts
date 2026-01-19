@@ -24,6 +24,7 @@ const resources = {
   ar: { translation: ar },
 };
 
+// eslint-disable-next-line import/no-named-as-default-member
 i18next.use(initReactI18next).init({
   resources,
   lng: getLocales()[0]?.languageCode || "en",

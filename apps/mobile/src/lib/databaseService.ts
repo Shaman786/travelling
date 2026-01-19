@@ -10,6 +10,7 @@
 
 import type {
   Addon,
+  AppNotification,
   Booking,
   BookingStatus,
   Message,
@@ -51,7 +52,7 @@ export const packageService = {
     try {
       const queries: string[] = [
         Query.equal("isActive", true),
-        Query.limit(limit),
+        Query.limit((filters as any)?.limit || limit), // Allow override via filters for specific sections
         Query.offset(offset),
       ];
 
@@ -1477,6 +1478,109 @@ export const chatService = {
   },
 };
 
+// ============ Notification Service ============
+
+export const notificationService = {
+  /**
+   * Get notifications for a user
+   */
+  async getNotifications(
+    userId: string,
+    limit = 20,
+  ): Promise<AppNotification[]> {
+    try {
+      const response = await tables.listRows({
+        databaseId: DATABASE_ID,
+        tableId: TABLES.NOTIFICATIONS,
+        queries: [
+          Query.equal("userId", userId),
+          Query.orderDesc("$createdAt"), // Newest first
+          Query.limit(limit),
+        ],
+      });
+      return response.rows as unknown as AppNotification[];
+    } catch (error: any) {
+      console.error("Get notifications error:", error);
+      return [];
+    }
+  },
+
+  /**
+   * Get unread notification count
+   */
+  async getUnreadCount(userId: string): Promise<number> {
+    try {
+      const response = await tables.listRows({
+        databaseId: DATABASE_ID,
+        tableId: TABLES.NOTIFICATIONS,
+        queries: [
+          Query.equal("userId", userId),
+          Query.equal("isRead", false),
+          Query.limit(1), // Minimal fetch, we rely on total
+        ],
+      });
+      return response.total;
+    } catch (error: any) {
+      console.error("Get unread count error:", error);
+      return 0;
+    }
+  },
+
+  /**
+   * Mark a notification as read
+   */
+  async markAsRead(notificationId: string): Promise<boolean> {
+    try {
+      await tables.updateRow({
+        databaseId: DATABASE_ID,
+        tableId: TABLES.NOTIFICATIONS,
+        rowId: notificationId,
+        data: {
+          isRead: true,
+        },
+      });
+      return true;
+    } catch (error: any) {
+      console.error("Mark as read error:", error);
+      return false;
+    }
+  },
+
+  /**
+   * Mark all notifications as read for a user
+   */
+  async markAllAsRead(userId: string): Promise<boolean> {
+    try {
+      // 1. Get all unread notifications
+      const unread = await tables.listRows({
+        databaseId: DATABASE_ID,
+        tableId: TABLES.NOTIFICATIONS,
+        queries: [
+          Query.equal("userId", userId),
+          Query.equal("isRead", false),
+          Query.limit(100), // Batch limit
+        ],
+      });
+
+      // 2. Update each (Parallel)
+      const promises = unread.rows.map((row) =>
+        tables.updateRow({
+          databaseId: DATABASE_ID,
+          tableId: TABLES.NOTIFICATIONS,
+          rowId: row.$id,
+          data: { isRead: true },
+        }),
+      );
+
+      await Promise.all(promises);
+      return true;
+    } catch (error: any) {
+      console.error("Mark all as read error:", error);
+      return false;
+    }
+  },
+};
+
 export default {
   packages: packageService,
   bookings: bookingService,
@@ -1489,4 +1593,5 @@ export default {
   banners: bannerService,
   consultations: consultationService,
   chat: chatService,
+  notifications: notificationService,
 };

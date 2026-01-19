@@ -134,7 +134,7 @@ interface AppState {
 
   // Actions - Booked Trips
   bookTrip: (
-    trip: Omit<BookedTrip, "id" | "status" | "statusHistory" | "bookingDate">
+    trip: Omit<BookedTrip, "id" | "status" | "statusHistory" | "bookingDate">,
   ) => void;
   setBookedTrips: (trips: Booking[]) => void;
   addBookedTrip: (trip: BookedTrip | Booking) => void;
@@ -142,7 +142,7 @@ interface AppState {
   updateTripStatus: (
     tripId: string,
     status: BookedTrip["status"],
-    note?: string
+    note?: string,
   ) => void;
   removeBookedTrip: (tripId: string) => void;
 
@@ -155,6 +155,14 @@ interface AppState {
   addToComparison: (packageId: string) => void;
   removeFromComparison: (packageId: string) => void;
   clearComparison: () => void;
+
+  // Preferences
+  preferences: {
+    darkMode: boolean;
+    notifications: boolean;
+    language: string;
+  };
+  updatePreferences: (prefs: Partial<AppState["preferences"]>) => void;
 }
 
 // Initial trip draft state
@@ -227,7 +235,7 @@ export const useStore = create<AppState>()(
           bookingDraft: {
             ...state.bookingDraft,
             selectedAddons: (state.bookingDraft.selectedAddons || []).filter(
-              (id) => id !== addonId
+              (id) => id !== addonId,
             ),
           },
         })),
@@ -250,7 +258,7 @@ export const useStore = create<AppState>()(
           tripDraft: {
             ...state.tripDraft,
             travelers: state.tripDraft.travelers.filter(
-              (t) => t.id !== travelerId
+              (t) => t.id !== travelerId,
             ),
           },
         })),
@@ -260,7 +268,7 @@ export const useStore = create<AppState>()(
           tripDraft: {
             ...state.tripDraft,
             travelers: state.tripDraft.travelers.map((t) =>
-              t.id === travelerId ? { ...t, ...updates } : t
+              t.id === travelerId ? { ...t, ...updates } : t,
             ),
           },
         })),
@@ -359,7 +367,7 @@ export const useStore = create<AppState>()(
                   }),
                   ...(updates.totalPrice && { totalPrice: updates.totalPrice }),
                 }
-              : trip
+              : trip,
           ),
         })),
 
@@ -375,7 +383,7 @@ export const useStore = create<AppState>()(
                     { status, date: new Date(), note },
                   ],
                 }
-              : trip
+              : trip,
           ),
         })),
 
@@ -395,7 +403,7 @@ export const useStore = create<AppState>()(
       removeFavorite: (packageId) =>
         set((state) => ({
           favoritePackages: state.favoritePackages.filter(
-            (id) => id !== packageId
+            (id) => id !== packageId,
           ),
         })),
 
@@ -424,6 +432,17 @@ export const useStore = create<AppState>()(
         })),
 
       clearComparison: () => set({ comparisonList: [] }),
+
+      // Preferences Actions
+      preferences: {
+        darkMode: false,
+        notifications: true,
+        language: "en",
+      },
+      updatePreferences: (prefs) =>
+        set((state) => ({
+          preferences: { ...state.preferences, ...prefs },
+        })),
     }),
     {
       name: "travelling-storage",
@@ -433,9 +452,10 @@ export const useStore = create<AppState>()(
         isLoggedIn: state.isLoggedIn,
         bookedTrips: state.bookedTrips,
         favoritePackages: state.favoritePackages,
+        preferences: state.preferences, // Persist preferences
       }),
-    }
-  )
+    },
+  ),
 );
 
 // Selectors (for convenience)

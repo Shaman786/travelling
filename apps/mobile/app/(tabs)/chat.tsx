@@ -13,13 +13,13 @@ import { ScrollView, StyleSheet, View } from "react-native";
 import { Avatar, Text, useTheme } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useStore } from "../../src/store/useStore";
-import { borderRadius, colors, shadows, spacing } from "../../src/theme";
+import { borderRadius, shadows, spacing } from "../../src/theme";
 
 const CHAT_OPTIONS = [
   {
     id: "expert",
-    title: "Talk to Travel Expert",
-    subtitle: "Get personalized advice for your trip",
+    title: "Talk to Expert",
+    subtitle: "Get personalized travel advice",
     icon: "headset",
     gradient: ["#0056D2", "#4A8FE7"],
     route: "/support/chat",
@@ -27,7 +27,7 @@ const CHAT_OPTIONS = [
   {
     id: "booking",
     title: "Booking Support",
-    subtitle: "Help with existing reservations",
+    subtitle: "Help with reservations",
     icon: "ticket-confirmation-outline",
     gradient: ["#10B981", "#059669"],
     route: "/support/booking-help",
@@ -35,15 +35,15 @@ const CHAT_OPTIONS = [
   {
     id: "visa",
     title: "Visa Assistance",
-    subtitle: "Documentation & requirements help",
+    subtitle: "Docs & requirements",
     icon: "passport",
     gradient: ["#F5A623", "#E09000"],
     route: "/consult/visa",
   },
   {
     id: "emergency",
-    title: "Emergency Support",
-    subtitle: "24/7 travel emergency assistance",
+    title: "Emergency",
+    subtitle: "24/7 assistance",
     icon: "phone-alert",
     gradient: ["#EF4444", "#DC2626"],
     route: "/support/emergency",
@@ -86,77 +86,126 @@ export default function ChatScreen() {
         {/* Header */}
         <View style={styles.header}>
           <View>
-            <Text variant="headlineMedium" style={styles.headerTitle}>
+            <Text
+              variant="headlineMedium"
+              style={[styles.headerTitle, { color: theme.colors.onBackground }]}
+            >
               Chat & Support
             </Text>
-            <Text variant="bodyMedium" style={{ color: theme.colors.outline }}>
-              We're here to help 24/7
+            <Text
+              variant="bodyMedium"
+              style={{ color: theme.colors.onSurfaceVariant }}
+            >
+              We&apos;re here to help 24/7
             </Text>
           </View>
           <Avatar.Text
             size={48}
             label={user?.name?.substring(0, 2).toUpperCase() || "U"}
-            style={{ backgroundColor: colors.accent }}
+            style={{ backgroundColor: theme.colors.primary }}
           />
         </View>
 
         {/* Chat Options */}
         <View style={styles.section}>
-          <Text variant="titleMedium" style={styles.sectionTitle}>
+          <Text
+            variant="titleMedium"
+            style={[styles.sectionTitle, { color: theme.colors.onBackground }]}
+          >
             How can we help?
           </Text>
           <View style={styles.optionsGrid}>
             {CHAT_OPTIONS.map((option) => (
-              <MotiPressable
+              <View
                 key={option.id}
-                onPress={() => router.push(option.route as any)}
-                animate={animateState}
-                transition={{ type: "spring", damping: 15, stiffness: 400 }}
-                style={styles.optionCard}
+                style={[
+                  styles.cardContainer,
+                  // Apply shadows here for better cross-platform support
+                  styles.cardShadow,
+                ]}
               >
-                <LinearGradient
-                  colors={option.gradient as [string, string]}
-                  style={styles.optionGradient}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
+                <MotiPressable
+                  onPress={() => router.push(option.route as any)}
+                  animate={animateState}
+                  transition={{ type: "spring", damping: 15, stiffness: 400 }}
+                  style={[
+                    styles.optionCard,
+                    { backgroundColor: theme.colors.surface },
+                  ]}
                 >
-                  <MaterialCommunityIcons
-                    name={option.icon as any}
-                    size={32}
-                    color="#fff"
-                  />
-                </LinearGradient>
-                <Text variant="titleSmall" style={styles.optionTitle}>
-                  {option.title}
-                </Text>
-                <Text variant="bodySmall" style={styles.optionSubtitle}>
-                  {option.subtitle}
-                </Text>
-              </MotiPressable>
+                  <LinearGradient
+                    colors={option.gradient as [string, string]}
+                    style={styles.optionGradient}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                  >
+                    <MaterialCommunityIcons
+                      name={option.icon as any}
+                      size={28}
+                      color="#fff"
+                    />
+                  </LinearGradient>
+                  <Text
+                    variant="titleSmall"
+                    style={[
+                      styles.optionTitle,
+                      { color: theme.colors.onSurface },
+                    ]}
+                    numberOfLines={1}
+                  >
+                    {option.title}
+                  </Text>
+                  <Text
+                    variant="bodySmall"
+                    style={[
+                      styles.optionSubtitle,
+                      { color: theme.colors.onSurfaceVariant },
+                    ]}
+                    numberOfLines={2}
+                  >
+                    {option.subtitle}
+                  </Text>
+                </MotiPressable>
+              </View>
             ))}
           </View>
         </View>
 
         {/* Quick FAQs */}
         <View style={styles.section}>
-          <Text variant="titleMedium" style={styles.sectionTitle}>
+          <Text
+            variant="titleMedium"
+            style={[styles.sectionTitle, { color: theme.colors.onBackground }]}
+          >
             Quick Answers
           </Text>
-          <View style={styles.faqContainer}>
+          <View
+            style={[
+              styles.faqContainer,
+              { backgroundColor: theme.colors.surface },
+            ]}
+          >
             {FAQ_ITEMS.map((faq, index) => (
               <MotiPressable
                 key={index}
                 onPress={() => router.push("/support/faq" as any)}
                 animate={animateState}
                 transition={{ type: "spring", damping: 15, stiffness: 400 }}
-                style={styles.faqItem}
+                style={[
+                  styles.faqItem,
+                  { borderBottomColor: theme.colors.outlineVariant },
+                  index === FAQ_ITEMS.length - 1 && { borderBottomWidth: 0 },
+                ]}
               >
                 <MaterialCommunityIcons
                   name="help-circle-outline"
                   size={20}
                   color={theme.colors.primary}
                 />
-                <Text variant="bodyMedium" style={styles.faqText}>
+                <Text
+                  variant="bodyMedium"
+                  style={[styles.faqText, { color: theme.colors.onSurface }]}
+                >
                   {faq}
                 </Text>
                 <MaterialCommunityIcons
@@ -189,7 +238,6 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontWeight: "bold",
-    color: colors.textPrimary,
   },
   section: {
     paddingHorizontal: spacing.lg,
@@ -197,39 +245,47 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontWeight: "600",
-    color: colors.textPrimary,
     marginBottom: spacing.md,
   },
   optionsGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: spacing.md,
+    justifyContent: "space-between",
+  },
+  cardContainer: {
+    width: "48%",
+    marginBottom: spacing.md,
+    borderRadius: borderRadius.lg,
+  },
+  cardShadow: {
+    ...shadows.md,
+    backgroundColor: "transparent",
   },
   optionCard: {
-    width: "47%",
-    backgroundColor: colors.surface,
+    width: "100%", // Fill container
     borderRadius: borderRadius.lg,
     padding: spacing.md,
-    ...shadows.md,
+    minHeight: 140,
+    overflow: "hidden", // Clip gradient/content
   },
   optionGradient: {
-    width: 56,
-    height: 56,
+    width: 52,
+    height: 52,
     borderRadius: borderRadius.md,
     justifyContent: "center",
     alignItems: "center",
     marginBottom: spacing.sm,
   },
   optionTitle: {
-    fontWeight: "600",
-    color: colors.textPrimary,
-    marginBottom: 4,
+    fontWeight: "700",
+    marginBottom: 2,
   },
   optionSubtitle: {
-    color: colors.textSecondary,
+    fontSize: 12,
+    lineHeight: 16,
   },
   faqContainer: {
-    backgroundColor: colors.surface,
+    // backgroundColor: colors.surface,
     borderRadius: borderRadius.lg,
     overflow: "hidden",
     ...shadows.sm,
@@ -239,11 +295,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: colors.surfaceVariant,
+    borderBottomColor: "#f0f0f000", // Will rely on theme override in component if needed, or remove border
     gap: spacing.sm,
   },
   faqText: {
     flex: 1,
-    color: colors.textPrimary,
+    // color: colors.textPrimary,
   },
 });

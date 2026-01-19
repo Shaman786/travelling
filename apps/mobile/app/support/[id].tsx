@@ -32,14 +32,6 @@ import { supportService } from "../../src/lib/databaseService";
 import { useStore } from "../../src/store/useStore";
 import type { SupportTicket, TicketMessage } from "../../src/types";
 
-// Status Colors
-const STATUS_COLORS = {
-  open: "#2196F3",
-  in_progress: "#FF9800",
-  resolved: "#4CAF50",
-  closed: "#9E9E9E",
-};
-
 export default function TicketDetailsScreen() {
   const { id } = useLocalSearchParams();
   const theme = useTheme();
@@ -174,7 +166,22 @@ export default function TicketDetailsScreen() {
   /*
    * UI: Modern Chat Interface
    */
-  const statusColor = STATUS_COLORS[ticket.status] || theme.colors.primary;
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "open":
+        return theme.colors.primary;
+      case "in_progress":
+        return theme.colors.secondary;
+      case "resolved":
+        return theme.colors.tertiary;
+      case "closed":
+        return theme.colors.outline;
+      default:
+        return theme.colors.primary;
+    }
+  };
+
+  const statusColor = getStatusColor(ticket.status);
   const renderMessage = ({ item }: { item: TicketMessage }) => {
     const isMe = item.senderId === user?.$id;
 
@@ -255,13 +262,22 @@ export default function TicketDetailsScreen() {
         }}
       />
 
-      <Surface style={styles.header} elevation={1}>
+      <Surface
+        style={[
+          styles.header,
+          {
+            backgroundColor: theme.colors.surface,
+            borderBottomColor: theme.colors.outlineVariant,
+          },
+        ]}
+        elevation={1}
+      >
         <View style={styles.headerRow}>
           <View style={{ flex: 1 }}>
             <Text
               variant="titleMedium"
               numberOfLines={1}
-              style={styles.headerTitle}
+              style={[styles.headerTitle, { color: theme.colors.onSurface }]}
             >
               {ticket.subject}
             </Text>
@@ -313,10 +329,19 @@ export default function TicketDetailsScreen() {
             >
               You started this conversation
             </Text>
-            <Surface style={styles.originalReq} elevation={0}>
+            <Surface
+              style={[
+                styles.originalReq,
+                { backgroundColor: theme.colors.surfaceVariant },
+              ]}
+              elevation={0}
+            >
               <Text
                 variant="bodyMedium"
-                style={{ fontStyle: "italic", color: theme.colors.secondary }}
+                style={{
+                  fontStyle: "italic",
+                  color: theme.colors.onSurfaceVariant,
+                }}
               >
                 &quot;{ticket.message}&quot;
               </Text>
@@ -331,16 +356,33 @@ export default function TicketDetailsScreen() {
         style={{ backgroundColor: theme.colors.surface }}
       >
         {ticket.status !== "closed" ? (
-          <View style={styles.inputBar}>
+          <View
+            style={[
+              styles.inputBar,
+              {
+                backgroundColor: theme.colors.surface,
+                borderTopColor: theme.colors.outlineVariant,
+              },
+            ]}
+          >
             <TextInput
               mode="outlined"
               placeholder="Type your message..."
               value={replyText}
               onChangeText={setReplyText}
-              style={styles.input}
+              style={[
+                styles.input,
+                {
+                  backgroundColor: theme.colors.surfaceVariant,
+                },
+              ]}
               multiline
               dense
-              contentStyle={{ paddingTop: 8, paddingBottom: 8 }}
+              contentStyle={{
+                paddingTop: 8,
+                paddingBottom: 8,
+                color: theme.colors.onSurface,
+              }}
               outlineStyle={{ borderRadius: 24, borderWidth: 0 }}
               placeholderTextColor={theme.colors.outline}
               right={
@@ -351,7 +393,7 @@ export default function TicketDetailsScreen() {
               icon="send"
               mode="contained"
               containerColor={theme.colors.primary}
-              iconColor="#fff"
+              iconColor={theme.colors.onPrimary}
               size={24}
               onPress={handleSendReply}
               loading={isSending}
@@ -360,7 +402,15 @@ export default function TicketDetailsScreen() {
             />
           </View>
         ) : (
-          <View style={styles.closedFooter}>
+          <View
+            style={[
+              styles.closedFooter,
+              {
+                backgroundColor: theme.colors.surfaceVariant,
+                borderTopColor: theme.colors.outlineVariant,
+              },
+            ]}
+          >
             <MaterialCommunityIcons
               name="check-circle-outline"
               size={20}
@@ -404,9 +454,9 @@ const styles = StyleSheet.create({
   },
   header: {
     padding: 16,
-    backgroundColor: "#fff",
+    // backgroundColor: "#fff", // Handled inline
     borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
+    // borderBottomColor: "#f0f0f0", // Handled inline
   },
   headerRow: {
     flexDirection: "row",
@@ -427,7 +477,7 @@ const styles = StyleSheet.create({
   },
   originalReq: {
     padding: 12,
-    backgroundColor: "#f5f5f5",
+    // backgroundColor: "#f5f5f5", // Handled inline
     borderRadius: 12,
     maxWidth: "90%",
   },
@@ -468,13 +518,13 @@ const styles = StyleSheet.create({
     padding: 12,
     paddingHorizontal: 16,
     borderTopWidth: 1,
-    borderTopColor: "#f0f0f0",
-    backgroundColor: "#fff",
+    // borderTopColor: "#f0f0f0", // Handled inline
+    // backgroundColor: "#fff", // Handled inline
     gap: 8,
   },
   input: {
     flex: 1,
-    backgroundColor: "#f5f5f5",
+    // backgroundColor: "#f5f5f5", // Handled inline
     maxHeight: 100,
     borderRadius: 24,
   },
@@ -486,8 +536,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#f9f9f9",
+    // backgroundColor: "#f9f9f9", // Handled inline
     borderTopWidth: 1,
-    borderTopColor: "#eee",
+    // borderTopColor: "#eee", // Handled inline
   },
 });

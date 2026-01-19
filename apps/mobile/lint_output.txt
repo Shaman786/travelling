@@ -1,32 +1,21 @@
-npm warn Unknown project config "node-linker". This will stop working in the next major version of npm.
 
-> host-palace@1.2.4 lint
+> host-palace@1.2.5 lint
 > expo lint
 
 env: load .env
 env: export EXPO_PUBLIC_APPWRITE_PROJECT_ID EXPO_PUBLIC_APPWRITE_ENDPOINT EXPO_PUBLIC_APPWRITE_PLATFORM EXPO_PUBLIC_APPWRITE_DATABASE_ID EXPO_PUBLIC_API_URL APPWRITE_API_KEY resend_api_key RNMAPBOX_MAPS_DOWNLOAD_TOKEN EXPO_PUBLIC_MAPBOX_PUBLIC_KEY
 
 C:\Users\fayaj\code\git\travelling\apps\mobile\app\(auth)\login.tsx
-  26:28  warning  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+  19:30  error  Parse errors in imported module '../../src/components/ui/GlassSurface': Unterminated template literal. (77:0)  import/namespace
 
-C:\Users\fayaj\code\git\travelling\apps\mobile\app\(tabs)\index.tsx
-  153:12  error  Component definition is missing display name  react/display-name
+C:\Users\fayaj\code\git\travelling\apps\mobile\app\(auth)\signup.tsx
+  17:30  error  Parse errors in imported module '../../src/components/ui/GlassSurface': Unterminated template literal. (77:0)  import/namespace
 
 C:\Users\fayaj\code\git\travelling\apps\mobile\app\(tabs)\profile.tsx
-  45:11  warning  'navigationMode' is assigned a value but never used  @typescript-eslint/no-unused-vars
-
-C:\Users\fayaj\code\git\travelling\apps\mobile\src\components\WhatsAppButton.tsx
-  8:9  warning  'theme' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  21:30  error  Parse errors in imported module '../../src/components/ui/GlassSurface': Unterminated template literal. (77:0)  import/namespace
 
 C:\Users\fayaj\code\git\travelling\apps\mobile\src\i18n\index.ts
   27:1  warning  Caution: `i18next` also has a named export `use`. Check if you meant to write `import {use} from 'i18next'` instead  import/no-named-as-default-member
 
-Γ£û 5 problems (1 error, 4 warnings)
+Γ£û 4 problems (3 errors, 1 warning)
 
-npm error Lifecycle script `lint` failed with error:
-npm error code 1
-npm error path C:\Users\fayaj\code\git\travelling\apps\mobile
-npm error workspace host-palace@1.2.4
-npm error location C:\Users\fayaj\code\git\travelling\apps\mobile
-npm error command failed
-npm error command C:\WINDOWS\system32\cmd.exe /d /s /c expo lint

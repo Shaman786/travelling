@@ -14,8 +14,10 @@ import PackageCard from "../../src/components/PackageCard";
 import { PackageCardSkeleton } from "../../src/components/Skeleton";
 import databaseService from "../../src/lib/databaseService";
 import { useStore } from "../../src/store/useStore";
-import { colors, spacing } from "../../src/theme";
+import { spacing } from "../../src/theme";
 import type { TravelPackage } from "../../src/types";
+
+// Note: Ensure PackageCard is also theme-aware (it was refactored previously)
 
 export default function SavedScreen() {
   const theme = useTheme();
@@ -59,13 +61,19 @@ export default function SavedScreen() {
         <MaterialCommunityIcons
           name="heart-outline"
           size={80}
-          color={colors.accent}
+          color={theme.colors.primary}
         />
       </View>
-      <Text variant="headlineSmall" style={styles.emptyTitle}>
+      <Text
+        variant="headlineSmall"
+        style={[styles.emptyTitle, { color: theme.colors.onBackground }]}
+      >
         No saved trips yet
       </Text>
-      <Text variant="bodyMedium" style={styles.emptySubtitle}>
+      <Text
+        variant="bodyMedium"
+        style={[styles.emptySubtitle, { color: theme.colors.onSurfaceVariant }]}
+      >
         Start exploring and save trips you love!
       </Text>
     </MotiView>
@@ -78,7 +86,10 @@ export default function SavedScreen() {
     >
       {/* Header */}
       <View style={styles.header}>
-        <Text variant="headlineMedium" style={styles.headerTitle}>
+        <Text
+          variant="headlineMedium"
+          style={[styles.headerTitle, { color: theme.colors.onBackground }]}
+        >
           Saved Trips
         </Text>
         <Text variant="bodyMedium" style={{ color: theme.colors.outline }}>
@@ -124,7 +135,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontWeight: "bold",
-    color: colors.textPrimary,
+    // color: colors.textPrimary, // Handled dynamically
   },
   loadingContainer: {
     paddingHorizontal: spacing.lg,
@@ -146,19 +157,16 @@ const styles = StyleSheet.create({
     width: 140,
     height: 140,
     borderRadius: 70,
-    backgroundColor: `${colors.accent}15`,
-    justifyContent: "center",
+    // backgroundColor: `${colors.primary}15`, // Injected dynamically
     alignItems: "center",
     marginBottom: spacing.lg,
   },
   emptyTitle: {
     fontWeight: "bold",
-    color: colors.textPrimary,
     textAlign: "center",
     marginBottom: spacing.sm,
   },
   emptySubtitle: {
-    color: colors.textSecondary,
     textAlign: "center",
   },
 });

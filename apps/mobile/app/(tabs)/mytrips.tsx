@@ -313,7 +313,11 @@ export default function MyTripsScreen() {
           <View
             style={[
               styles.compactCard,
-              { borderLeftColor: statusColor, borderLeftWidth: 4 },
+              {
+                borderLeftColor: statusColor,
+                borderLeftWidth: 4,
+                backgroundColor: theme.colors.surface,
+              },
             ]}
           >
             <View style={{ flex: 1 }}>
@@ -393,7 +397,10 @@ export default function MyTripsScreen() {
         onPress={() => handleViewDetails(trip.id)}
         style={({ pressed }) => [{ opacity: pressed ? 0.95 : 1 }]}
       >
-        <Card style={styles.card} mode="elevated">
+        <Card
+          style={[styles.card, { backgroundColor: theme.colors.surface }]}
+          mode="elevated"
+        >
           {/* Header Image Background Style */}
           <View style={{ position: "relative" }}>
             {trip.packageImageUrl && (
@@ -543,7 +550,15 @@ export default function MyTripsScreen() {
       style={[styles.container, { backgroundColor: theme.colors.background }]}
       edges={["top", "left", "right"]} // Bottom handled manually by useNavBarHeight
     >
-      <View style={styles.header}>
+      <View
+        style={[
+          styles.header,
+          {
+            backgroundColor: theme.colors.surface,
+            borderBottomColor: theme.colors.outlineVariant,
+          },
+        ]}
+      >
         <View
           style={{
             flexDirection: "row",
@@ -651,9 +666,9 @@ const styles = StyleSheet.create({
   header: {
     paddingHorizontal: 20,
     paddingVertical: 16,
-    backgroundColor: "#fff",
+    // backgroundColor: "#fff",
     borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
+    // borderBottomColor: "#f0f0f0",
     ...shadows.sm,
   },
   title: {
@@ -666,7 +681,7 @@ const styles = StyleSheet.create({
   },
   card: {
     marginBottom: 16,
-    backgroundColor: "#fff",
+    // backgroundColor: "#fff",
     borderRadius: borderRadius.md,
     overflow: "hidden",
     ...shadows.md,
@@ -714,7 +729,7 @@ const styles = StyleSheet.create({
   },
   // New Styles for Refactored Cards
   compactCard: {
-    backgroundColor: "#fff",
+    // backgroundColor: "#fff",
     borderRadius: borderRadius.sm,
     padding: 12,
     marginBottom: 12,

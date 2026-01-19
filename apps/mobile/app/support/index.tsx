@@ -21,14 +21,6 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useSupport } from "../../src/hooks/useSupport";
 import type { SupportTicket } from "../../src/types";
 
-// Status Colors
-const STATUS_COLORS = {
-  open: "#2196F3",
-  in_progress: "#FF9800",
-  resolved: "#4CAF50",
-  closed: "#9E9E9E",
-};
-
 export default function SupportScreen() {
   const theme = useTheme();
   const router = useRouter();
@@ -37,15 +29,30 @@ export default function SupportScreen() {
   useFocusEffect(
     useCallback(() => {
       fetchTickets();
-    }, [fetchTickets])
+    }, [fetchTickets]),
   );
 
   const renderTicket = ({ item }: { item: SupportTicket }) => {
-    const statusColor = STATUS_COLORS[item.status] || theme.colors.primary;
+    const getStatusColor = (status: string) => {
+      switch (status) {
+        case "open":
+          return theme.colors.primary;
+        case "in_progress":
+          return theme.colors.secondary;
+        case "resolved":
+          return theme.colors.tertiary;
+        case "closed":
+          return theme.colors.outline;
+        default:
+          return theme.colors.primary;
+      }
+    };
+
+    const statusColor = getStatusColor(item.status);
 
     return (
       <Card
-        style={styles.card}
+        style={[styles.card, { backgroundColor: theme.colors.surface }]}
         mode="elevated"
         onPress={() => router.push(`/support/${item.$id}` as any)}
       >
@@ -54,7 +61,7 @@ export default function SupportScreen() {
             <View style={styles.headerLeft}>
               <Text
                 variant="titleMedium"
-                style={styles.subject}
+                style={[styles.subject, { color: theme.colors.onSurface }]}
                 numberOfLines={1}
               >
                 {item.subject}
@@ -76,20 +83,29 @@ export default function SupportScreen() {
             </Chip>
           </View>
 
-          <Text variant="bodyMedium" numberOfLines={2} style={styles.message}>
+          <Text
+            variant="bodyMedium"
+            numberOfLines={2}
+            style={[styles.message, { color: theme.colors.onSurfaceVariant }]}
+          >
             {item.message}
           </Text>
 
           <View style={styles.cardFooter}>
-            <View style={styles.priorityBadge}>
+            <View
+              style={[
+                styles.priorityBadge,
+                { backgroundColor: theme.colors.surfaceVariant },
+              ]}
+            >
               <MaterialCommunityIcons
                 name="flag"
                 size={14}
-                color={theme.colors.outline}
+                color={theme.colors.onSurfaceVariant}
               />
               <Text
                 variant="labelSmall"
-                style={{ color: theme.colors.outline, marginLeft: 4 }}
+                style={{ color: theme.colors.onSurfaceVariant, marginLeft: 4 }}
               >
                 {item.priority.charAt(0).toUpperCase() + item.priority.slice(1)}{" "}
                 Priority
@@ -181,7 +197,7 @@ const styles = StyleSheet.create({
   },
   card: {
     marginBottom: 12,
-    backgroundColor: "#fff",
+    // backgroundColor: "#fff",
     borderRadius: 12,
   },
   cardHeader: {
@@ -199,7 +215,7 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   message: {
-    color: "#666",
+    // color: "#666",
     marginBottom: 12,
   },
   cardFooter: {
@@ -210,7 +226,7 @@ const styles = StyleSheet.create({
   priorityBadge: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#f5f5f5",
+    // backgroundColor: "#f5f5f5",
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 4,

@@ -6,45 +6,89 @@
 
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
-import { Platform, StyleSheet, View } from "react-native";
-import { useNavigationMode } from "react-native-navigation-mode";
+import { MotiView } from "moti";
+import React from "react";
+import { Platform } from "react-native";
 import { useTheme } from "react-native-paper";
-import { colors, shadows } from "../../src/theme";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+
+// Micro-component for Animated Tab Icon
+const TabIcon = ({
+  focused,
+  name,
+  color,
+}: {
+  focused: boolean;
+  name: any;
+  color: string;
+}) => {
+  return (
+    <MotiView
+      animate={{
+        scale: focused ? 1.2 : 1,
+        translateY: focused ? -2 : 0,
+      }}
+      transition={{
+        type: "spring",
+        stiffness: 300,
+        damping: 15,
+      }}
+      style={{
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      <MaterialCommunityIcons name={name} size={26} color={color} />
+      {focused && (
+        <MotiView
+          from={{ opacity: 0, scale: 0 }}
+          animate={{ opacity: 1, scale: 1 }}
+          style={{
+            position: "absolute",
+            bottom: -8,
+            width: 4,
+            height: 4,
+            borderRadius: 2,
+            backgroundColor: color,
+          }}
+        />
+      )}
+    </MotiView>
+  );
+};
 
 export default function TabsLayout() {
+  const insets = useSafeAreaInsets();
   const theme = useTheme();
-  const { navigationMode } = useNavigationMode();
-
-  // Only add extra padding for 3-button navigation on Android 15+ (edge-to-edge)
-  const is3ButtonNav = navigationMode?.type === "3_button";
-  const isAndroid15 = Platform.OS === "android" && Platform.Version >= 35;
-  const navBarPadding =
-    is3ButtonNav && isAndroid15
-      ? (navigationMode?.navigationBarHeight ?? 0)
-      : 0;
 
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: colors.accent,
-        tabBarInactiveTintColor: colors.textMuted,
-        tabBarShowLabel: true,
-        tabBarLabelStyle: {
-          fontSize: 11,
-          fontWeight: "600",
-          marginTop: -2,
-        },
+        tabBarActiveTintColor: theme.colors.primary,
+        tabBarInactiveTintColor: theme.colors.onSurfaceVariant,
+        tabBarShowLabel: false,
         tabBarStyle: {
-          backgroundColor: colors.surface,
+          position: "absolute",
+          bottom: Platform.OS === "ios" ? insets.bottom + 10 : 20,
+          left: 20,
+          right: 20,
+          borderRadius: 32,
+          height: 64,
+          backgroundColor: theme.dark
+            ? "rgba(30,30,30,0.8)" // Fallback for android if glass fails or needs bg
+            : "rgba(255,255,255,0.8)",
           borderTopWidth: 0,
-          height: 65 + navBarPadding,
-          paddingTop: 8,
-          paddingBottom: 8 + navBarPadding,
-          ...shadows.md,
+          elevation: 10,
+          shadowColor: "#000",
+          shadowOpacity: 0.15,
+          shadowRadius: 10,
+          shadowOffset: { width: 0, height: 5 },
+          paddingBottom: 0,
         },
         tabBarItemStyle: {
-          paddingVertical: 4,
+          height: 64,
+          padding: 0,
         },
       }}
     >
@@ -53,13 +97,11 @@ export default function TabsLayout() {
         options={{
           title: "Home",
           tabBarIcon: ({ color, focused }) => (
-            <View style={focused ? styles.activeIconWrapper : undefined}>
-              <MaterialCommunityIcons
-                name={focused ? "home" : "home-outline"}
-                size={26}
-                color={color}
-              />
-            </View>
+            <TabIcon
+              focused={focused}
+              name={focused ? "home" : "home-outline"}
+              color={color}
+            />
           ),
         }}
       />
@@ -68,13 +110,11 @@ export default function TabsLayout() {
         options={{
           title: "Chat",
           tabBarIcon: ({ color, focused }) => (
-            <View style={focused ? styles.activeIconWrapper : undefined}>
-              <MaterialCommunityIcons
-                name={focused ? "chat" : "chat-outline"}
-                size={26}
-                color={color}
-              />
-            </View>
+            <TabIcon
+              focused={focused}
+              name={focused ? "chat" : "chat-outline"}
+              color={color}
+            />
           ),
         }}
       />
@@ -83,13 +123,11 @@ export default function TabsLayout() {
         options={{
           title: "Schedule",
           tabBarIcon: ({ color, focused }) => (
-            <View style={focused ? styles.activeIconWrapper : undefined}>
-              <MaterialCommunityIcons
-                name={focused ? "calendar-check" : "calendar-check-outline"}
-                size={26}
-                color={color}
-              />
-            </View>
+            <TabIcon
+              focused={focused}
+              name={focused ? "calendar-check" : "calendar-check-outline"}
+              color={color}
+            />
           ),
         }}
       />
@@ -98,13 +136,11 @@ export default function TabsLayout() {
         options={{
           title: "Saved",
           tabBarIcon: ({ color, focused }) => (
-            <View style={focused ? styles.activeIconWrapper : undefined}>
-              <MaterialCommunityIcons
-                name={focused ? "heart" : "heart-outline"}
-                size={26}
-                color={color}
-              />
-            </View>
+            <TabIcon
+              focused={focused}
+              name={focused ? "heart" : "heart-outline"}
+              color={color}
+            />
           ),
         }}
       />
@@ -113,25 +149,14 @@ export default function TabsLayout() {
         options={{
           title: "Profile",
           tabBarIcon: ({ color, focused }) => (
-            <View style={focused ? styles.activeIconWrapper : undefined}>
-              <MaterialCommunityIcons
-                name={focused ? "account-circle" : "account-circle-outline"}
-                size={26}
-                color={color}
-              />
-            </View>
+            <TabIcon
+              focused={focused}
+              name={focused ? "account-circle" : "account-circle-outline"}
+              color={color}
+            />
           ),
         }}
       />
     </Tabs>
   );
 }
-
-const styles = StyleSheet.create({
-  activeIconWrapper: {
-    backgroundColor: `${colors.accent}15`,
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-  },
-});

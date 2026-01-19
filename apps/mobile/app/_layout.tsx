@@ -1,5 +1,18 @@
+import {
+  Inter_400Regular,
+  Inter_500Medium,
+  Inter_600SemiBold,
+  Inter_700Bold,
+} from "@expo-google-fonts/inter";
+import {
+  Outfit_400Regular,
+  Outfit_500Medium,
+  Outfit_700Bold,
+  useFonts,
+} from "@expo-google-fonts/outfit";
 import * as Notifications from "expo-notifications";
 import { Stack, useSegments } from "expo-router";
+import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import * as SystemUI from "expo-system-ui";
 import { useEffect, useRef } from "react";
@@ -12,7 +25,11 @@ import OfflineNotice from "../src/components/OfflineNotice";
 import WhatsAppButton from "../src/components/WhatsAppButton";
 import { usePushToken } from "../src/hooks/usePushToken";
 import "../src/i18n"; // Init i18n
-import { theme } from "../src/theme";
+import { useStore } from "../src/store/useStore";
+import { darkTheme, lightTheme } from "../src/theme";
+
+// Keep the splash screen visible while we fetch resources
+SplashScreen.preventAutoHideAsync();
 
 // Auth redirects are handled declaratively in app/index.tsx using <Redirect>
 
@@ -31,6 +48,27 @@ export default function RootLayout() {
   const responseListener = useRef<Notifications.Subscription | null>(null);
   const segments = useSegments(); // Get current segments
 
+  // Load Fonts
+  const [fontsLoaded] = useFonts({
+    Outfit_400Regular,
+    Outfit_500Medium,
+    Outfit_700Bold,
+    Inter_400Regular,
+    Inter_500Medium,
+    Inter_600SemiBold,
+    Inter_700Bold,
+  });
+
+  // Get Dark Mode preference
+  const darkMode = useStore((state) => state.preferences.darkMode);
+  const activeTheme = darkMode ? darkTheme : lightTheme;
+
+  useEffect(() => {
+    if (fontsLoaded) {
+      SplashScreen.hideAsync();
+    }
+  }, [fontsLoaded]);
+
   useEffect(() => {
     // Register for push notifications
     // registerForPushNotificationsAsync().then((token) => {
@@ -38,7 +76,7 @@ export default function RootLayout() {
     // });
 
     // Set System UI Background Color (Runtime)
-    SystemUI.setBackgroundColorAsync("#F5F7FA");
+    SystemUI.setBackgroundColorAsync(activeTheme.colors.background);
 
     // This listener is fired whenever a notification is received while the app is foregrounded
     notificationListener.current =
@@ -57,15 +95,19 @@ export default function RootLayout() {
       notificationListener.current?.remove();
       responseListener.current?.remove();
     };
-  }, []);
+  }, [activeTheme, fontsLoaded]); // Re-run when theme changes
+
+  if (!fontsLoaded) {
+    return null;
+  }
 
   const hideWhatsApp = segments[0] === "(auth)";
 
   return (
     <SafeAreaProvider>
       <ErrorBoundary>
-        <StatusBar style="dark" />
-        <PaperProvider theme={theme}>
+        <StatusBar style={darkMode ? "light" : "dark"} />
+        <PaperProvider theme={activeTheme}>
           <OfflineNotice />
           {!hideWhatsApp && <WhatsAppButton />}
           <PushTokenHandler />

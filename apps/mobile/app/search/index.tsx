@@ -99,7 +99,7 @@ export default function SearchScreen() {
       setOpenDate(false);
       setRange({ startDate, endDate });
     },
-    [setOpenDate, setRange]
+    [setOpenDate, setRange],
   );
 
   // Request Location Permissions
@@ -132,7 +132,7 @@ export default function SearchScreen() {
         // ... filtering logic ...
         if (filters.category && filters.category !== "all") {
           data = data.filter(
-            (p) => p.category.toLowerCase() === filters.category!.toLowerCase()
+            (p) => p.category.toLowerCase() === filters.category!.toLowerCase(),
           );
         }
         if (filters.minPrice) {
@@ -147,13 +147,13 @@ export default function SearchScreen() {
       } else {
         // 3. No query? Just use standard browse with filters
         const hasFilters = Object.keys(filters).some(
-          (k) => filters[k as keyof PackageFilters] !== undefined
+          (k) => filters[k as keyof PackageFilters] !== undefined,
         );
 
         if (hasFilters) {
           const response = await databaseService.packages.getPackages(
             filters,
-            50
+            50,
           );
           data = response.documents;
         } else {
@@ -179,7 +179,7 @@ export default function SearchScreen() {
   }, [performSearch, debouncedQuery, filters]);
 
   const activeFilterCount = Object.keys(filters).filter(
-    (k) => filters[k as keyof PackageFilters] !== undefined
+    (k) => filters[k as keyof PackageFilters] !== undefined,
   ).length;
 
   return (
@@ -187,13 +187,21 @@ export default function SearchScreen() {
       style={[styles.container, { backgroundColor: theme.colors.background }]}
     >
       {/* Header with Search Bar */}
-      <View style={styles.header}>
-        <IconButton icon="arrow-left" onPress={() => router.back()} />
+      <View style={[styles.header, { backgroundColor: theme.colors.surface }]}>
+        <IconButton
+          icon="arrow-left"
+          onPress={() => router.back()}
+          iconColor={theme.colors.onSurface}
+        />
         <Searchbar
           placeholder="Where to next?"
           onChangeText={setQuery}
           value={query}
-          style={styles.searchBar}
+          style={[
+            styles.searchBar,
+            { backgroundColor: theme.colors.surfaceVariant },
+          ]}
+          inputStyle={{ color: theme.colors.onSurfaceVariant }}
           elevation={0}
           autoFocus={true}
           loading={isLoading}
@@ -208,6 +216,7 @@ export default function SearchScreen() {
             <IconButton
               icon="filter-variant"
               onPress={() => setShowFilters(true)}
+              iconColor={theme.colors.onSurface}
             />
             {activeFilterCount > 0 && (
               <Badge style={styles.badge}>{activeFilterCount}</Badge>
@@ -223,9 +232,9 @@ export default function SearchScreen() {
           paddingHorizontal: 16,
           paddingBottom: 12,
           gap: 8,
-          backgroundColor: "#fff",
+          backgroundColor: theme.colors.surface,
           borderBottomWidth: 1,
-          borderBottomColor: "#f0f0f0",
+          borderBottomColor: theme.colors.outlineVariant,
         }}
       >
         <Button
@@ -290,7 +299,7 @@ export default function SearchScreen() {
                   coordinate={[validLng, validLat]}
                   onSelected={() =>
                     router.push(
-                      `/package/${pkg.$id}` as `/package/${string}` as any
+                      `/package/${pkg.$id}` as `/package/${string}` as any,
                     )
                   }
                 >
@@ -484,12 +493,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: 8,
     paddingRight: 8,
-    backgroundColor: "#fff",
+    // backgroundColor: "#fff",
     ...shadows.sm,
   },
   searchBar: {
     flex: 1,
-    backgroundColor: "#F0F5FF",
+    // backgroundColor: "#F0F5FF",
     height: 48,
   },
   badge: {

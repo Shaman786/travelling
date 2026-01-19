@@ -62,7 +62,10 @@ export default function CreateTicketScreen() {
         </Text>
 
         <View style={styles.formGroup}>
-          <Text variant="labelMedium" style={styles.label}>
+          <Text
+            variant="labelMedium"
+            style={[styles.label, { color: theme.colors.onSurfaceVariant }]}
+          >
             Category
           </Text>
           <SegmentedButtons
@@ -97,7 +100,10 @@ export default function CreateTicketScreen() {
         />
 
         <View style={styles.formGroup}>
-          <Text variant="labelMedium" style={styles.label}>
+          <Text
+            variant="labelMedium"
+            style={[styles.label, { color: theme.colors.onSurfaceVariant }]}
+          >
             Priority
           </Text>
           <RadioButton.Group
@@ -107,15 +113,15 @@ export default function CreateTicketScreen() {
             <View style={styles.radioRow}>
               <View style={styles.radioItem}>
                 <RadioButton value="low" />
-                <Text>Low</Text>
+                <Text style={{ color: theme.colors.onSurface }}>Low</Text>
               </View>
               <View style={styles.radioItem}>
                 <RadioButton value="medium" />
-                <Text>Medium</Text>
+                <Text style={{ color: theme.colors.onSurface }}>Medium</Text>
               </View>
               <View style={styles.radioItem}>
                 <RadioButton value="high" />
-                <Text>High</Text>
+                <Text style={{ color: theme.colors.onSurface }}>High</Text>
               </View>
             </View>
           </RadioButton.Group>
@@ -152,7 +158,7 @@ const styles = StyleSheet.create({
   },
   label: {
     marginBottom: 8,
-    color: "#666",
+    // color: "#666", // Handled inline
   },
   input: {
     marginBottom: 16,
