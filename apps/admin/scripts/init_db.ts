@@ -599,6 +599,45 @@ const COLLECTIONS: any = {
       { key: "sort_idx", type: "key", attributes: ["sortOrder"] },
     ],
   },
+  services: {
+    name: "Services",
+    documentSecurity: false,
+    permissions: [
+      Permission.read(Role.any()),
+      Permission.write(Role.team(TEAM_NAME)),
+    ],
+    attributes: [
+      { key: "label", type: "string", size: 64, required: true },
+      { key: "icon", type: "string", size: 64, required: true },
+      { key: "gradientStart", type: "string", size: 7, required: true },
+      { key: "gradientEnd", type: "string", size: 7, required: true },
+      { key: "route", type: "string", size: 128, required: true },
+      { key: "sortOrder", type: "integer", required: false, default: 0 },
+      { key: "isActive", type: "boolean", required: false, default: true },
+    ],
+    indexes: [
+      { key: "sort_idx", type: "key", attributes: ["sortOrder"] },
+    ],
+  },
+  features: {
+    name: "Features",
+    documentSecurity: false,
+    permissions: [
+      Permission.read(Role.any()),
+      Permission.write(Role.team(TEAM_NAME)),
+    ],
+    attributes: [
+      { key: "title", type: "string", size: 64, required: true },
+      { key: "subtitle", type: "string", size: 128, required: true },
+      { key: "icon", type: "string", size: 64, required: true },
+      { key: "color", type: "string", size: 7, required: true },
+      { key: "sortOrder", type: "integer", required: false, default: 0 },
+      { key: "isActive", type: "boolean", required: false, default: true },
+    ],
+    indexes: [
+      { key: "sort_idx", type: "key", attributes: ["sortOrder"] },
+    ],
+  },
 };
 
 const BUCKETS = [
@@ -1072,22 +1111,71 @@ async function seedContent() {
     console.error("   ⚠️ Error seeding FAQs:", e.message);
   }
 
-  // 5. System Config - WhatsApp Number
+  // 5. System Config - WhatsApp Number + Hero Text
   try {
-    const configs = await databases.listDocuments(DATABASE_ID, "system_config", [Query.equal("key", "whatsapp_phone")]);
-    if (configs.total === 0) {
-      console.log("   Seeding System Config (WhatsApp)...");
-      await databases.createDocument(DATABASE_ID, "system_config", ID.unique(), {
-        key: "whatsapp_phone",
-        value: "1234567890",
-        description: "WhatsApp contact number for support button",
-      });
-      console.log("   ✅ System Config seeded.");
-    } else {
-      console.log("   ✅ System Config already exists.");
+    const configsToSeed = [
+      { key: "whatsapp_phone", value: "1234567890", description: "WhatsApp contact number" },
+      { key: "hero_greeting", value: "Good Morning", description: "Hero section greeting" },
+      { key: "hero_title", value: "Discover your next dream destination", description: "Hero section main title" },
+      { key: "search_placeholder", value: "Search flights, hotels...", description: "Search bar placeholder" },
+    ];
+    for (const cfg of configsToSeed) {
+      const existing = await databases.listDocuments(DATABASE_ID, "system_config", [Query.equal("key", cfg.key)]);
+      if (existing.total === 0) {
+        await databases.createDocument(DATABASE_ID, "system_config", ID.unique(), cfg);
+        console.log(`   ✅ Config '${cfg.key}' seeded.`);
+      }
     }
   } catch (e: any) {
     console.error("   ⚠️ Error seeding system config:", e.message);
+  }
+
+  // 6. Services (Consulting Grid)
+  try {
+    const s = await databases.listDocuments(DATABASE_ID, "services");
+    if (s.total === 0) {
+      console.log("   Seeding Services...");
+      const services = [
+        { label: "Plan Trip", icon: "airplane", gradientStart: "#0047AB", gradientEnd: "#4180DB", route: "/consult/plan-trip", sortOrder: 1, isActive: true },
+        { label: "Expert", icon: "headset", gradientStart: "#002F75", gradientEnd: "#0047AB", route: "/consult/expert", sortOrder: 2, isActive: true },
+        { label: "Visa", icon: "file-document-outline", gradientStart: "#FF6B00", gradientEnd: "#FF9E4D", route: "/consult/visa", sortOrder: 3, isActive: true },
+        { label: "Stays", icon: "bed", gradientStart: "#101820", gradientEnd: "#4B5563", route: "/consult/stays", sortOrder: 4, isActive: true },
+        { label: "Flights", icon: "airplane-takeoff", gradientStart: "#0047AB", gradientEnd: "#4180DB", route: "/consult/flights", sortOrder: 5, isActive: true },
+        { label: "Groups", icon: "account-group", gradientStart: "#002F75", gradientEnd: "#0047AB", route: "/consult/group", sortOrder: 6, isActive: true },
+        { label: "Insurance", icon: "shield-check", gradientStart: "#FF6B00", gradientEnd: "#FF9E4D", route: "/consult/insurance", sortOrder: 7, isActive: true },
+        { label: "More", icon: "dots-horizontal", gradientStart: "#101820", gradientEnd: "#4B5563", route: "/consult/more", sortOrder: 8, isActive: true },
+      ];
+      for (const svc of services) {
+        await databases.createDocument(DATABASE_ID, "services", ID.unique(), svc);
+      }
+      console.log("   ✅ Services seeded.");
+    } else {
+      console.log("   ✅ Services already exist.");
+    }
+  } catch (e: any) {
+    console.error("   ⚠️ Error seeding services:", e.message);
+  }
+
+  // 7. Features (Why Book With Us)
+  try {
+    const ft = await databases.listDocuments(DATABASE_ID, "features");
+    if (ft.total === 0) {
+      console.log("   Seeding Features...");
+      const features = [
+        { title: "Verified Experts", subtitle: "Certified travel consultants", icon: "check-decagram", color: "#4CAF50", sortOrder: 1, isActive: true },
+        { title: "24/7 Support", subtitle: "Always here for you", icon: "face-agent", color: "#2196F3", sortOrder: 2, isActive: true },
+        { title: "Best Price", subtitle: "Guaranteed deals", icon: "tag-heart", color: "#009688", sortOrder: 3, isActive: true },
+        { title: "Secure Booking", subtitle: "100% safe payments", icon: "lock-outline", color: "#FF9800", sortOrder: 4, isActive: true },
+      ];
+      for (const ft of features) {
+        await databases.createDocument(DATABASE_ID, "features", ID.unique(), ft);
+      }
+      console.log("   ✅ Features seeded.");
+    } else {
+      console.log("   ✅ Features already exist.");
+    }
+  } catch (e: any) {
+    console.error("   ⚠️ Error seeding features:", e.message);
   }
 }
 

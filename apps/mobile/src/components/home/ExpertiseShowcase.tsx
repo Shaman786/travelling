@@ -1,41 +1,39 @@
-import React from "react";
+/**
+ * ExpertiseShowcase Component
+ *
+ * "Why Book With Us" horizontal cards.
+ * Fetches features dynamically from the backend.
+ */
+
+import React, { useEffect, useState } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { Avatar, Card, Text, useTheme } from "react-native-paper";
+import databaseService from "../../lib/databaseService";
 import { borderRadius, shadows } from "../../theme";
 
-const SHOWCASE_ITEMS = [
-  {
-    id: "1",
-    title: "Verified Experts",
-    subtitle: "Certified travel consultants",
-    icon: "check-decagram",
-    color: "#4CAF50",
-  },
-  {
-    id: "2",
-    title: "24/7 Support",
-    subtitle: "Always here for you",
-    icon: "face-agent",
-    color: "#2196F3",
-  },
-  {
-    id: "3",
-    title: "Best Price",
-    subtitle: "Guaranteed deals",
-    icon: "tag-heart",
-    color: "#009688", // Teal - Safe color
-  },
-  {
-    id: "4",
-    title: "Secure Booking",
-    subtitle: "100% safe payments",
-    icon: "lock-outline",
-    color: "#FF9800",
-  },
-];
+interface FeatureItem {
+  $id: string;
+  title: string;
+  subtitle: string;
+  icon: string;
+  color: string;
+}
 
 export default function ExpertiseShowcase() {
   const theme = useTheme();
+  const [features, setFeatures] = useState<FeatureItem[]>([]);
+
+  useEffect(() => {
+    const loadFeatures = async () => {
+      const data = await databaseService.content.getFeatures();
+      setFeatures(data);
+    };
+    loadFeatures();
+  }, []);
+
+  if (features.length === 0) {
+    return null;
+  }
 
   return (
     <View style={styles.container}>
@@ -52,9 +50,9 @@ export default function ExpertiseShowcase() {
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
-        {SHOWCASE_ITEMS.map((item) => (
+        {features.map((item) => (
           <Card
-            key={item.id}
+            key={item.$id}
             style={[
               styles.card,
               {
@@ -122,7 +120,7 @@ const styles = StyleSheet.create({
     paddingRight: 8,
   },
   card: {
-    width: 210, // Slightly wider to prevent cutting
+    width: 210,
     marginRight: 12,
   },
   cardContent: {

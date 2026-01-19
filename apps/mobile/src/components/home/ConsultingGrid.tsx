@@ -1,79 +1,34 @@
+/**
+ * ConsultingGrid Component
+ *
+ * Horizontal scrolling grid of consulting/service options.
+ * Fetches services dynamically from the backend.
+ */
+
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { MotiPressable } from "moti/interactions";
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { Text, useTheme } from "react-native-paper";
+import databaseService from "../../lib/databaseService";
 import { shadows } from "../../theme";
 
-// Grid items with vector icons
-const GRID_ITEMS = [
-  {
-    id: "plan",
-    label: "Plan Trip",
-    icon: "airplane",
-    gradient: ["#0047AB", "#4180DB"], // Blue Theme
-    route: "/consult/plan-trip",
-  },
-  {
-    id: "expert",
-    label: "Expert",
-    icon: "headset",
-    gradient: ["#002F75", "#0047AB"], // Darker Blue
-    route: "/consult/expert",
-  },
-  {
-    id: "visa",
-    label: "Visa",
-    icon: "file-document-outline",
-    gradient: ["#FF6B00", "#FF9E4D"], // Orange Accent
-    route: "/consult/visa",
-  },
-  {
-    id: "stays",
-    label: "Stays",
-    icon: "bed",
-    gradient: ["#101820", "#4B5563"], // Black/Grey
-    route: "/consult/stays",
-  },
-  {
-    id: "flights",
-    label: "Flights",
-    icon: "airplane-takeoff",
-    gradient: ["#0047AB", "#4180DB"], // Blue Theme
-    route: "/consult/flights",
-  },
-  {
-    id: "group",
-    label: "Groups",
-    icon: "account-group",
-    gradient: ["#002F75", "#0047AB"], // Darker Blue
-    route: "/consult/group",
-  },
-  {
-    id: "insurance",
-    label: "Insurance",
-    icon: "shield-check",
-    gradient: ["#FF6B00", "#FF9E4D"], // Orange Accent
-    route: "/consult/insurance",
-  },
-  {
-    id: "more",
-    label: "More",
-    icon: "dots-horizontal",
-    gradient: ["#101820", "#4B5563"], // Black/Grey
-    route: "/consult/more",
-  },
-];
+interface ServiceItem {
+  $id: string;
+  label: string;
+  icon: string;
+  gradient: [string, string];
+  route: string;
+}
 
-// Grid item component with Moti animations
 function GridItem({
   item,
   onPress,
   labelColor,
 }: {
-  item: (typeof GRID_ITEMS)[0];
+  item: ServiceItem;
   onPress: () => void;
   labelColor: string;
 }) {
@@ -102,7 +57,7 @@ function GridItem({
     >
       <View style={styles.shadowContainer}>
         <LinearGradient
-          colors={item.gradient as [string, string]}
+          colors={item.gradient}
           style={styles.iconContainer}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
@@ -128,6 +83,19 @@ function GridItem({
 export default function ConsultingGrid() {
   const router = useRouter();
   const theme = useTheme();
+  const [services, setServices] = useState<ServiceItem[]>([]);
+
+  useEffect(() => {
+    const loadServices = async () => {
+      const data = await databaseService.content.getServices();
+      setServices(data);
+    };
+    loadServices();
+  }, []);
+
+  if (services.length === 0) {
+    return null;
+  }
 
   return (
     <View>
@@ -136,9 +104,9 @@ export default function ConsultingGrid() {
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.container}
       >
-        {GRID_ITEMS.map((item) => (
+        {services.map((item) => (
           <GridItem
-            key={item.id}
+            key={item.$id}
             item={item}
             onPress={() => router.push(item.route as any)}
             labelColor={theme.colors.onSurface}
@@ -167,7 +135,7 @@ const styles = StyleSheet.create({
   iconContainer: {
     width: 60,
     height: 60,
-    borderRadius: 30, // Perfectly round
+    borderRadius: 30,
     justifyContent: "center",
     alignItems: "center",
   },

@@ -1,16 +1,17 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { Text, useTheme } from "react-native-paper";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import databaseService from "../../lib/databaseService";
 import { GlassSurface } from "../ui/GlassySurface";
 
 interface HeroSectionProps {
   userName: string;
   onNotificationPress: () => void;
-  onSettingsPress?: () => void; // New prop
+  onSettingsPress?: () => void;
   unreadCount?: number;
 }
 
@@ -23,15 +24,34 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
   const theme = useTheme();
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const [heroConfig, setHeroConfig] = useState({
+    greeting: "Good Morning",
+    title: "Discover your next\ndream destination",
+    searchPlaceholder: "Search flights, hotels...",
+  });
 
-  // Dynamic gradient colors based on theme
+  useEffect(() => {
+    const loadConfig = async () => {
+      const [greeting, title, searchPlaceholder] = await Promise.all([
+        databaseService.content.getConfigValue("hero_greeting"),
+        databaseService.content.getConfigValue("hero_title"),
+        databaseService.content.getConfigValue("search_placeholder"),
+      ]);
+      setHeroConfig({
+        greeting: greeting || "Good Morning",
+        title: title || "Discover your next\ndream destination",
+        searchPlaceholder: searchPlaceholder || "Search flights, hotels...",
+      });
+    };
+    loadConfig();
+  }, []);
+
   const gradientColors = theme.dark
-    ? ["#1A237E", "#000000"] // Dark Blue to Black
-    : ["#2196F3", "#E3F2FD"]; // Blue to Light Blue
+    ? ["#1A237E", "#000000"]
+    : ["#2196F3", "#E3F2FD"];
 
   return (
     <View style={styles.container}>
-      {/* Background Gradient */}
       <LinearGradient
         colors={gradientColors as any}
         start={{ x: 0, y: 0 }}
@@ -40,13 +60,12 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
           styles.gradient,
           {
             paddingTop: insets.top,
-            height: 280 + insets.top, // Taller hero for impact
+            height: 280 + insets.top,
           },
         ]}
       />
 
       <View style={[styles.content, { paddingTop: insets.top + 16 }]}>
-        {/* Header Row */}
         <View style={styles.headerRow}>
           <View>
             <Text
@@ -56,12 +75,12 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 opacity: 0.9,
               }}
             >
-              Good Morning,
+              {heroConfig.greeting},
             </Text>
             <Text
               variant="headlineMedium"
               style={{
-                color: theme.dark ? "#FFFFFF" : "#FFFFFF",
+                color: "#FFFFFF",
                 fontWeight: "bold",
               }}
             >
@@ -106,7 +125,6 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
           </View>
         </View>
 
-        {/* Hero Message */}
         <Text
           variant="headlineSmall"
           style={{
@@ -118,10 +136,9 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             paddingRight: 40,
           }}
         >
-          Discover your next{"\n"}dream destination
+          {heroConfig.title}
         </Text>
 
-        {/* Search Bar Entry */}
         <Pressable onPress={() => router.push("/search")}>
           <GlassSurface intensity={30} style={styles.searchBar}>
             <MaterialCommunityIcons
@@ -137,7 +154,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 flex: 1,
               }}
             >
-              Search flights, hotels...
+              {heroConfig.searchPlaceholder}
             </Text>
             <View
               style={[
@@ -161,7 +178,6 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 const styles = StyleSheet.create({
   container: {
     marginBottom: 24,
-    // Negative margin to pull list up if needed, or just let it flow
   },
   gradient: {
     position: "absolute",

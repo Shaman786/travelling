@@ -1721,6 +1721,76 @@ export const contentService = {
       return null;
     }
   },
+
+  /**
+   * Get all active services (Consulting Grid), sorted by sortOrder
+   */
+  async getServices(): Promise<
+    {
+      $id: string;
+      label: string;
+      icon: string;
+      gradient: [string, string];
+      route: string;
+    }[]
+  > {
+    try {
+      const response = await tables.listRows({
+        databaseId: DATABASE_ID,
+        tableId: "services",
+        queries: [
+          Query.equal("isActive", true),
+          Query.orderAsc("sortOrder"),
+          Query.limit(15),
+        ],
+      });
+      return response.rows.map((r: any) => ({
+        $id: r.$id,
+        label: r.label,
+        icon: r.icon,
+        gradient: [r.gradientStart, r.gradientEnd] as [string, string],
+        route: r.route,
+      }));
+    } catch (error) {
+      console.error("Get services error:", error);
+      return [];
+    }
+  },
+
+  /**
+   * Get all active features (Why Book With Us), sorted by sortOrder
+   */
+  async getFeatures(): Promise<
+    {
+      $id: string;
+      title: string;
+      subtitle: string;
+      icon: string;
+      color: string;
+    }[]
+  > {
+    try {
+      const response = await tables.listRows({
+        databaseId: DATABASE_ID,
+        tableId: "features",
+        queries: [
+          Query.equal("isActive", true),
+          Query.orderAsc("sortOrder"),
+          Query.limit(10),
+        ],
+      });
+      return response.rows.map((r: any) => ({
+        $id: r.$id,
+        title: r.title,
+        subtitle: r.subtitle,
+        icon: r.icon,
+        color: r.color,
+      }));
+    } catch (error) {
+      console.error("Get features error:", error);
+      return [];
+    }
+  },
 };
 
 export default {

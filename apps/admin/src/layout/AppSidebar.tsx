@@ -74,6 +74,18 @@ const navItems: NavItem[] = [
     path: "/notifications",
   },
   {
+    icon: <HorizontaLDots />,
+    name: "Content",
+    subItems: [
+      { name: "Categories", path: "/content/categories" },
+      { name: "Destinations", path: "/content/destinations" },
+      { name: "Services", path: "/content/services" },
+      { name: "Features", path: "/content/features" },
+      { name: "FAQs", path: "/content/faqs" },
+      { name: "Support Options", path: "/content/support-options" },
+    ],
+  },
+  {
     icon: <GridIcon />, // Placeholder icon, ideally use SettingsIcon
     name: "Settings",
     path: "/settings",
