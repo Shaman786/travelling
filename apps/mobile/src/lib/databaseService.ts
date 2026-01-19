@@ -1581,6 +1581,148 @@ export const notificationService = {
   },
 };
 
+// ============ Content Service (Dynamic Content) ============
+
+export const contentService = {
+  /**
+   * Get all active categories, sorted by sortOrder
+   */
+  async getCategories(): Promise<
+    { $id: string; name: string; icon: string }[]
+  > {
+    try {
+      const response = await tables.listRows({
+        databaseId: DATABASE_ID,
+        tableId: "categories",
+        queries: [
+          Query.equal("isActive", true),
+          Query.orderAsc("sortOrder"),
+          Query.limit(25),
+        ],
+      });
+      return response.rows.map((r: any) => ({
+        $id: r.$id,
+        name: r.name,
+        icon: r.icon,
+      }));
+    } catch (error) {
+      console.error("Get categories error:", error);
+      return [];
+    }
+  },
+
+  /**
+   * Get all active destinations, sorted by sortOrder
+   */
+  async getDestinations(): Promise<
+    { $id: string; name: string; image: string }[]
+  > {
+    try {
+      const response = await tables.listRows({
+        databaseId: DATABASE_ID,
+        tableId: "destinations",
+        queries: [
+          Query.equal("isActive", true),
+          Query.orderAsc("sortOrder"),
+          Query.limit(10),
+        ],
+      });
+      return response.rows.map((r: any) => ({
+        $id: r.$id,
+        name: r.name,
+        image: r.image,
+      }));
+    } catch (error) {
+      console.error("Get destinations error:", error);
+      return [];
+    }
+  },
+
+  /**
+   * Get all active FAQs, sorted by sortOrder
+   */
+  async getFAQs(): Promise<
+    { $id: string; question: string; answer: string }[]
+  > {
+    try {
+      const response = await tables.listRows({
+        databaseId: DATABASE_ID,
+        tableId: "faqs",
+        queries: [
+          Query.equal("isActive", true),
+          Query.orderAsc("sortOrder"),
+          Query.limit(20),
+        ],
+      });
+      return response.rows.map((r: any) => ({
+        $id: r.$id,
+        question: r.question,
+        answer: r.answer,
+      }));
+    } catch (error) {
+      console.error("Get FAQs error:", error);
+      return [];
+    }
+  },
+
+  /**
+   * Get all active support options, sorted by sortOrder
+   */
+  async getSupportOptions(): Promise<
+    {
+      $id: string;
+      title: string;
+      subtitle: string;
+      icon: string;
+      route: string;
+      gradient: [string, string];
+    }[]
+  > {
+    try {
+      const response = await tables.listRows({
+        databaseId: DATABASE_ID,
+        tableId: "support_options",
+        queries: [
+          Query.equal("isActive", true),
+          Query.orderAsc("sortOrder"),
+          Query.limit(10),
+        ],
+      });
+      return response.rows.map((r: any) => ({
+        $id: r.$id,
+        title: r.title,
+        subtitle: r.subtitle,
+        icon: r.icon,
+        route: r.route,
+        gradient: [r.gradientStart, r.gradientEnd] as [string, string],
+      }));
+    } catch (error) {
+      console.error("Get support options error:", error);
+      return [];
+    }
+  },
+
+  /**
+   * Get a system config value by key
+   */
+  async getConfigValue(key: string): Promise<string | null> {
+    try {
+      const response = await tables.listRows({
+        databaseId: DATABASE_ID,
+        tableId: "system_config",
+        queries: [Query.equal("key", key), Query.limit(1)],
+      });
+      if (response.rows.length > 0) {
+        return response.rows[0].value;
+      }
+      return null;
+    } catch (error) {
+      console.error("Get config value error:", error);
+      return null;
+    }
+  },
+};
+
 export default {
   packages: packageService,
   bookings: bookingService,
@@ -1594,4 +1736,5 @@ export default {
   consultations: consultationService,
   chat: chatService,
   notifications: notificationService,
+  content: contentService,
 };

@@ -1,7 +1,8 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { MotiPressable } from "moti/interactions";
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Linking, StyleSheet, ViewStyle } from "react-native";
+import databaseService from "../lib/databaseService";
 
 interface WhatsAppButtonProps {
   style?: ViewStyle;
@@ -9,9 +10,19 @@ interface WhatsAppButtonProps {
 }
 
 const WhatsAppButton = ({ style, message }: WhatsAppButtonProps) => {
+  const [phoneNumber, setPhoneNumber] = useState<string | null>(null);
+
+  useEffect(() => {
+    const loadPhone = async () => {
+      const phone =
+        await databaseService.content.getConfigValue("whatsapp_phone");
+      setPhoneNumber(phone || "1234567890"); // Fallback
+    };
+    loadPhone();
+  }, []);
+
   const handlePress = () => {
-    // Replace with the actual phone number
-    const phoneNumber = "1234567890";
+    if (!phoneNumber) return;
     const defaultMessage =
       "Hello, I would like to inquire about a travel package.";
     const text = message || defaultMessage;

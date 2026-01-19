@@ -8,60 +8,48 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { MotiPressable } from "moti/interactions";
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { Avatar, Text, useTheme } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 import WhatsAppButton from "../../src/components/WhatsAppButton";
+import databaseService from "../../src/lib/databaseService";
 import { useStore } from "../../src/store/useStore";
 import { borderRadius, shadows, spacing } from "../../src/theme";
 
-const CHAT_OPTIONS = [
-  {
-    id: "expert",
-    title: "Talk to Expert",
-    subtitle: "Get personalized travel advice",
-    icon: "headset",
-    gradient: ["#0056D2", "#4A8FE7"],
-    route: "/support/chat",
-  },
-  {
-    id: "booking",
-    title: "Booking Support",
-    subtitle: "Help with reservations",
-    icon: "ticket-confirmation-outline",
-    gradient: ["#10B981", "#059669"],
-    route: "/support/booking-help",
-  },
-  {
-    id: "visa",
-    title: "Visa Assistance",
-    subtitle: "Docs & requirements",
-    icon: "passport",
-    gradient: ["#F5A623", "#E09000"],
-    route: "/consult/visa",
-  },
-  {
-    id: "emergency",
-    title: "Emergency",
-    subtitle: "24/7 assistance",
-    icon: "phone-alert",
-    gradient: ["#EF4444", "#DC2626"],
-    route: "/support/emergency",
-  },
-];
+interface SupportOption {
+  $id: string;
+  title: string;
+  subtitle: string;
+  icon: string;
+  route: string;
+  gradient: [string, string];
+}
 
-const FAQ_ITEMS = [
-  "How do I cancel my booking?",
-  "What documents do I need?",
-  "How to modify trip dates?",
-  "Refund policy explained",
-];
+interface FAQ {
+  $id: string;
+  question: string;
+  answer: string;
+}
 
 export default function ChatScreen() {
   const theme = useTheme();
   const router = useRouter();
   const user = useStore((state) => state.user);
+  const [chatOptions, setChatOptions] = useState<SupportOption[]>([]);
+  const [faqItems, setFaqItems] = useState<FAQ[]>([]);
+
+  useEffect(() => {
+    const loadContent = async () => {
+      const [options, faqs] = await Promise.all([
+        databaseService.content.getSupportOptions(),
+        databaseService.content.getFAQs(),
+      ]);
+      setChatOptions(options);
+      setFaqItems(faqs);
+    };
+    loadContent();
+  }, []);
 
   const animateState = useMemo(
     () =>
@@ -116,9 +104,9 @@ export default function ChatScreen() {
             How can we help?
           </Text>
           <View style={styles.optionsGrid}>
-            {CHAT_OPTIONS.map((option) => (
+            {chatOptions.map((option) => (
               <View
-                key={option.id}
+                key={option.$id}
                 style={[
                   styles.cardContainer,
                   // Apply shadows here for better cross-platform support
@@ -186,16 +174,16 @@ export default function ChatScreen() {
               { backgroundColor: theme.colors.surface },
             ]}
           >
-            {FAQ_ITEMS.map((faq, index) => (
+            {faqItems.map((faq, index) => (
               <MotiPressable
-                key={index}
+                key={faq.$id}
                 onPress={() => router.push("/support/faq" as any)}
                 animate={animateState}
                 transition={{ type: "spring", damping: 15, stiffness: 400 }}
                 style={[
                   styles.faqItem,
                   { borderBottomColor: theme.colors.outlineVariant },
-                  index === FAQ_ITEMS.length - 1 && { borderBottomWidth: 0 },
+                  index === faqItems.length - 1 && { borderBottomWidth: 0 },
                 ]}
               >
                 <MaterialCommunityIcons
@@ -207,7 +195,7 @@ export default function ChatScreen() {
                   variant="bodyMedium"
                   style={[styles.faqText, { color: theme.colors.onSurface }]}
                 >
-                  {faq}
+                  {faq.question}
                 </Text>
                 <MaterialCommunityIcons
                   name="chevron-right"

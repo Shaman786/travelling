@@ -14,40 +14,6 @@ import { Text, useTheme } from "react-native-paper";
 import databaseService from "../../lib/databaseService";
 import { shadows, spacing } from "../../theme";
 
-// Static popular destinations (will be dashboard-managed later)
-const STATIC_DESTINATIONS = [
-  {
-    id: "maldives",
-    name: "Maldives",
-    image: "https://images.unsplash.com/photo-1514282401047-d79a71a590e8?w=200",
-  },
-  {
-    id: "dubai",
-    name: "Dubai",
-    image: "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=200",
-  },
-  {
-    id: "bali",
-    name: "Bali",
-    image: "https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=200",
-  },
-  {
-    id: "paris",
-    name: "Paris",
-    image: "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=200",
-  },
-  {
-    id: "london",
-    name: "London",
-    image: "https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=200",
-  },
-  {
-    id: "tokyo",
-    name: "Tokyo",
-    image: "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=200",
-  },
-];
-
 interface DestinationScrollerProps {
   title?: string;
 }
@@ -57,27 +23,17 @@ export default function DestinationScroller({
 }: DestinationScrollerProps) {
   const router = useRouter();
   const theme = useTheme();
-  const [dynamicDestinations, setDynamicDestinations] = useState<
-    { id: string; name: string }[]
+  const [destinations, setDestinations] = useState<
+    { $id: string; name: string; image: string }[]
   >([]);
 
   useEffect(() => {
-    // Fetch dynamic categories from packages
-    const loadCategories = async () => {
-      const cats = await databaseService.packages.getUniqueCategories();
-      setDynamicDestinations(cats);
+    const loadDestinations = async () => {
+      const data = await databaseService.content.getDestinations();
+      setDestinations(data);
     };
-    loadCategories();
+    loadDestinations();
   }, []);
-
-  // Merge static and dynamic, removing duplicates
-  const allDestinations = useMemo(() => {
-    const dynamicNames = dynamicDestinations.map((d) => d.name.toLowerCase());
-    const filtered = STATIC_DESTINATIONS.filter(
-      (s) => !dynamicNames.includes(s.name.toLowerCase()),
-    );
-    return [...filtered.slice(0, 6)]; // Limit to 6 for now
-  }, [dynamicDestinations]);
 
   const animateState = useMemo(
     () =>
@@ -91,12 +47,16 @@ export default function DestinationScroller({
     [],
   );
 
-  const handlePress = (destination: { id: string; name: string }) => {
+  const handlePress = (destination: { $id: string; name: string }) => {
     router.push({
       pathname: "/search",
       params: { q: destination.name },
     } as any);
   };
+
+  if (destinations.length === 0) {
+    return null; // Don't render if no destinations loaded
+  }
 
   return (
     <View style={styles.container}>
@@ -111,9 +71,9 @@ export default function DestinationScroller({
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
-        {allDestinations.map((destination) => (
+        {destinations.map((destination) => (
           <MotiPressable
-            key={destination.id}
+            key={destination.$id}
             onPress={() => handlePress(destination)}
             animate={animateState}
             transition={{ type: "spring", damping: 15, stiffness: 400 }}
@@ -126,7 +86,6 @@ export default function DestinationScroller({
                 contentFit="cover"
                 transition={300}
               />
-              {/* Subtle border overlay */}
               <View style={styles.imageBorder} />
             </View>
             <Text
@@ -176,11 +135,6 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     borderRadius: 32,
     borderWidth: 2,
-    // borderColor: colors.accent, // We can't access theme here easily without passing it or using a functional style or just using a safe static color if it's an overlay
-    // But wait, this is a StyleSheet.
-    // Let's use a dynamic style in the component instead.
-    // For now in styles, we can't use theme.
-    // I will remove it from here and add it to the component.
     opacity: 0.5,
   },
   name: {

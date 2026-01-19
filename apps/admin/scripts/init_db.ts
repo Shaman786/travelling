@@ -527,6 +527,78 @@ const COLLECTIONS: any = {
       { key: "active_idx", type: "key", attributes: ["isRead"] },
     ],
   },
+  categories: {
+    name: "Categories",
+    documentSecurity: false,
+    permissions: [
+      Permission.read(Role.any()),
+      Permission.write(Role.team(TEAM_NAME)),
+    ],
+    attributes: [
+      { key: "name", type: "string", size: 64, required: true },
+      { key: "icon", type: "string", size: 64, required: true },
+      { key: "sortOrder", type: "integer", required: false, default: 0 },
+      { key: "isActive", type: "boolean", required: false, default: true },
+    ],
+    indexes: [
+      { key: "sort_idx", type: "key", attributes: ["sortOrder"] },
+    ],
+  },
+  destinations: {
+    name: "Destinations",
+    documentSecurity: false,
+    permissions: [
+      Permission.read(Role.any()),
+      Permission.write(Role.team(TEAM_NAME)),
+    ],
+    attributes: [
+      { key: "name", type: "string", size: 128, required: true },
+      { key: "image", type: "string", size: 1024, required: true },
+      { key: "sortOrder", type: "integer", required: false, default: 0 },
+      { key: "isActive", type: "boolean", required: false, default: true },
+    ],
+    indexes: [
+      { key: "sort_idx", type: "key", attributes: ["sortOrder"] },
+    ],
+  },
+  faqs: {
+    name: "FAQs",
+    documentSecurity: false,
+    permissions: [
+      Permission.read(Role.any()),
+      Permission.write(Role.team(TEAM_NAME)),
+    ],
+    attributes: [
+      { key: "question", type: "string", size: 255, required: true },
+      { key: "answer", type: "string", size: 2000, required: true },
+      { key: "sortOrder", type: "integer", required: false, default: 0 },
+      { key: "isActive", type: "boolean", required: false, default: true },
+    ],
+    indexes: [
+      { key: "sort_idx", type: "key", attributes: ["sortOrder"] },
+    ],
+  },
+  support_options: {
+    name: "Support Options",
+    documentSecurity: false,
+    permissions: [
+      Permission.read(Role.any()),
+      Permission.write(Role.team(TEAM_NAME)),
+    ],
+    attributes: [
+      { key: "title", type: "string", size: 64, required: true },
+      { key: "subtitle", type: "string", size: 128, required: true },
+      { key: "icon", type: "string", size: 64, required: true },
+      { key: "route", type: "string", size: 128, required: true },
+      { key: "gradientStart", type: "string", size: 7, required: true },
+      { key: "gradientEnd", type: "string", size: 7, required: true },
+      { key: "sortOrder", type: "integer", required: false, default: 0 },
+      { key: "isActive", type: "boolean", required: false, default: true },
+    ],
+    indexes: [
+      { key: "sort_idx", type: "key", attributes: ["sortOrder"] },
+    ],
+  },
 };
 
 const BUCKETS = [
@@ -897,7 +969,126 @@ async function init() {
     await seedAdminProfile(adminUserId);
   }
 
+  // Seed content collections
+  await seedContent();
+
   console.log("\n🎉 Database Init Complete!");
+}
+
+// Seeding Data for new content collections
+async function seedContent() {
+  console.log("🌱 Seeding initial content...");
+
+  // 1. Categories
+  try {
+    const cats = await databases.listDocuments(DATABASE_ID, "categories");
+    if (cats.total === 0) {
+      console.log("   Seeding Categories...");
+      const categories = [
+        { name: "All", icon: "compass-rose", sortOrder: 0, isActive: true },
+        { name: "Beach", icon: "beach", sortOrder: 1, isActive: true },
+        { name: "Mountain", icon: "image-filter-hdr", sortOrder: 2, isActive: true },
+        { name: "Adventure", icon: "hiking", sortOrder: 3, isActive: true },
+        { name: "Cultural", icon: "bank", sortOrder: 4, isActive: true },
+        { name: "Honeymoon", icon: "heart", sortOrder: 5, isActive: true },
+        { name: "Family", icon: "account-group", sortOrder: 6, isActive: true },
+      ];
+      for (const cat of categories) {
+        await databases.createDocument(DATABASE_ID, "categories", ID.unique(), cat);
+      }
+      console.log("   ✅ Categories seeded.");
+    } else {
+      console.log("   ✅ Categories already exist.");
+    }
+  } catch (e: any) {
+    console.error("   ⚠️ Error seeding categories:", e.message);
+  }
+
+  // 2. Destinations
+  try {
+    const dests = await databases.listDocuments(DATABASE_ID, "destinations");
+    if (dests.total === 0) {
+      console.log("   Seeding Destinations...");
+      const destinations = [
+        { name: "Maldives", image: "https://images.unsplash.com/photo-1514282401047-d79a71a590e8?w=200", sortOrder: 1, isActive: true },
+        { name: "Dubai", image: "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=200", sortOrder: 2, isActive: true },
+        { name: "Bali", image: "https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=200", sortOrder: 3, isActive: true },
+        { name: "Paris", image: "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=200", sortOrder: 4, isActive: true },
+        { name: "London", image: "https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=200", sortOrder: 5, isActive: true },
+        { name: "Tokyo", image: "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=200", sortOrder: 6, isActive: true },
+      ];
+      for (const dest of destinations) {
+        await databases.createDocument(DATABASE_ID, "destinations", ID.unique(), dest);
+      }
+      console.log("   ✅ Destinations seeded.");
+    } else {
+      console.log("   ✅ Destinations already exist.");
+    }
+  } catch (e: any) {
+    console.error("   ⚠️ Error seeding destinations:", e.message);
+  }
+
+  // 3. Support Options
+  try {
+    const opts = await databases.listDocuments(DATABASE_ID, "support_options");
+    if (opts.total === 0) {
+      console.log("   Seeding Support Options...");
+      const options = [
+        { title: "Talk to Expert", subtitle: "Get personalized travel advice", icon: "headset", route: "/support/chat", gradientStart: "#0056D2", gradientEnd: "#4A8FE7", sortOrder: 1, isActive: true },
+        { title: "Booking Support", subtitle: "Help with reservations", icon: "ticket-confirmation-outline", route: "/support/booking-help", gradientStart: "#10B981", gradientEnd: "#059669", sortOrder: 2, isActive: true },
+        { title: "Visa Assistance", subtitle: "Docs & requirements", icon: "passport", route: "/consult/visa", gradientStart: "#F5A623", gradientEnd: "#E09000", sortOrder: 3, isActive: true },
+        { title: "Emergency", subtitle: "24/7 assistance", icon: "phone-alert", route: "/support/emergency", gradientStart: "#EF4444", gradientEnd: "#DC2626", sortOrder: 4, isActive: true },
+      ];
+      for (const opt of options) {
+        await databases.createDocument(DATABASE_ID, "support_options", ID.unique(), opt);
+      }
+      console.log("   ✅ Support Options seeded.");
+    } else {
+      console.log("   ✅ Support Options already exist.");
+    }
+  } catch (e: any) {
+    console.error("   ⚠️ Error seeding support options:", e.message);
+  }
+
+  // 4. FAQs
+  try {
+    const f = await databases.listDocuments(DATABASE_ID, "faqs");
+    if (f.total === 0) {
+      console.log("   Seeding FAQs...");
+      const faqs = [
+        { question: "How do I cancel my booking?", answer: "You can cancel your booking from the My Trips section or contact support.", sortOrder: 1, isActive: true },
+        { question: "What documents do I need?", answer: "Passport, Visa, and Tickets are usually required.", sortOrder: 2, isActive: true },
+        { question: "How to modify trip dates?", answer: "Contact our support team to check availability for date changes.", sortOrder: 3, isActive: true },
+        { question: "Refund policy explained", answer: "Refunds depend on the package and time of cancellation. Check T&Cs.", sortOrder: 4, isActive: true },
+      ];
+      for (const faq of faqs) {
+        await databases.createDocument(DATABASE_ID, "faqs", ID.unique(), faq);
+      }
+      console.log("   ✅ FAQs seeded.");
+    } else {
+      console.log("   ✅ FAQs already exist.");
+    }
+  } catch (e: any) {
+    console.error("   ⚠️ Error seeding FAQs:", e.message);
+  }
+
+  // 5. System Config - WhatsApp Number
+  try {
+    const configs = await databases.listDocuments(DATABASE_ID, "system_config", [Query.equal("key", "whatsapp_phone")]);
+    if (configs.total === 0) {
+      console.log("   Seeding System Config (WhatsApp)...");
+      await databases.createDocument(DATABASE_ID, "system_config", ID.unique(), {
+        key: "whatsapp_phone",
+        value: "1234567890",
+        description: "WhatsApp contact number for support button",
+      });
+      console.log("   ✅ System Config seeded.");
+    } else {
+      console.log("   ✅ System Config already exists.");
+    }
+  } catch (e: any) {
+    console.error("   ⚠️ Error seeding system config:", e.message);
+  }
 }
 
 init();

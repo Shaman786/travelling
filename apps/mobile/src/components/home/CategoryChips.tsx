@@ -7,20 +7,11 @@
 
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { MotiPressable } from "moti/interactions";
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { Text, useTheme } from "react-native-paper";
+import databaseService from "../../lib/databaseService";
 import { borderRadius, shadows, spacing } from "../../theme";
-
-const CATEGORIES = [
-  { id: "all", name: "All", icon: "compass-rose" },
-  { id: "beach", name: "Beach", icon: "beach" },
-  { id: "mountain", name: "Mountain", icon: "image-filter-hdr" },
-  { id: "adventure", name: "Adventure", icon: "hiking" },
-  { id: "cultural", name: "Cultural", icon: "bank" },
-  { id: "honeymoon", name: "Honeymoon", icon: "heart" },
-  { id: "family", name: "Family", icon: "account-group" },
-];
 
 interface CategoryChipsProps {
   onSelect?: (category: string) => void;
@@ -32,7 +23,22 @@ export default function CategoryChips({
   selectedCategory = "all",
 }: CategoryChipsProps) {
   const [selected, setSelected] = useState(selectedCategory);
+  const [categories, setCategories] = useState<
+    { $id: string; name: string; icon: string }[]
+  >([]);
   const theme = useTheme();
+
+  useEffect(() => {
+    const loadCategories = async () => {
+      const data = await databaseService.content.getCategories();
+      // Ensure "All" is first
+      if (data.length > 0 && data[0].name !== "All") {
+        data.unshift({ $id: "all", name: "All", icon: "compass-rose" });
+      }
+      setCategories(data);
+    };
+    loadCategories();
+  }, []);
 
   const animateState = useMemo(
     () =>
@@ -45,10 +51,15 @@ export default function CategoryChips({
     [],
   );
 
-  const handlePress = (categoryId: string) => {
-    setSelected(categoryId);
-    onSelect?.(categoryId);
+  const handlePress = (categoryName: string) => {
+    const id = categoryName.toLowerCase();
+    setSelected(id);
+    onSelect?.(id);
   };
+
+  if (categories.length === 0) {
+    return null;
+  }
 
   return (
     <View style={styles.container}>
@@ -77,12 +88,12 @@ export default function CategoryChips({
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
-        {CATEGORIES.map((category) => {
-          const isSelected = selected === category.id;
+        {categories.map((category) => {
+          const isSelected = selected === category.name.toLowerCase();
           return (
             <MotiPressable
-              key={category.id}
-              onPress={() => handlePress(category.id)}
+              key={category.$id}
+              onPress={() => handlePress(category.name)}
               animate={animateState}
               transition={{ type: "spring", damping: 15, stiffness: 400 }}
               style={[
