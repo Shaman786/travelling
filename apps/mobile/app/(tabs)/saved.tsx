@@ -12,6 +12,7 @@ import { Text, useTheme } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 import PackageCard from "../../src/components/PackageCard";
 import { PackageCardSkeleton } from "../../src/components/Skeleton";
+import WhatsAppButton from "../../src/components/WhatsAppButton";
 import databaseService from "../../src/lib/databaseService";
 import { useStore } from "../../src/store/useStore";
 import { spacing } from "../../src/theme";
@@ -118,6 +119,7 @@ export default function SavedScreen() {
           showsVerticalScrollIndicator={false}
         />
       )}
+      <WhatsAppButton message="Hello, I have some questions about my saved trips." />
     </SafeAreaView>
   );
 }

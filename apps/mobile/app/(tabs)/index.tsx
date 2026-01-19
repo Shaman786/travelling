@@ -10,6 +10,7 @@ import {
 } from "react-native-safe-area-context";
 import PackageCard from "../../src/components/PackageCard";
 import { PackageCardSkeleton } from "../../src/components/Skeleton";
+import WhatsAppButton from "../../src/components/WhatsAppButton";
 import CategoryChips from "../../src/components/home/CategoryChips";
 import ConsultingGrid from "../../src/components/home/ConsultingGrid";
 import DestinationScroller from "../../src/components/home/DestinationScroller";
@@ -314,6 +315,7 @@ export default function CatalogScreen() {
           </View>
         </View>
       )}
+      <WhatsAppButton />
     </SafeAreaView>
   );
 }

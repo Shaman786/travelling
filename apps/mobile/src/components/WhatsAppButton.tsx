@@ -1,17 +1,23 @@
-import { Image } from "expo-image";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { MotiPressable } from "moti/interactions";
 import React, { useMemo } from "react";
-import { Linking, StyleSheet } from "react-native";
-// @ts-ignore
-import whatsappIcon from "../../assets/WhatsApp-Brand-Resource-Center/01_Glyph/01_Digital/03_PNG/White/Digital_Glyph_White.png";
+import { Linking, StyleSheet, ViewStyle } from "react-native";
 
-const WhatsAppButton = () => {
+interface WhatsAppButtonProps {
+  style?: ViewStyle;
+  message?: string;
+}
+
+const WhatsAppButton = ({ style, message }: WhatsAppButtonProps) => {
   const handlePress = () => {
     // Replace with the actual phone number
     const phoneNumber = "1234567890";
-    const message = "Hello, I would like to inquire about a travel package.";
+    const defaultMessage =
+      "Hello, I would like to inquire about a travel package.";
+    const text = message || defaultMessage;
+
     const url = `whatsapp://send?phone=${phoneNumber}&text=${encodeURIComponent(
-      message,
+      text,
     )}`;
 
     Linking.openURL(url).catch((err) =>
@@ -33,7 +39,7 @@ const WhatsAppButton = () => {
 
   return (
     <MotiPressable
-      style={[styles.container, { backgroundColor: "#25D366" }]}
+      style={[styles.container, style]}
       onPress={handlePress}
       animate={animateState}
       transition={{
@@ -42,7 +48,7 @@ const WhatsAppButton = () => {
         stiffness: 400,
       }}
     >
-      <Image source={whatsappIcon} style={styles.icon} contentFit="contain" />
+      <MaterialCommunityIcons name="whatsapp" size={32} color="white" />
     </MotiPressable>
   );
 };
@@ -55,6 +61,7 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
+    backgroundColor: "#25D366",
     justifyContent: "center",
     alignItems: "center",
     elevation: 8,

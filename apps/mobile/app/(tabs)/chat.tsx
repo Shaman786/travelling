@@ -12,6 +12,7 @@ import React, { useMemo } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { Avatar, Text, useTheme } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
+import WhatsAppButton from "../../src/components/WhatsAppButton";
 import { useStore } from "../../src/store/useStore";
 import { borderRadius, shadows, spacing } from "../../src/theme";
 
@@ -218,6 +219,7 @@ export default function ChatScreen() {
           </View>
         </View>
       </ScrollView>
+      <WhatsAppButton message="Hello, I need some assistance with the app." />
     </SafeAreaView>
   );
 }

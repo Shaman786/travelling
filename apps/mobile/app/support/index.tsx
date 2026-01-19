@@ -18,6 +18,7 @@ import {
   useTheme,
 } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
+import WhatsAppButton from "../../src/components/WhatsAppButton";
 import { useSupport } from "../../src/hooks/useSupport";
 import type { SupportTicket } from "../../src/types";
 
@@ -171,6 +172,17 @@ export default function SupportScreen() {
         style={[styles.fab, { backgroundColor: theme.colors.primary }]}
         color="#fff"
         onPress={() => router.push("/support/create")}
+      />
+      <FAB
+        icon="plus"
+        label="New Ticket"
+        style={[styles.fab, { backgroundColor: theme.colors.primary }]}
+        color="#fff"
+        onPress={() => router.push("/support/create")}
+      />
+      <WhatsAppButton
+        style={{ bottom: 160 }}
+        message="Hello, I need to raise a support ticket or have an issue."
       />
     </SafeAreaView>
   );

@@ -17,6 +17,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Toast } from "toastify-react-native";
 import databaseService from "../../lib/databaseService";
 import { useStore } from "../../store/useStore";
+import WhatsAppButton from "../WhatsAppButton";
 
 // Helper to format dates
 const formatDate = (d: Date | undefined) =>
@@ -380,6 +381,7 @@ export default function TripWizard() {
           {step === TOTAL_STEPS ? "Submit Request" : "Next"}
         </Button>
       </View>
+      <WhatsAppButton message="Hello, I need help with planning my trip using the Trip Wizard." />
     </SafeAreaView>
   );
 }
