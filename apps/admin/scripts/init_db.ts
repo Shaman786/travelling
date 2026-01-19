@@ -638,6 +638,28 @@ const COLLECTIONS: any = {
       { key: "sort_idx", type: "key", attributes: ["sortOrder"] },
     ],
   },
+  wizard_options: {
+    name: "Wizard Options",
+    documentSecurity: false,
+    permissions: [
+      Permission.read(Role.any()),
+      Permission.write(Role.team(TEAM_NAME)),
+    ],
+    attributes: [
+      { key: "wizardId", type: "string", size: 64, required: true },
+      { key: "optionKey", type: "string", size: 64, required: true },
+      { key: "label", type: "string", size: 64, required: true },
+      { key: "value", type: "string", size: 128, required: true },
+      { key: "icon", type: "string", size: 64, required: false },
+      { key: "extra", type: "string", size: 256, required: false },
+      { key: "sortOrder", type: "integer", required: false, default: 0 },
+      { key: "isActive", type: "boolean", required: false, default: true },
+    ],
+    indexes: [
+      { key: "wizard_key_idx", type: "key", attributes: ["wizardId", "optionKey"] },
+      { key: "sort_idx", type: "key", attributes: ["sortOrder"] },
+    ],
+  },
 };
 
 const BUCKETS = [
@@ -1176,6 +1198,80 @@ async function seedContent() {
     }
   } catch (e: any) {
     console.error("   ⚠️ Error seeding features:", e.message);
+  }
+
+  // 8. Wizard Options
+  try {
+    const wo = await databases.listDocuments(DATABASE_ID, "wizard_options");
+    if (wo.total === 0) {
+      console.log("   Seeding Wizard Options...");
+      const options = [
+        // Trip Wizard - Interests
+        { wizardId: "trip_wizard", optionKey: "interests", label: "Adventure", value: "adventure", sortOrder: 1 },
+        { wizardId: "trip_wizard", optionKey: "interests", label: "Relaxation", value: "relaxation", sortOrder: 2 },
+        { wizardId: "trip_wizard", optionKey: "interests", label: "Culture", value: "culture", sortOrder: 3 },
+        { wizardId: "trip_wizard", optionKey: "interests", label: "Food", value: "food", sortOrder: 4 },
+        { wizardId: "trip_wizard", optionKey: "interests", label: "Wildlife", value: "wildlife", sortOrder: 5 },
+        { wizardId: "trip_wizard", optionKey: "interests", label: "Luxury", value: "luxury", sortOrder: 6 },
+        { wizardId: "trip_wizard", optionKey: "interests", label: "Family Fun", value: "family_fun", sortOrder: 7 },
+        { wizardId: "trip_wizard", optionKey: "interests", label: "Romantic", value: "romantic", sortOrder: 8 },
+        { wizardId: "trip_wizard", optionKey: "interests", label: "Nightlife", value: "nightlife", sortOrder: 9 },
+        { wizardId: "trip_wizard", optionKey: "interests", label: "Shopping", value: "shopping", sortOrder: 10 },
+        // Trip Wizard - Budget Tiers
+        { wizardId: "trip_wizard", optionKey: "budget_tiers", label: "Budget", value: "budget", icon: "wallet-outline", sortOrder: 1 },
+        { wizardId: "trip_wizard", optionKey: "budget_tiers", label: "Moderate", value: "moderate", icon: "wallet-travel", sortOrder: 2 },
+        { wizardId: "trip_wizard", optionKey: "budget_tiers", label: "Luxury", value: "luxury", icon: "diamond-stone", sortOrder: 3 },
+        // Visa Checker - Popular Destinations
+        { wizardId: "visa_checker", optionKey: "destinations", label: "Dubai", value: "AE", extra: "visa_on_arrival", sortOrder: 1 },
+        { wizardId: "visa_checker", optionKey: "destinations", label: "Singapore", value: "SG", extra: "e_visa", sortOrder: 2 },
+        { wizardId: "visa_checker", optionKey: "destinations", label: "Thailand", value: "TH", extra: "visa_on_arrival", sortOrder: 3 },
+        { wizardId: "visa_checker", optionKey: "destinations", label: "Malaysia", value: "MY", extra: "visa_free", sortOrder: 4 },
+        { wizardId: "visa_checker", optionKey: "destinations", label: "Bali", value: "ID", extra: "visa_on_arrival", sortOrder: 5 },
+        { wizardId: "visa_checker", optionKey: "destinations", label: "Maldives", value: "MV", extra: "visa_free", sortOrder: 6 },
+        // Visa Checker - Citizenships
+        { wizardId: "visa_checker", optionKey: "citizenships", label: "India", value: "IN", sortOrder: 1 },
+        { wizardId: "visa_checker", optionKey: "citizenships", label: "United States", value: "US", sortOrder: 2 },
+        { wizardId: "visa_checker", optionKey: "citizenships", label: "United Kingdom", value: "UK", sortOrder: 3 },
+        { wizardId: "visa_checker", optionKey: "citizenships", label: "France", value: "FR", sortOrder: 4 },
+        // Deal Hunter - Cabin Classes
+        { wizardId: "deal_hunter", optionKey: "cabin_class", label: "Economy", value: "economy", sortOrder: 1 },
+        { wizardId: "deal_hunter", optionKey: "cabin_class", label: "Business", value: "business", sortOrder: 2 },
+        { wizardId: "deal_hunter", optionKey: "cabin_class", label: "First", value: "first", sortOrder: 3 },
+        // Vibe Finder - Vibes
+        { wizardId: "vibe_finder", optionKey: "vibes", label: "Beach Chill", value: "beach", icon: "beach", sortOrder: 1 },
+        { wizardId: "vibe_finder", optionKey: "vibes", label: "Mountain Retreat", value: "mountain", icon: "image-filter-hdr", sortOrder: 2 },
+        { wizardId: "vibe_finder", optionKey: "vibes", label: "City Explorer", value: "city", icon: "city", sortOrder: 3 },
+        { wizardId: "vibe_finder", optionKey: "vibes", label: "Heritage Walk", value: "heritage", icon: "bank", sortOrder: 4 },
+        // Group Planner - Trip Types
+        { wizardId: "group_planner", optionKey: "trip_types", label: "Bachelor/Bachelorette", value: "bachelor", icon: "party-popper", sortOrder: 1 },
+        { wizardId: "group_planner", optionKey: "trip_types", label: "Family Reunion", value: "family", icon: "account-group", sortOrder: 2 },
+        { wizardId: "group_planner", optionKey: "trip_types", label: "Corporate Offsite", value: "corporate", icon: "briefcase", sortOrder: 3 },
+        { wizardId: "group_planner", optionKey: "trip_types", label: "Friends Trip", value: "friends", icon: "human-greeting-proximity", sortOrder: 4 },
+        // Insurance Calc - Coverage Types
+        { wizardId: "insurance_calc", optionKey: "coverage_types", label: "Basic", value: "basic", extra: "Medical only", sortOrder: 1 },
+        { wizardId: "insurance_calc", optionKey: "coverage_types", label: "Standard", value: "standard", extra: "Medical + Baggage", sortOrder: 2 },
+        { wizardId: "insurance_calc", optionKey: "coverage_types", label: "Premium", value: "premium", extra: "All inclusive", sortOrder: 3 },
+        // Concierge Connect - Service Types
+        { wizardId: "concierge", optionKey: "service_types", label: "Airport Transfer", value: "airport_transfer", icon: "car", sortOrder: 1 },
+        { wizardId: "concierge", optionKey: "service_types", label: "Restaurant Booking", value: "restaurant", icon: "food", sortOrder: 2 },
+        { wizardId: "concierge", optionKey: "service_types", label: "Event Tickets", value: "events", icon: "ticket", sortOrder: 3 },
+        { wizardId: "concierge", optionKey: "service_types", label: "Personal Shopper", value: "shopping", icon: "shopping", sortOrder: 4 },
+        { wizardId: "concierge", optionKey: "service_types", label: "City Tour", value: "city_tour", icon: "bus-side", sortOrder: 5 },
+        // Service Marketplace - Categories
+        { wizardId: "marketplace", optionKey: "categories", label: "Local Guides", value: "guides", icon: "map-marker-path", sortOrder: 1 },
+        { wizardId: "marketplace", optionKey: "categories", label: "Photography", value: "photography", icon: "camera", sortOrder: 2 },
+        { wizardId: "marketplace", optionKey: "categories", label: "Spa & Wellness", value: "spa", icon: "spa", sortOrder: 3 },
+        { wizardId: "marketplace", optionKey: "categories", label: "Water Sports", value: "water_sports", icon: "swim", sortOrder: 4 },
+      ];
+      for (const opt of options) {
+        await databases.createDocument(DATABASE_ID, "wizard_options", ID.unique(), { ...opt, isActive: true });
+      }
+      console.log("   ✅ Wizard Options seeded.");
+    } else {
+      console.log("   ✅ Wizard Options already exist.");
+    }
+  } catch (e: any) {
+    console.error("   ⚠️ Error seeding wizard options:", e.message);
   }
 }
 

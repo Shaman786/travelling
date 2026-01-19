@@ -1,6 +1,6 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import {
   Button,
@@ -25,7 +25,8 @@ const formatDate = (d: Date | undefined) =>
 
 const TOTAL_STEPS = 5;
 
-const INTERESTS = [
+// Fallback values (used while loading)
+const DEFAULT_INTERESTS = [
   "Adventure",
   "Relaxation",
   "Culture",
@@ -37,8 +38,7 @@ const INTERESTS = [
   "Nightlife",
   "Shopping",
 ];
-
-const BUDGET_TIERS = [
+const DEFAULT_BUDGETS = [
   { value: "budget", label: "Budget", icon: "wallet-outline" },
   { value: "moderate", label: "Moderate", icon: "wallet-travel" },
   { value: "luxury", label: "Luxury", icon: "diamond-stone" },
@@ -51,6 +51,32 @@ export default function TripWizard() {
 
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
+
+  // Dynamic options from dashboard
+  const [interests, setInterests] = useState<string[]>(DEFAULT_INTERESTS);
+  const [budgetTiers, setBudgetTiers] = useState(DEFAULT_BUDGETS);
+
+  useEffect(() => {
+    const loadOptions = async () => {
+      const [interestOpts, budgetOpts] = await Promise.all([
+        databaseService.content.getWizardOptions("trip_wizard", "interests"),
+        databaseService.content.getWizardOptions("trip_wizard", "budget_tiers"),
+      ]);
+      if (interestOpts.length > 0) {
+        setInterests(interestOpts.map((o) => o.label));
+      }
+      if (budgetOpts.length > 0) {
+        setBudgetTiers(
+          budgetOpts.map((o) => ({
+            value: o.value,
+            label: o.label,
+            icon: o.icon || "wallet",
+          })),
+        );
+      }
+    };
+    loadOptions();
+  }, []);
 
   // Form State
   const [destination, setDestination] = useState("");
@@ -312,7 +338,7 @@ export default function TripWizard() {
               </Text>
 
               <View style={styles.chipGrid}>
-                {INTERESTS.map((interest) => (
+                {interests.map((interest) => (
                   <Chip
                     key={interest}
                     selected={selectedInterests.includes(interest)}
@@ -342,7 +368,7 @@ export default function TripWizard() {
               <SegmentedButtons
                 value={budgetTier}
                 onValueChange={setBudgetTier}
-                buttons={BUDGET_TIERS}
+                buttons={budgetTiers}
                 style={{ marginBottom: 24, width: "100%" }}
               />
 

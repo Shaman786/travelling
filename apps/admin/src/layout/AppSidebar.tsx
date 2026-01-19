@@ -83,6 +83,7 @@ const navItems: NavItem[] = [
       { name: "Features", path: "/content/features" },
       { name: "FAQs", path: "/content/faqs" },
       { name: "Support Options", path: "/content/support-options" },
+      { name: "Wizard Options", path: "/content/wizard-options" },
     ],
   },
   {

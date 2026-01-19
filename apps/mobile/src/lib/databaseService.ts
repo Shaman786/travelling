@@ -1791,6 +1791,46 @@ export const contentService = {
       return [];
     }
   },
+
+  /**
+   * Get wizard options for a specific wizard and option key
+   */
+  async getWizardOptions(
+    wizardId: string,
+    optionKey: string,
+  ): Promise<
+    {
+      $id: string;
+      label: string;
+      value: string;
+      icon?: string;
+      extra?: string;
+    }[]
+  > {
+    try {
+      const response = await tables.listRows({
+        databaseId: DATABASE_ID,
+        tableId: "wizard_options",
+        queries: [
+          Query.equal("wizardId", wizardId),
+          Query.equal("optionKey", optionKey),
+          Query.equal("isActive", true),
+          Query.orderAsc("sortOrder"),
+          Query.limit(50),
+        ],
+      });
+      return response.rows.map((r: any) => ({
+        $id: r.$id,
+        label: r.label,
+        value: r.value,
+        icon: r.icon || undefined,
+        extra: r.extra || undefined,
+      }));
+    } catch (error) {
+      console.error("Get wizard options error:", error);
+      return [];
+    }
+  },
 };
 
 export default {

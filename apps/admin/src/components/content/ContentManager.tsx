@@ -3,7 +3,7 @@ import Button from "@/components/ui/button/Button";
 import { PencilIcon, PlusIcon, TrashBinIcon } from "@/icons";
 import { DATABASE_ID, databases } from "@/lib/appwrite";
 import { Query } from "appwrite";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 interface ContentItem {
   $id: string;
@@ -28,11 +28,7 @@ export default function ContentManager({
   const [items, setItems] = useState<ContentItem[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchItems();
-  }, [collectionId]);
-
-  const fetchItems = async () => {
+  const fetchItems = useCallback(async () => {
     try {
       setLoading(true);
       const response = await databases.listDocuments(DATABASE_ID, collectionId, [
@@ -45,7 +41,11 @@ export default function ContentManager({
     } finally {
       setLoading(false);
     }
-  };
+  }, [collectionId]);
+
+  useEffect(() => {
+    fetchItems();
+  }, [fetchItems]);
 
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this item?")) return;
