@@ -24,6 +24,7 @@ interface UseAuthReturn {
   clearError: () => void;
   refreshUser: () => Promise<void>;
   loginWithProvider: (provider: "google" | "apple") => Promise<void>;
+  deleteAccount: () => Promise<void>;
 }
 
 export function useAuth(): UseAuthReturn {
@@ -92,7 +93,7 @@ export function useAuth(): UseAuthReturn {
             name: authUser.name,
             email: authUser.email,
             createdAt: new Date().toISOString(),
-          }
+          },
         );
 
         // Register for push notifications
@@ -108,7 +109,7 @@ export function useAuth(): UseAuthReturn {
         setIsLoading(false);
       }
     },
-    [setUser]
+    [setUser],
   );
 
   const signup = useCallback(
@@ -129,7 +130,7 @@ export function useAuth(): UseAuthReturn {
             name: authUser.name,
             email: authUser.email,
             createdAt: new Date().toISOString(),
-          }
+          },
         );
 
         // Register for push notifications
@@ -145,7 +146,7 @@ export function useAuth(): UseAuthReturn {
         setIsLoading(false);
       }
     },
-    [setUser]
+    [setUser],
   );
 
   const logout = useCallback(async () => {
@@ -184,7 +185,7 @@ export function useAuth(): UseAuthReturn {
         setIsLoading(false);
       }
     },
-    []
+    [],
   );
 
   return {
@@ -198,6 +199,18 @@ export function useAuth(): UseAuthReturn {
     clearError,
     refreshUser,
     loginWithProvider,
+    deleteAccount: async () => {
+      setIsLoading(true);
+      try {
+        await authService.deleteAccount();
+        storeLogout();
+      } catch (err: any) {
+        setError(err.message || "Failed to delete account");
+        throw err;
+      } finally {
+        setIsLoading(false);
+      }
+    },
   };
 }
 

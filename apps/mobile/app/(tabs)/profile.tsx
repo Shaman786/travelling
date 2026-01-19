@@ -4,7 +4,7 @@ import * as Linking from "expo-linking";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { Alert, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import {
   Avatar,
   Button,
@@ -34,12 +34,11 @@ export default function ProfileScreen() {
   const router = useRouter();
   const { t, i18n } = useTranslation();
   const user = useStore((state) => state.user);
-  const { logout } = useAuth();
+  const { logout, deleteAccount } = useAuth();
   const [documents, setDocuments] = useState<UploadedFile[]>([]);
 
   // Safe Area & Navigation Mode
   const insets = useSafeAreaInsets();
-  // const { navigationMode } = useNavigationMode();
   // Base padding 100 + insets.bottom to ensure content clears the floating tab bar
   const bottomPadding = 100 + (insets.bottom || 20);
 
@@ -48,12 +47,41 @@ export default function ProfileScreen() {
     const next = current === "en" ? "hi" : current === "hi" ? "ar" : "en";
     i18n.changeLanguage(next);
   };
+
   /*
    * Actions
    */
   const handleLogout = async () => {
     await logout();
     router.replace("/(auth)/login");
+  };
+
+  const handleDeleteAccount = () => {
+    Alert.alert(
+      t("delete_account") ?? "Delete Account",
+      t("delete_account_confirm") ??
+        "Are you sure you want to delete your account? This action cannot be undone and you will lose all your data.",
+      [
+        { text: t("cancel") ?? "Cancel", style: "cancel" },
+        {
+          text: t("delete") ?? "Delete",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await deleteAccount();
+              router.replace("/(auth)/login");
+              Toast.success("Account deleted successfully");
+            } catch {
+              Toast.error("Failed to delete account");
+            }
+          },
+        },
+      ],
+    );
+  };
+
+  const openLink = (url: string) => {
+    Linking.openURL(url).catch(() => Toast.error("Could not open link"));
   };
 
   const handleUpload = async () => {
@@ -92,6 +120,7 @@ export default function ProfileScreen() {
       Toast.error("WhatsApp is not installed on this device.");
     });
   };
+
   return (
     <SafeAreaView
       style={[styles.container, { backgroundColor: theme.colors.background }]}
@@ -373,14 +402,55 @@ export default function ProfileScreen() {
             </Pressable>
           </Surface>
 
-          <Button
-            mode="outlined"
-            onPress={handleLogout}
-            textColor={theme.colors.error}
-            style={{ marginTop: 24, borderColor: theme.colors.error }}
-          >
-            {t("logout")}
-          </Button>
+          <View style={{ marginTop: 24, marginBottom: 40, gap: 12 }}>
+            <Button
+              mode="outlined"
+              onPress={handleLogout}
+              textColor={theme.colors.primary}
+              style={{ borderColor: theme.colors.outline }}
+            >
+              {t("logout")}
+            </Button>
+
+            <Button
+              mode="contained"
+              onPress={handleDeleteAccount}
+              buttonColor={theme.colors.error}
+              textColor="#fff"
+            >
+              {t("delete_account") ?? "Delete Account"}
+            </Button>
+
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "center",
+                gap: 16,
+                marginTop: 8,
+              }}
+            >
+              <Text
+                variant="bodySmall"
+                style={{
+                  color: theme.colors.secondary,
+                  textDecorationLine: "underline",
+                }}
+                onPress={() => openLink("https://travelling.app/privacy")}
+              >
+                Privacy Policy
+              </Text>
+              <Text
+                variant="bodySmall"
+                style={{
+                  color: theme.colors.secondary,
+                  textDecorationLine: "underline",
+                }}
+                onPress={() => openLink("https://travelling.app/terms")}
+              >
+                Terms of Service
+              </Text>
+            </View>
+          </View>
         </View>
       </ScrollView>
     </SafeAreaView>

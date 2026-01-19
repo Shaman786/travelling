@@ -7,7 +7,13 @@
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
-import { KeyboardAvoidingView, Platform, StyleSheet, View } from "react-native";
+import {
+  KeyboardAvoidingView,
+  Linking,
+  Platform,
+  StyleSheet,
+  View,
+} from "react-native";
 import {
   Button,
   HelperText,
@@ -206,6 +212,37 @@ export default function LoginScreen() {
               >
                 Create Account
               </Button>
+            </View>
+
+            {/* Legal Links */}
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "center",
+                marginTop: 24,
+                gap: 16,
+              }}
+            >
+              <Text
+                style={{ color: "rgba(255,255,255,0.6)", fontSize: 12 }}
+                onPress={() =>
+                  Linking.openURL("https://travelling.app/privacy").catch(
+                    () => {},
+                  )
+                }
+              >
+                Privacy Policy
+              </Text>
+              <Text
+                style={{ color: "rgba(255,255,255,0.6)", fontSize: 12 }}
+                onPress={() =>
+                  Linking.openURL("https://travelling.app/terms").catch(
+                    () => {},
+                  )
+                }
+              >
+                Terms of Service
+              </Text>
             </View>
           </View>
         </KeyboardAvoidingView>
