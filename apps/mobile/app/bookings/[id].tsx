@@ -28,6 +28,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Toast } from "toastify-react-native";
 
+import ReviewModal from "../../src/components/ReviewModal";
 import StepTracker from "../../src/components/StepTracker";
 import { usePayment } from "../../src/hooks/usePayment";
 import databaseService from "../../src/lib/databaseService";
@@ -41,6 +42,7 @@ export default function BookingDetailsScreen() {
   const [booking, setBooking] = useState<Booking | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isCancelling, setIsCancelling] = useState(false);
+  const [showReviewModal, setShowReviewModal] = useState(false);
 
   const fetchBooking = useCallback(async () => {
     try {
@@ -83,7 +85,7 @@ export default function BookingDetailsScreen() {
             }
           },
         },
-      ]
+      ],
     );
   }, [booking, fetchBooking]);
 
@@ -135,7 +137,7 @@ export default function BookingDetailsScreen() {
   }
 
   const canCancel = !["completed", "cancelled", "ready_to_fly"].includes(
-    booking.status
+    booking.status,
   );
 
   return (
@@ -236,7 +238,7 @@ export default function BookingDetailsScreen() {
             {booking.travelers.map(
               (
                 t: any,
-                index: number // Using any for traveler json structure
+                index: number, // Using any for traveler json structure
               ) => (
                 <List.Item
                   key={index}
@@ -244,7 +246,7 @@ export default function BookingDetailsScreen() {
                   description={`${t.age} years • ${t.gender}`}
                   left={(props) => <List.Icon {...props} icon="account" />}
                 />
-              )
+              ),
             )}
           </Card.Content>
         </Card>
@@ -318,10 +320,34 @@ export default function BookingDetailsScreen() {
               Cancel Trip
             </Button>
           )}
+
+          {booking.status === "completed" && (
+            <Button
+              mode="contained"
+              icon="star"
+              buttonColor="#FFC107"
+              onPress={() => setShowReviewModal(true)}
+              style={styles.actionButton}
+            >
+              Review
+            </Button>
+          )}
         </View>
 
         <View style={{ height: 40 }} />
       </ScrollView>
+
+      {/* Review Modal */}
+      <ReviewModal
+        visible={showReviewModal}
+        onDismiss={() => setShowReviewModal(false)}
+        bookingId={booking.$id}
+        packageId={booking.packageId}
+        packageTitle={booking.packageTitle}
+        onSuccess={() => {
+          Toast.success("Thanks for your review!");
+        }}
+      />
     </SafeAreaView>
   );
 }
